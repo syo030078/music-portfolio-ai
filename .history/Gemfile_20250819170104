@@ -6,12 +6,6 @@ ruby "3.1.3"
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 7.0.4", ">= 7.0.4.3"
 
-# Gemfile
-gem 'devise'
-gem 'devise-jwt', '~> 0.12.0'   # JWT発行・検証
-gem 'rack-cors'                 # CORS対応
-gem 'bcrypt', '~> 3.1.7'
-
 # Use sqlite3 as the database for Active Record
 gem "sqlite3", "~> 1.4"
 
