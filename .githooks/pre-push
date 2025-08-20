@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+EXPECTED="44368100+syo030078@users.noreply.github.com"
+remote="$1"; url="$2"
+# 受け取る更新行: <local_sha> <local_ref> <remote_sha> <remote_ref>
+while read local_sha local_ref remote_sha remote_ref; do
+  # 新規ブランチ等に対応：remoteが無いなら空集合と比較
+  range="${remote_sha}..${local_sha}"
+  if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+    range="${local_sha}"
+  fi
+  # 範囲のコミットの author.email を抽出
+  bad=$(git log --format='%ae' $range | grep -v "^$EXPECTED\$" | sort -u || true)
+  if [ -n "$bad" ]; then
+    echo "✖ Push blocked: commits contain non-noreply author emails:"
+    echo "$bad" | sed 's/^/  - /'
+    echo "→ Run:   git config user.email \"$EXPECTED\"   and amend/rebase as needed."
+    exit 1
+  fi
+done
+exit 0
