@@ -52,3 +52,5 @@ group :development do
   # gem "spring"
 end
 
+
+gem "rspec-rails", "~> 7.1", :group => :test
