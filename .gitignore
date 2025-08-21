@@ -31,3 +31,42 @@
 
 # Ignore master key for decrypting credentials and more.
 /config/master.key
+# Ruby / Rails
+log/*
+tmp/*
+*.sqlite3
+*.sqlite3-journal
+/public/assets
+/.bundle
+/vendor/bundle
+/node_modules
+.byebug_history
+
+# Analyzer (Python)
+analyzer/.venv
+analyzer/__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+# Editor histories / caches
+.history/
+*.swp
+*.swo
+
+# Python venv
+.venv/
+analyzer/.venv/
+analyzer/__pycache__/
+
+# Rails common
+log/*
+tmp/*
+*.sqlite3
+*.sqlite3-journal
+/public/assets
+/.bundle
+/vendor/bundle
+/node_modules
+.byebug_history
+.DS_Store
