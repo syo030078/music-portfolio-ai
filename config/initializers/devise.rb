@@ -15,7 +15,11 @@ Devise.setup do |config|
   # Devise will use the `secret_key_base` as its `secret_key`
   # by default. You can change it below and use your own secret key.
   # config.secret_key = 'bed9b21f51591b91821501825e5c9699cad69ed1e4a4aa4668bcdc7d4b4e31b07a53dcd2fbeb452f0b4dda72394220e4425971ff07b73a381ba75977227e0f2c'
+  config.navigational_formats = []
 
+  config.warden do |manager|
+    manager.intercept_401 = false
+  end
   # ==> Controller configuration
   # Configure the parent class to the devise controllers.
   # config.parent_controller = 'DeviseController'
@@ -311,19 +315,10 @@ Devise.setup do |config|
   # changed. Defaults to true, so a user is signed in automatically after changing a password.
   # config.sign_in_after_change_password = true
   config.jwt do |jwt|
-    # 認証用シークレットは credentials から読むのが推奨
-    jwt.secret = Rails.application.credentials.fetch(:devise_jwt_secret, 'CHANGE-ME')
-    # ログイン時にJWTを発行するリクエストを指定
-    jwt.dispatch_requests = [
-      ['POST', %r{^/auth/sign_in$}]
-    ]
-    # ログアウト時にJWTを無効化（denylistに記録）するリクエストを指定
-    jwt.revocation_requests = [
-      ['DELETE', %r{^/auth/sign_out$}]
-    ]
-    # トークン有効期限（例：24h）
-    jwt.expiration_time = 24.hours.to_i
-    # JSONのみ受け付け
+    jwt.secret = Rails.application.secret_key_base
+    jwt.dispatch_requests   = [['POST', %r{^/auth/sign_in$}]]
+    jwt.revocation_requests = [['DELETE', %r{^/auth/sign_out$}]]
+    jwt.expiration_time = 1.day.to_i
     jwt.request_formats = { user: [:json] }
   end
 end
