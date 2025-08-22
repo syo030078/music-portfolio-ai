@@ -1,26 +1,27 @@
-# frozen_string_literal: true
-require "open3"
-require "timeout"
+# app/services/analyzer_runner.rb
+require 'json'
+require 'open3'
 
 class AnalyzerRunner
-  TIMEOUT_SEC = 120
+  # YouTube URL を受け取り、{ "bpm"=>..., "key"=>..., "genre"=>..., "ai_text"=>... } を返す
+  def self.call(url)
+    # 仮想環境の python を明示（必要に応じて調整）
+    py = Rails.root.join(".venv/bin/python").to_s
+    script = Rails.root.join("analyzer/analyze.py").to_s
 
-  def self.call(youtube_url)
-    script = Rails.root.join("analyzer", "analyze.py").to_s
-    cmd = ["python3", script, "--url", youtube_url]
+    cmd = [py, script, "--url", url]
 
-    stdout = nil
-    status = nil
-    begin
-      Timeout.timeout(TIMEOUT_SEC) do
-        stdout, stderr, status = Open3.capture3(*cmd)
-        raise(StandardError, stderr.presence || "analyzer failed") unless status.success?
-      end
-    rescue Timeout::Error
-      raise(StandardError, "analyzer timeout")
+    stdout, stderr, status = Open3.capture3(*cmd, chdir: Rails.root.to_s)
+
+    unless status.success?
+      Rails.logger.error("[AnalyzerRunner] exit=#{status.exitstatus} stderr=#{stderr}")
+      raise "Analyzer failed: #{stderr}"
     end
 
-    JSON.parse(stdout)
+    # analyzer/analyze.py は JSON を標準出力に出す想定
+    JSON.parse(stdout) # => Ruby の Hash を返す
+  rescue => e
+    Rails.logger.error("[AnalyzerRunner] Error: #{e.class}: #{e.message}")
+    raise
   end
 end
-
