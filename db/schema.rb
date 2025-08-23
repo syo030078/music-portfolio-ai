@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_08_21_071948) do
+ActiveRecord::Schema[7.0].define(version: 2025_08_23_022457) do
   create_table "jwt_denylists", force: :cascade do |t|
     t.string "jti"
     t.datetime "exp"
@@ -30,6 +30,8 @@ ActiveRecord::Schema[7.0].define(version: 2025_08_21_071948) do
     t.text "ai_text"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["user_id", "created_at"], name: "index_tracks_on_user_id_and_created_at"
+    t.index ["user_id", "yt_url"], name: "index_tracks_on_user_id_and_yt_url", unique: true
     t.index ["user_id"], name: "index_tracks_on_user_id"
   end
 
