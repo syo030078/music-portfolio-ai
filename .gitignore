@@ -43,8 +43,6 @@ tmp/*
 .byebug_history
 
 # Analyzer (Python)
-analyzer/.venv
-analyzer/__pycache__/
 *.pyc
 
 # macOS
@@ -56,8 +54,6 @@ analyzer/__pycache__/
 
 # Python venv
 .venv/
-analyzer/.venv/
-analyzer/__pycache__/
 
 # Rails common
 log/*
