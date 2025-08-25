@@ -50,6 +50,11 @@ tmp/*
 *.swp
 *.swo
 
+# Generated files
+*.mp3
+*.wav
+*.m4a
+
 # Python venv
 .venv/
 
