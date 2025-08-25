@@ -42,10 +42,6 @@ tmp/*
 /node_modules
 .byebug_history
 
-# Analyzer (Python)
-analyzer/.venv
-analyzer/__pycache__/
-*.pyc
 
 # macOS
 .DS_Store
@@ -56,8 +52,6 @@ analyzer/__pycache__/
 
 # Python venv
 .venv/
-analyzer/.venv/
-analyzer/__pycache__/
 
 # Rails common
 log/*
