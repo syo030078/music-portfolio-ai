@@ -71,3 +71,6 @@ tmp/*
 .byebug_history
 .DS_Store
 out.mp3
+
+# local analyzer (not tracked)
+analyzer/
