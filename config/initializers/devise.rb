@@ -19,6 +19,7 @@ Devise.setup do |config|
 
   config.warden do |manager|
     manager.intercept_401 = false
+    manager.failure_app = Auth::FailureApp
   end
   # ==> Controller configuration
   # Configure the parent class to the devise controllers.
