@@ -5,7 +5,6 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
-      resource :profile, only: [:show, :update]
     end
   end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
