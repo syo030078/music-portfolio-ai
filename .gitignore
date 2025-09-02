@@ -4,44 +4,28 @@
 # or operating system, you probably want to add a global ignore instead:
 #   git config --global core.excludesfile '~/.gitignore_global'
 
-# Ignore bundler config.
-/.bundle
-
-# Ignore the default SQLite database.
-/db/*.sqlite3
-/db/*.sqlite3-*
-
-# Ignore all logfiles and tempfiles.
-/log/*
-/tmp/*
-!/log/.keep
-!/tmp/.keep
-
-# Ignore pidfiles, but keep the directory.
-/tmp/pids/*
-!/tmp/pids/
-!/tmp/pids/.keep
-
-# Ignore uploaded files in development.
-/storage/*
-!/storage/.keep
-/tmp/storage/*
-!/tmp/storage/
-!/tmp/storage/.keep
-
-# Ignore master key for decrypting credentials and more.
-/config/master.key
-# Ruby / Rails
-log/*
-tmp/*
-*.sqlite3
-*.sqlite3-journal
-/public/assets
-/.bundle
-/vendor/bundle
-/node_modules
-.byebug_history
-
+# Backend (Rails) files
+backend/.bundle
+backend/db/*.sqlite3
+backend/db/*.sqlite3-*
+backend/log/*
+backend/tmp/*
+!backend/log/.keep
+!backend/tmp/.keep
+backend/tmp/pids/*
+!backend/tmp/pids/
+!backend/tmp/pids/.keep
+backend/storage/*
+!backend/storage/.keep
+backend/tmp/storage/*
+!backend/tmp/storage/
+!backend/tmp/storage/.keep
+backend/config/master.key
+# Frontend (Next.js) files
+frontend/.next/
+frontend/node_modules/
+frontend/out/
+frontend/.vercel/
 
 # macOS
 .DS_Store
@@ -57,15 +41,3 @@ tmp/*
 
 # Python venv
 .venv/
-
-# Rails common
-log/*
-tmp/*
-*.sqlite3
-*.sqlite3-journal
-/public/assets
-/.bundle
-/vendor/bundle
-/node_modules
-.byebug_history
-.DS_Store
