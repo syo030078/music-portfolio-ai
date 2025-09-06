@@ -12,8 +12,8 @@ gem 'devise-jwt', '~> 0.12.0'   # JWT発行・検証
 gem 'rack-cors'                 # CORS対応
 gem 'bcrypt', '~> 3.1.7'
 
-# Use sqlite3 as the database for Active Record
-gem "sqlite3", "~> 1.4"
+# Use mysql2 as the database for Active Record
+gem "mysql2", "~> 0.5"
 
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", "~> 5.0"
