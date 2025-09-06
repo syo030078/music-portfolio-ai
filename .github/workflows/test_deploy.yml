@@ -38,9 +38,9 @@ jobs:
           bundle install
 
       - name: Setup database
-        run: RAILS_ENV=test bundle exec rails db:create
-
-      - run: RAILS_ENV=test bundle exec rails assets:precompile
+        run: |
+          RAILS_ENV=test bundle exec rails db:create
+          RAILS_ENV=test bundle exec rails db:migrate
 
       - name: Run RSpec
         run: bundle exec rspec --format documentation
