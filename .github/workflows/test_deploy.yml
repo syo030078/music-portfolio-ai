@@ -7,6 +7,22 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+        ports:
+          - 3306:3306
+
+    env:
+      DB_HOST: 127.0.0.1
+      DB_USERNAME: root
+      DB_PASSWORD: password
 
     steps:
       - uses: actions/checkout@v2
@@ -20,6 +36,9 @@ jobs:
           bundle config --local path vendor/bundle
           bundle config --local without production
           bundle install
+
+      - name: Setup database
+        run: RAILS_ENV=test bundle exec rails db:create
 
       - run: RAILS_ENV=test bundle exec rails assets:precompile
 
