@@ -10,7 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_09_05_060355) do
+ActiveRecord::Schema[7.0].define(version: 2025_09_08_112429) do
+  create_table "commissions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "track_id", null: false
+    t.text "description"
+    t.integer "budget"
+    t.string "status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["track_id"], name: "index_commissions_on_track_id"
+    t.index ["user_id"], name: "index_commissions_on_user_id"
+  end
+
   create_table "jwt_denylists", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "jti"
     t.datetime "exp"
@@ -51,5 +63,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_05_060355) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "commissions", "tracks"
+  add_foreign_key "commissions", "users"
   add_foreign_key "tracks", "users"
 end
