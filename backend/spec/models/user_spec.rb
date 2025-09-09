@@ -45,4 +45,38 @@ RSpec.describe User, type: :model do
       expect(user.bio).to eq('Full stack musician and developer')
     end
   end
+
+  describe 'message associations' do
+    let(:user) { User.create!(email: 'user@example.com', password: 'password123') }
+    let(:track) { Track.create!(title: 'Test Track', user: user, yt_url: 'https://youtube.com/watch?v=test') }
+    let(:commission) { Commission.create!(user: user, track: track, description: 'Test commission', budget: 5000, status: 'pending') }
+
+    it 'has many messages' do
+      message1 = user.messages.create!(commission: commission, content: 'First message')
+      message2 = user.messages.create!(commission: commission, content: 'Second message')
+
+      expect(user.messages.count).to eq(2)
+      expect(user.messages).to include(message1, message2)
+    end
+
+    it 'destroys associated messages when user is deleted' do
+      message = user.messages.create!(commission: commission, content: 'Test message')
+      message_id = message.id
+
+      user.destroy
+
+      expect(Message.find_by(id: message_id)).to be_nil
+    end
+
+    it 'can send messages to different commissions' do
+      commission2 = Commission.create!(user: user, track: track, description: 'Another commission', budget: 3000, status: 'pending')
+      
+      message1 = user.messages.create!(commission: commission, content: 'Message to first commission')
+      message2 = user.messages.create!(commission: commission2, content: 'Message to second commission')
+
+      expect(user.messages.count).to eq(2)
+      expect(message1.commission).to eq(commission)
+      expect(message2.commission).to eq(commission2)
+    end
+  end
 end
