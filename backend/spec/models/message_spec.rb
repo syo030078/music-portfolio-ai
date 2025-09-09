@@ -53,7 +53,7 @@ RSpec.describe Message, type: :model do
 
   it 'requires commission to be present' do
     message = Message.new(
-      sender: user,
+      user: user,
       content: 'Test message'
     )
 
