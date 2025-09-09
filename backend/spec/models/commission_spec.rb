@@ -37,4 +37,37 @@ RSpec.describe Commission, type: :model do
     commission.status = 'done'
     expect(commission.done?).to be true
   end
+
+  it 'has many messages' do
+    commission = Commission.create!(
+      user: user,
+      track: track,
+      description: 'Test commission',
+      budget: 5000,
+      status: 'pending'
+    )
+
+    message1 = commission.messages.create!(user: user, content: 'First message')
+    message2 = commission.messages.create!(user: user, content: 'Second message')
+
+    expect(commission.messages.count).to eq(2)
+    expect(commission.messages).to include(message1, message2)
+  end
+
+  it 'destroys associated messages when commission is deleted' do
+    commission = Commission.create!(
+      user: user,
+      track: track,
+      description: 'Test commission',
+      budget: 5000,
+      status: 'pending'
+    )
+
+    message = commission.messages.create!(user: user, content: 'Test message')
+    message_id = message.id
+
+    commission.destroy
+
+    expect(Message.find_by(id: message_id)).to be_nil
+  end
 end

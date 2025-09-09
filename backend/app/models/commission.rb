@@ -1,10 +1,11 @@
 class Commission < ApplicationRecord
   belongs_to :user
   belongs_to :track
+  has_many :messages, dependent: :destroy
 
   enum status: {
     pending: 'pending',
-    accepted: 'accepted', 
+    accepted: 'accepted',
     done: 'done'
   }
 
