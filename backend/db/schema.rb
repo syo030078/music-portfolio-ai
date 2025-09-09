@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_09_08_112429) do
+ActiveRecord::Schema[7.0].define(version: 2025_09_09_084153) do
   create_table "commissions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "track_id", null: false
@@ -29,6 +29,16 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_08_112429) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["jti"], name: "index_jwt_denylists_on_jti"
+  end
+
+  create_table "messages", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "commission_id", null: false
+    t.bigint "user_id", null: false
+    t.text "content"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["commission_id"], name: "index_messages_on_commission_id"
+    t.index ["user_id"], name: "index_messages_on_user_id"
   end
 
   create_table "tracks", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -65,5 +75,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_09_08_112429) do
 
   add_foreign_key "commissions", "tracks"
   add_foreign_key "commissions", "users"
+  add_foreign_key "messages", "commissions"
+  add_foreign_key "messages", "users"
   add_foreign_key "tracks", "users"
 end

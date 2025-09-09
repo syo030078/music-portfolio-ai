@@ -367,3 +367,272 @@ FOREIGN KEY ("user_id")
   [1m[36mUser Create (0.6ms)[0m  [1m[32mINSERT INTO "users" ("email", "encrypted_password", "reset_password_token", "reset_password_sent_at", "remember_created_at", "created_at", "updated_at", "name", "provider", "bio", "uid") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)[0m  [["email", "complete@example.com"], ["encrypted_password", "[FILTERED]"], ["reset_password_token", "[FILTERED]"], ["reset_password_sent_at", "[FILTERED]"], ["remember_created_at", nil], ["created_at", "2025-09-05 09:12:12.320804"], ["updated_at", "2025-09-05 09:12:12.320804"], ["name", nil], ["provider", "github"], ["bio", "Full stack musician and developer"], ["uid", "67890"]]
   [1m[36mTRANSACTION (0.0ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
   [1m[36mTRANSACTION (0.5ms)[0m  [1m[31mrollback transaction[0m
+  [1m[35m (5.7ms)[0m  [1m[35mDROP DATABASE IF EXISTS `music_portfolio_ai_test`[0m
+  [1m[35m (4.6ms)[0m  [1m[35mCREATE DATABASE `music_portfolio_ai_test` DEFAULT CHARACTER SET `utf8mb4`[0m
+  [1m[35m (2.8ms)[0m  [1m[35mDROP TABLE IF EXISTS `commissions` CASCADE[0m
+  [1m[35m (46.7ms)[0m  [1m[35mCREATE TABLE `commissions` (`id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY, `user_id` bigint NOT NULL, `track_id` bigint NOT NULL, `description` text, `budget` int, `status` varchar(255), `created_at` datetime(6) NOT NULL, `updated_at` datetime(6) NOT NULL, INDEX `index_commissions_on_track_id` (`track_id`), INDEX `index_commissions_on_user_id` (`user_id`)) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci[0m
+  [1m[35m (11.0ms)[0m  [1m[35mDROP TABLE IF EXISTS `jwt_denylists` CASCADE[0m
+  [1m[35m (24.5ms)[0m  [1m[35mCREATE TABLE `jwt_denylists` (`id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY, `jti` varchar(255), `exp` datetime(6), `created_at` datetime(6) NOT NULL, `updated_at` datetime(6) NOT NULL, INDEX `index_jwt_denylists_on_jti` (`jti`)) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci[0m
+  [1m[35m (3.0ms)[0m  [1m[35mDROP TABLE IF EXISTS `tracks` CASCADE[0m
+  [1m[35m (30.4ms)[0m  [1m[35mCREATE TABLE `tracks` (`id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY, `user_id` bigint NOT NULL, `title` varchar(255), `description` text, `yt_url` varchar(255), `bpm` float(24), `key` varchar(255), `genre` varchar(255), `ai_text` text, `created_at` datetime(6) NOT NULL, `updated_at` datetime(6) NOT NULL, INDEX `index_tracks_on_user_id_and_created_at` (`user_id`, `created_at`), UNIQUE INDEX `index_tracks_on_user_id_and_yt_url` (`user_id`, `yt_url`), INDEX `index_tracks_on_user_id` (`user_id`)) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci[0m
+  [1m[35m (3.0ms)[0m  [1m[35mDROP TABLE IF EXISTS `users` CASCADE[0m
+  [1m[35m (30.6ms)[0m  [1m[35mCREATE TABLE `users` (`id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY, `email` varchar(255) DEFAULT '' NOT NULL, `encrypted_password` varchar(255) DEFAULT '' NOT NULL, `reset_password_token` varchar(255), `reset_password_sent_at` datetime(6), `remember_created_at` datetime(6), `created_at` datetime(6) NOT NULL, `updated_at` datetime(6) NOT NULL, `name` varchar(255), `provider` varchar(255), `bio` text, `uid` varchar(255), UNIQUE INDEX `index_users_on_email` (`email`), UNIQUE INDEX `index_users_on_reset_password_token` (`reset_password_token`)) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci[0m
+  [1m[35m (64.6ms)[0m  [1m[35mALTER TABLE `commissions` ADD CONSTRAINT `fk_rails_780195e5db`
+FOREIGN KEY (`track_id`)
+  REFERENCES `tracks` (`id`)
+[0m
+  [1m[35m (80.6ms)[0m  [1m[35mALTER TABLE `commissions` ADD CONSTRAINT `fk_rails_1cc89d251d`
+FOREIGN KEY (`user_id`)
+  REFERENCES `users` (`id`)
+[0m
+  [1m[35m (183.3ms)[0m  [1m[35mALTER TABLE `tracks` ADD CONSTRAINT `fk_rails_a9ae83adcc`
+FOREIGN KEY (`user_id`)
+  REFERENCES `users` (`id`)
+[0m
+  [1m[35m (19.5ms)[0m  [1m[35mCREATE TABLE `schema_migrations` (`version` varchar(255) NOT NULL PRIMARY KEY)[0m
+  [1m[36mActiveRecord::SchemaMigration Pluck (2.5ms)[0m  [1m[34mSELECT `schema_migrations`.`version` FROM `schema_migrations` ORDER BY `schema_migrations`.`version` ASC[0m
+  [1m[35m (4.4ms)[0m  [1m[32mINSERT INTO `schema_migrations` (version) VALUES (20250908112429)[0m
+  [1m[35m (3.2ms)[0m  [1m[32mINSERT INTO `schema_migrations` (version) VALUES
+(20250820020719),
+(20250820022943),
+(20250820030443),
+(20250821071948),
+(20250823022457),
+(20250905052457),
+(20250905060205),
+(20250905060355);
+
+[0m
+  [1m[35m (16.0ms)[0m  [1m[35mCREATE TABLE `ar_internal_metadata` (`key` varchar(255) NOT NULL PRIMARY KEY, `value` varchar(255), `created_at` datetime(6) NOT NULL, `updated_at` datetime(6) NOT NULL)[0m
+  [1m[36mActiveRecord::InternalMetadata Load (1.7ms)[0m  [1m[34mSELECT `ar_internal_metadata`.* FROM `ar_internal_metadata` WHERE `ar_internal_metadata`.`key` = 'environment' LIMIT 1[0m
+  [1m[36mTRANSACTION (1.5ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mActiveRecord::InternalMetadata Create (1.4ms)[0m  [1m[32mINSERT INTO `ar_internal_metadata` (`key`, `value`, `created_at`, `updated_at`) VALUES ('environment', 'test', '2025-09-09 08:48:29.734482', '2025-09-09 08:48:29.734482')[0m
+  [1m[36mTRANSACTION (3.6ms)[0m  [1m[35mCOMMIT[0m
+  [1m[36mActiveRecord::InternalMetadata Load (1.2ms)[0m  [1m[34mSELECT `ar_internal_metadata`.* FROM `ar_internal_metadata` WHERE `ar_internal_metadata`.`key` = 'environment' LIMIT 1[0m
+  [1m[36mActiveRecord::InternalMetadata Load (1.2ms)[0m  [1m[34mSELECT `ar_internal_metadata`.* FROM `ar_internal_metadata` WHERE `ar_internal_metadata`.`key` = 'schema_sha1' LIMIT 1[0m
+  [1m[36mTRANSACTION (1.1ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mActiveRecord::InternalMetadata Create (1.8ms)[0m  [1m[32mINSERT INTO `ar_internal_metadata` (`key`, `value`, `created_at`, `updated_at`) VALUES ('schema_sha1', 'cf5513995560694841a7ddbdd7cd390a8451bcb9', '2025-09-09 08:48:29.748811', '2025-09-09 08:48:29.748811')[0m
+  [1m[36mTRANSACTION (3.5ms)[0m  [1m[35mCOMMIT[0m
+  [1m[36mActiveRecord::SchemaMigration Pluck (1.5ms)[0m  [1m[34mSELECT `schema_migrations`.`version` FROM `schema_migrations` ORDER BY `schema_migrations`.`version` ASC[0m
+  [1m[36mActiveRecord::SchemaMigration Pluck (2.4ms)[0m  [1m[34mSELECT `schema_migrations`.`version` FROM `schema_migrations` ORDER BY `schema_migrations`.`version` ASC[0m
+  [1m[35m (1.0ms)[0m  [1m[34mSELECT GET_LOCK('1210461228077814510', 0)[0m
+  [1m[36mActiveRecord::SchemaMigration Pluck (1.8ms)[0m  [1m[34mSELECT `schema_migrations`.`version` FROM `schema_migrations` ORDER BY `schema_migrations`.`version` ASC[0m
+Migrating to CreateMessages (20250909084153)
+  [1m[35m (28.2ms)[0m  [1m[35mCREATE TABLE `messages` (`id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY, `commission_id` bigint NOT NULL, `user_id` bigint NOT NULL, `content` text, `created_at` datetime(6) NOT NULL, `updated_at` datetime(6) NOT NULL, INDEX `index_messages_on_commission_id` (`commission_id`), INDEX `index_messages_on_user_id` (`user_id`), CONSTRAINT `fk_rails_aeae1708ed`
+FOREIGN KEY (`commission_id`)
+  REFERENCES `commissions` (`id`)
+, CONSTRAINT `fk_rails_273a25a7a6`
+FOREIGN KEY (`user_id`)
+  REFERENCES `users` (`id`)
+)[0m
+  [1m[36mTRANSACTION (1.2ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mActiveRecord::SchemaMigration Create (1.4ms)[0m  [1m[32mINSERT INTO `schema_migrations` (`version`) VALUES ('20250909084153')[0m
+  [1m[36mTRANSACTION (3.0ms)[0m  [1m[35mCOMMIT[0m
+  [1m[36mActiveRecord::InternalMetadata Load (2.4ms)[0m  [1m[34mSELECT `ar_internal_metadata`.* FROM `ar_internal_metadata` WHERE `ar_internal_metadata`.`key` = 'environment' LIMIT 1[0m
+  [1m[35m (1.4ms)[0m  [1m[34mSELECT RELEASE_LOCK('1210461228077814510')[0m
+  [1m[36mActiveRecord::SchemaMigration Pluck (2.0ms)[0m  [1m[34mSELECT `schema_migrations`.`version` FROM `schema_migrations` ORDER BY `schema_migrations`.`version` ASC[0m
+  [1m[36mActiveRecord::InternalMetadata Pluck (1.8ms)[0m  [1m[34mSELECT `ar_internal_metadata`.`value` FROM `ar_internal_metadata` WHERE `ar_internal_metadata`.`key` = 'schema_sha1' LIMIT 1[0m
+  [1m[36mActiveRecord::SchemaMigration Pluck (1.4ms)[0m  [1m[34mSELECT `schema_migrations`.`version` FROM `schema_migrations` ORDER BY `schema_migrations`.`version` ASC[0m
+  [1m[36mActiveRecord::InternalMetadata Pluck (3.0ms)[0m  [1m[34mSELECT `ar_internal_metadata`.`value` FROM `ar_internal_metadata` WHERE `ar_internal_metadata`.`key` = 'environment' LIMIT 1[0m
+  [1m[36mActiveRecord::SchemaMigration Pluck (1.4ms)[0m  [1m[34mSELECT `schema_migrations`.`version` FROM `schema_migrations` ORDER BY `schema_migrations`.`version` ASC[0m
+  [1m[36mActiveRecord::InternalMetadata Pluck (1.6ms)[0m  [1m[34mSELECT `ar_internal_metadata`.`value` FROM `ar_internal_metadata` WHERE `ar_internal_metadata`.`key` = 'environment' LIMIT 1[0m
+  [1m[36mActiveRecord::SchemaMigration Pluck (1.6ms)[0m  [1m[34mSELECT `schema_migrations`.`version` FROM `schema_migrations` ORDER BY `schema_migrations`.`version` ASC[0m
+  [1m[36mActiveRecord::InternalMetadata Pluck (3.1ms)[0m  [1m[34mSELECT `ar_internal_metadata`.`value` FROM `ar_internal_metadata` WHERE `ar_internal_metadata`.`key` = 'environment' LIMIT 1[0m
+  [1m[35m (70.6ms)[0m  [1m[35mDROP DATABASE IF EXISTS `music_portfolio_ai_test`[0m
+  [1m[35m (5.4ms)[0m  [1m[35mCREATE DATABASE `music_portfolio_ai_test` DEFAULT CHARACTER SET `utf8mb4`[0m
+  [1m[35m (3.0ms)[0m  [1m[35mDROP TABLE IF EXISTS `commissions` CASCADE[0m
+  [1m[35m (21.4ms)[0m  [1m[35mCREATE TABLE `commissions` (`id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY, `user_id` bigint NOT NULL, `track_id` bigint NOT NULL, `description` text, `budget` int, `status` varchar(255), `created_at` datetime(6) NOT NULL, `updated_at` datetime(6) NOT NULL, INDEX `index_commissions_on_track_id` (`track_id`), INDEX `index_commissions_on_user_id` (`user_id`)) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci[0m
+  [1m[35m (3.2ms)[0m  [1m[35mDROP TABLE IF EXISTS `jwt_denylists` CASCADE[0m
+  [1m[35m (19.1ms)[0m  [1m[35mCREATE TABLE `jwt_denylists` (`id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY, `jti` varchar(255), `exp` datetime(6), `created_at` datetime(6) NOT NULL, `updated_at` datetime(6) NOT NULL, INDEX `index_jwt_denylists_on_jti` (`jti`)) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci[0m
+  [1m[35m (3.4ms)[0m  [1m[35mDROP TABLE IF EXISTS `messages` CASCADE[0m
+  [1m[35m (23.7ms)[0m  [1m[35mCREATE TABLE `messages` (`id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY, `commission_id` bigint NOT NULL, `user_id` bigint NOT NULL, `content` text, `created_at` datetime(6) NOT NULL, `updated_at` datetime(6) NOT NULL, INDEX `index_messages_on_commission_id` (`commission_id`), INDEX `index_messages_on_user_id` (`user_id`)) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci[0m
+  [1m[35m (3.2ms)[0m  [1m[35mDROP TABLE IF EXISTS `tracks` CASCADE[0m
+  [1m[35m (28.0ms)[0m  [1m[35mCREATE TABLE `tracks` (`id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY, `user_id` bigint NOT NULL, `title` varchar(255), `description` text, `yt_url` varchar(255), `bpm` float(24), `key` varchar(255), `genre` varchar(255), `ai_text` text, `created_at` datetime(6) NOT NULL, `updated_at` datetime(6) NOT NULL, INDEX `index_tracks_on_user_id_and_created_at` (`user_id`, `created_at`), UNIQUE INDEX `index_tracks_on_user_id_and_yt_url` (`user_id`, `yt_url`), INDEX `index_tracks_on_user_id` (`user_id`)) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci[0m
+  [1m[35m (2.6ms)[0m  [1m[35mDROP TABLE IF EXISTS `users` CASCADE[0m
+  [1m[35m (23.1ms)[0m  [1m[35mCREATE TABLE `users` (`id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY, `email` varchar(255) DEFAULT '' NOT NULL, `encrypted_password` varchar(255) DEFAULT '' NOT NULL, `reset_password_token` varchar(255), `reset_password_sent_at` datetime(6), `remember_created_at` datetime(6), `created_at` datetime(6) NOT NULL, `updated_at` datetime(6) NOT NULL, `name` varchar(255), `provider` varchar(255), `bio` text, `uid` varchar(255), UNIQUE INDEX `index_users_on_email` (`email`), UNIQUE INDEX `index_users_on_reset_password_token` (`reset_password_token`)) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci[0m
+  [1m[35m (53.7ms)[0m  [1m[35mALTER TABLE `commissions` ADD CONSTRAINT `fk_rails_780195e5db`
+FOREIGN KEY (`track_id`)
+  REFERENCES `tracks` (`id`)
+[0m
+  [1m[35m (56.8ms)[0m  [1m[35mALTER TABLE `commissions` ADD CONSTRAINT `fk_rails_1cc89d251d`
+FOREIGN KEY (`user_id`)
+  REFERENCES `users` (`id`)
+[0m
+  [1m[35m (52.7ms)[0m  [1m[35mALTER TABLE `messages` ADD CONSTRAINT `fk_rails_aeae1708ed`
+FOREIGN KEY (`commission_id`)
+  REFERENCES `commissions` (`id`)
+[0m
+  [1m[35m (59.2ms)[0m  [1m[35mALTER TABLE `messages` ADD CONSTRAINT `fk_rails_273a25a7a6`
+FOREIGN KEY (`user_id`)
+  REFERENCES `users` (`id`)
+[0m
+  [1m[35m (53.2ms)[0m  [1m[35mALTER TABLE `tracks` ADD CONSTRAINT `fk_rails_a9ae83adcc`
+FOREIGN KEY (`user_id`)
+  REFERENCES `users` (`id`)
+[0m
+  [1m[35m (18.7ms)[0m  [1m[35mCREATE TABLE `schema_migrations` (`version` varchar(255) NOT NULL PRIMARY KEY)[0m
+  [1m[36mActiveRecord::SchemaMigration Pluck (3.0ms)[0m  [1m[34mSELECT `schema_migrations`.`version` FROM `schema_migrations` ORDER BY `schema_migrations`.`version` ASC[0m
+  [1m[35m (3.7ms)[0m  [1m[32mINSERT INTO `schema_migrations` (version) VALUES (20250909084153)[0m
+  [1m[35m (3.6ms)[0m  [1m[32mINSERT INTO `schema_migrations` (version) VALUES
+(20250820020719),
+(20250820022943),
+(20250820030443),
+(20250821071948),
+(20250823022457),
+(20250905052457),
+(20250905060205),
+(20250905060355),
+(20250908112429);
+
+[0m
+  [1m[35m (16.0ms)[0m  [1m[35mCREATE TABLE `ar_internal_metadata` (`key` varchar(255) NOT NULL PRIMARY KEY, `value` varchar(255), `created_at` datetime(6) NOT NULL, `updated_at` datetime(6) NOT NULL)[0m
+  [1m[36mActiveRecord::InternalMetadata Load (2.3ms)[0m  [1m[34mSELECT `ar_internal_metadata`.* FROM `ar_internal_metadata` WHERE `ar_internal_metadata`.`key` = 'environment' LIMIT 1[0m
+  [1m[36mTRANSACTION (1.7ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mActiveRecord::InternalMetadata Create (1.5ms)[0m  [1m[32mINSERT INTO `ar_internal_metadata` (`key`, `value`, `created_at`, `updated_at`) VALUES ('environment', 'test', '2025-09-09 08:49:18.241871', '2025-09-09 08:49:18.241871')[0m
+  [1m[36mTRANSACTION (3.6ms)[0m  [1m[35mCOMMIT[0m
+  [1m[36mActiveRecord::InternalMetadata Load (1.6ms)[0m  [1m[34mSELECT `ar_internal_metadata`.* FROM `ar_internal_metadata` WHERE `ar_internal_metadata`.`key` = 'environment' LIMIT 1[0m
+  [1m[36mActiveRecord::InternalMetadata Load (1.8ms)[0m  [1m[34mSELECT `ar_internal_metadata`.* FROM `ar_internal_metadata` WHERE `ar_internal_metadata`.`key` = 'schema_sha1' LIMIT 1[0m
+  [1m[36mTRANSACTION (1.6ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mActiveRecord::InternalMetadata Create (2.4ms)[0m  [1m[32mINSERT INTO `ar_internal_metadata` (`key`, `value`, `created_at`, `updated_at`) VALUES ('schema_sha1', '11d2fb0f3845cc57fd1db0052468bd44f0b0ec64', '2025-09-09 08:49:18.258264', '2025-09-09 08:49:18.258264')[0m
+  [1m[36mTRANSACTION (5.3ms)[0m  [1m[35mCOMMIT[0m
+  [1m[36mActiveRecord::SchemaMigration Pluck (1.4ms)[0m  [1m[34mSELECT `schema_migrations`.`version` FROM `schema_migrations` ORDER BY `schema_migrations`.`version` ASC[0m
+  [1m[36mTRANSACTION (1.5ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mTRANSACTION (1.8ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (1.5ms)[0m  [1m[34mSELECT 1 AS one FROM `users` WHERE `users`.`email` = BINARY 'user@example.com' LIMIT 1[0m
+  [1m[36mUser Create (2.1ms)[0m  [1m[32mINSERT INTO `users` (`email`, `encrypted_password`, `reset_password_token`, `reset_password_sent_at`, `remember_created_at`, `created_at`, `updated_at`, `name`, `provider`, `bio`, `uid`) VALUES ('user@example.com', '$2a$04$1ca94M8Gv/tK25CQJamTTOsVnrn1ZL0CdApA5GlCvmjUn1WdBk84W', NULL, NULL, NULL, '2025-09-09 08:49:18.432005', '2025-09-09 08:49:18.432005', NULL, NULL, NULL, NULL)[0m
+  [1m[36mTRANSACTION (1.2ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (2.1ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mTrack Create (1.9ms)[0m  [1m[32mINSERT INTO `tracks` (`user_id`, `title`, `description`, `yt_url`, `bpm`, `key`, `genre`, `ai_text`, `created_at`, `updated_at`) VALUES (1, 'Test Track', NULL, 'https://youtube.com/watch?v=test', NULL, NULL, NULL, NULL, '2025-09-09 08:49:18.460509', '2025-09-09 08:49:18.460509')[0m
+  [1m[36mTRANSACTION (1.3ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (1.5ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mCommission Create (3.1ms)[0m  [1m[32mINSERT INTO `commissions` (`user_id`, `track_id`, `description`, `budget`, `status`, `created_at`, `updated_at`) VALUES (1, 1, 'Test commission', 5000, 'pending', '2025-09-09 08:49:18.481490', '2025-09-09 08:49:18.481490')[0m
+  [1m[36mTRANSACTION (1.6ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (1.7ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mMessage Create (1.9ms)[0m  [1m[32mINSERT INTO `messages` (`commission_id`, `user_id`, `content`, `created_at`, `updated_at`) VALUES (1, 1, 'This is a test message', '2025-09-09 08:49:18.501248', '2025-09-09 08:49:18.501248')[0m
+  [1m[36mTRANSACTION (1.6ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (3.5ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (1.4ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mTRANSACTION (1.4ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (1.7ms)[0m  [1m[34mSELECT 1 AS one FROM `users` WHERE `users`.`email` = BINARY 'user@example.com' LIMIT 1[0m
+  [1m[36mUser Create (2.5ms)[0m  [1m[32mINSERT INTO `users` (`email`, `encrypted_password`, `reset_password_token`, `reset_password_sent_at`, `remember_created_at`, `created_at`, `updated_at`, `name`, `provider`, `bio`, `uid`) VALUES ('user@example.com', '$2a$04$.y6rE2WQlj.jAEDHHgCEPeg2zvs3t6se./84sRP118qxrwcqNlwgi', NULL, NULL, NULL, '2025-09-09 08:49:18.548624', '2025-09-09 08:49:18.548624', NULL, NULL, NULL, NULL)[0m
+  [1m[36mTRANSACTION (1.4ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (1.4ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mTrack Create (1.8ms)[0m  [1m[32mINSERT INTO `tracks` (`user_id`, `title`, `description`, `yt_url`, `bpm`, `key`, `genre`, `ai_text`, `created_at`, `updated_at`) VALUES (2, 'Test Track', NULL, 'https://youtube.com/watch?v=test', NULL, NULL, NULL, NULL, '2025-09-09 08:49:18.553879', '2025-09-09 08:49:18.553879')[0m
+  [1m[36mTRANSACTION (1.2ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (1.4ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mCommission Create (1.6ms)[0m  [1m[32mINSERT INTO `commissions` (`user_id`, `track_id`, `description`, `budget`, `status`, `created_at`, `updated_at`) VALUES (2, 2, 'Test commission', 5000, 'pending', '2025-09-09 08:49:18.559669', '2025-09-09 08:49:18.559669')[0m
+  [1m[36mTRANSACTION (1.4ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (2.4ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (1.5ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mTRANSACTION (1.4ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (1.7ms)[0m  [1m[34mSELECT 1 AS one FROM `users` WHERE `users`.`email` = BINARY 'user@example.com' LIMIT 1[0m
+  [1m[36mUser Create (1.4ms)[0m  [1m[32mINSERT INTO `users` (`email`, `encrypted_password`, `reset_password_token`, `reset_password_sent_at`, `remember_created_at`, `created_at`, `updated_at`, `name`, `provider`, `bio`, `uid`) VALUES ('user@example.com', '$2a$04$4IAWvJo9wnf37o7ZffS8beXwJjC0glt4Pbrht3337mZONfws/Upsa', NULL, NULL, NULL, '2025-09-09 08:49:18.590197', '2025-09-09 08:49:18.590197', NULL, NULL, NULL, NULL)[0m
+  [1m[36mTRANSACTION (2.2ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (1.6ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mTrack Create (1.8ms)[0m  [1m[32mINSERT INTO `tracks` (`user_id`, `title`, `description`, `yt_url`, `bpm`, `key`, `genre`, `ai_text`, `created_at`, `updated_at`) VALUES (3, 'Test Track', NULL, 'https://youtube.com/watch?v=test', NULL, NULL, NULL, NULL, '2025-09-09 08:49:18.595470', '2025-09-09 08:49:18.595470')[0m
+  [1m[36mTRANSACTION (1.9ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (2.0ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mCommission Create (1.9ms)[0m  [1m[32mINSERT INTO `commissions` (`user_id`, `track_id`, `description`, `budget`, `status`, `created_at`, `updated_at`) VALUES (3, 3, 'Test commission', 5000, 'pending', '2025-09-09 08:49:18.602430', '2025-09-09 08:49:18.602430')[0m
+  [1m[36mTRANSACTION (2.0ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (3.4ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (1.8ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mTRANSACTION (1.7ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (1.5ms)[0m  [1m[34mSELECT 1 AS one FROM `users` WHERE `users`.`email` = BINARY 'user@example.com' LIMIT 1[0m
+  [1m[36mUser Create (1.6ms)[0m  [1m[32mINSERT INTO `users` (`email`, `encrypted_password`, `reset_password_token`, `reset_password_sent_at`, `remember_created_at`, `created_at`, `updated_at`, `name`, `provider`, `bio`, `uid`) VALUES ('user@example.com', '$2a$04$mMT/80OBYAR2lJ7/rR21qua/MGnwrC1cEOOMEQ/gYwvTW1MwYyRKO', NULL, NULL, NULL, '2025-09-09 08:49:18.623500', '2025-09-09 08:49:18.623500', NULL, NULL, NULL, NULL)[0m
+  [1m[36mTRANSACTION (1.3ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (1.4ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mTrack Create (1.4ms)[0m  [1m[32mINSERT INTO `tracks` (`user_id`, `title`, `description`, `yt_url`, `bpm`, `key`, `genre`, `ai_text`, `created_at`, `updated_at`) VALUES (4, 'Test Track', NULL, 'https://youtube.com/watch?v=test', NULL, NULL, NULL, NULL, '2025-09-09 08:49:18.627442', '2025-09-09 08:49:18.627442')[0m
+  [1m[36mTRANSACTION (1.1ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (1.2ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mCommission Create (1.8ms)[0m  [1m[32mINSERT INTO `commissions` (`user_id`, `track_id`, `description`, `budget`, `status`, `created_at`, `updated_at`) VALUES (4, 4, 'Test commission', 5000, 'pending', '2025-09-09 08:49:18.632300', '2025-09-09 08:49:18.632300')[0m
+  [1m[36mTRANSACTION (1.0ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (2.0ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (1.1ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mTRANSACTION (1.3ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (1.5ms)[0m  [1m[34mSELECT 1 AS one FROM `users` WHERE `users`.`email` = BINARY 'user@example.com' LIMIT 1[0m
+  [1m[36mUser Create (1.7ms)[0m  [1m[32mINSERT INTO `users` (`email`, `encrypted_password`, `reset_password_token`, `reset_password_sent_at`, `remember_created_at`, `created_at`, `updated_at`, `name`, `provider`, `bio`, `uid`) VALUES ('user@example.com', '$2a$04$mWj2Vm/ogEmChImUWef.L.ziH4sj4ZiQ6YWpIyRibnYoLooZZjQMq', NULL, NULL, NULL, '2025-09-09 08:49:18.647137', '2025-09-09 08:49:18.647137', NULL, NULL, NULL, NULL)[0m
+  [1m[36mTRANSACTION (2.2ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (3.1ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (1.6ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mTRANSACTION (1.4ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (1.7ms)[0m  [1m[34mSELECT 1 AS one FROM `users` WHERE `users`.`email` = BINARY 'user@example.com' LIMIT 1[0m
+  [1m[36mUser Create (1.6ms)[0m  [1m[32mINSERT INTO `users` (`email`, `encrypted_password`, `reset_password_token`, `reset_password_sent_at`, `remember_created_at`, `created_at`, `updated_at`, `name`, `provider`, `bio`, `uid`) VALUES ('user@example.com', '$2a$04$EJyOsy.kAqBDyFY6UfVuS.xK4JAUn9EYE53Uo3QFyTtdsY6/LOwai', NULL, NULL, NULL, '2025-09-09 08:49:18.665198', '2025-09-09 08:49:18.665198', NULL, NULL, NULL, NULL)[0m
+  [1m[36mTRANSACTION (2.0ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (1.3ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mTrack Create (1.4ms)[0m  [1m[32mINSERT INTO `tracks` (`user_id`, `title`, `description`, `yt_url`, `bpm`, `key`, `genre`, `ai_text`, `created_at`, `updated_at`) VALUES (6, 'Test Track', NULL, 'https://youtube.com/watch?v=test', NULL, NULL, NULL, NULL, '2025-09-09 08:49:18.669943', '2025-09-09 08:49:18.669943')[0m
+  [1m[36mTRANSACTION (1.2ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (1.5ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mCommission Create (2.3ms)[0m  [1m[32mINSERT INTO `commissions` (`user_id`, `track_id`, `description`, `budget`, `status`, `created_at`, `updated_at`) VALUES (6, 5, 'Test commission', 5000, 'pending', '2025-09-09 08:49:18.674899', '2025-09-09 08:49:18.674899')[0m
+  [1m[36mTRANSACTION (1.8ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (2.5ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mActiveRecord::InternalMetadata Pluck (1.5ms)[0m  [1m[34mSELECT `ar_internal_metadata`.`value` FROM `ar_internal_metadata` WHERE `ar_internal_metadata`.`key` = 'schema_sha1' LIMIT 1[0m
+  [1m[36mActiveRecord::SchemaMigration Pluck (1.3ms)[0m  [1m[34mSELECT `schema_migrations`.`version` FROM `schema_migrations` ORDER BY `schema_migrations`.`version` ASC[0m
+  [1m[36mTRANSACTION (2.4ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mTRANSACTION (2.9ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (1.6ms)[0m  [1m[34mSELECT 1 AS one FROM `users` WHERE `users`.`email` = BINARY 'user@example.com' LIMIT 1[0m
+  [1m[36mUser Create (1.8ms)[0m  [1m[32mINSERT INTO `users` (`email`, `encrypted_password`, `reset_password_token`, `reset_password_sent_at`, `remember_created_at`, `created_at`, `updated_at`, `name`, `provider`, `bio`, `uid`) VALUES ('user@example.com', '$2a$04$hIUywa23VcBr8fOiIpRLyuUHx32irbtfLskdKM/yLzHoC0UOvoX9O', NULL, NULL, NULL, '2025-09-09 08:49:32.112840', '2025-09-09 08:49:32.112840', NULL, NULL, NULL, NULL)[0m
+  [1m[36mTRANSACTION (1.4ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (2.3ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mTrack Create (1.4ms)[0m  [1m[32mINSERT INTO `tracks` (`user_id`, `title`, `description`, `yt_url`, `bpm`, `key`, `genre`, `ai_text`, `created_at`, `updated_at`) VALUES (7, 'Test Track', NULL, 'https://youtube.com/watch?v=test', NULL, NULL, NULL, NULL, '2025-09-09 08:49:32.138129', '2025-09-09 08:49:32.138129')[0m
+  [1m[36mTRANSACTION (1.0ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (1.6ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mCommission Create (1.8ms)[0m  [1m[32mINSERT INTO `commissions` (`user_id`, `track_id`, `description`, `budget`, `status`, `created_at`, `updated_at`) VALUES (7, 6, 'Test commission', 5000, 'pending', '2025-09-09 08:49:32.158308', '2025-09-09 08:49:32.158308')[0m
+  [1m[36mTRANSACTION (2.2ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (1.3ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mMessage Create (1.4ms)[0m  [1m[32mINSERT INTO `messages` (`commission_id`, `user_id`, `content`, `created_at`, `updated_at`) VALUES (6, 7, 'This is a test message', '2025-09-09 08:49:32.180939', '2025-09-09 08:49:32.180939')[0m
+  [1m[36mTRANSACTION (1.4ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (2.6ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (0.9ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mTRANSACTION (1.5ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (1.3ms)[0m  [1m[34mSELECT 1 AS one FROM `users` WHERE `users`.`email` = BINARY 'user@example.com' LIMIT 1[0m
+  [1m[36mUser Create (1.6ms)[0m  [1m[32mINSERT INTO `users` (`email`, `encrypted_password`, `reset_password_token`, `reset_password_sent_at`, `remember_created_at`, `created_at`, `updated_at`, `name`, `provider`, `bio`, `uid`) VALUES ('user@example.com', '$2a$04$YrE7gopPzZhHA0TokpLvt.Vv5NqAmPv6i1Fadc9veuBqUgNyd7b9G', NULL, NULL, NULL, '2025-09-09 08:49:32.223036', '2025-09-09 08:49:32.223036', NULL, NULL, NULL, NULL)[0m
+  [1m[36mTRANSACTION (1.0ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (1.2ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mTrack Create (1.5ms)[0m  [1m[32mINSERT INTO `tracks` (`user_id`, `title`, `description`, `yt_url`, `bpm`, `key`, `genre`, `ai_text`, `created_at`, `updated_at`) VALUES (8, 'Test Track', NULL, 'https://youtube.com/watch?v=test', NULL, NULL, NULL, NULL, '2025-09-09 08:49:32.227261', '2025-09-09 08:49:32.227261')[0m
+  [1m[36mTRANSACTION (1.6ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (1.2ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mCommission Create (1.7ms)[0m  [1m[32mINSERT INTO `commissions` (`user_id`, `track_id`, `description`, `budget`, `status`, `created_at`, `updated_at`) VALUES (8, 7, 'Test commission', 5000, 'pending', '2025-09-09 08:49:32.232885', '2025-09-09 08:49:32.232885')[0m
+  [1m[36mTRANSACTION (1.7ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (2.7ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (2.0ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mTRANSACTION (1.5ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (2.2ms)[0m  [1m[34mSELECT 1 AS one FROM `users` WHERE `users`.`email` = BINARY 'user@example.com' LIMIT 1[0m
+  [1m[36mUser Create (1.8ms)[0m  [1m[32mINSERT INTO `users` (`email`, `encrypted_password`, `reset_password_token`, `reset_password_sent_at`, `remember_created_at`, `created_at`, `updated_at`, `name`, `provider`, `bio`, `uid`) VALUES ('user@example.com', '$2a$04$ScLIBBngXOF9hqGNLSLGdO7Mb5dN1REMVMG1Zv3paq.FtSAQROAWe', NULL, NULL, NULL, '2025-09-09 08:49:32.258799', '2025-09-09 08:49:32.258799', NULL, NULL, NULL, NULL)[0m
+  [1m[36mTRANSACTION (1.5ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (1.3ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mTrack Create (2.0ms)[0m  [1m[32mINSERT INTO `tracks` (`user_id`, `title`, `description`, `yt_url`, `bpm`, `key`, `genre`, `ai_text`, `created_at`, `updated_at`) VALUES (9, 'Test Track', NULL, 'https://youtube.com/watch?v=test', NULL, NULL, NULL, NULL, '2025-09-09 08:49:32.264005', '2025-09-09 08:49:32.264005')[0m
+  [1m[36mTRANSACTION (1.1ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (1.2ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mCommission Create (1.8ms)[0m  [1m[32mINSERT INTO `commissions` (`user_id`, `track_id`, `description`, `budget`, `status`, `created_at`, `updated_at`) VALUES (9, 8, 'Test commission', 5000, 'pending', '2025-09-09 08:49:32.269772', '2025-09-09 08:49:32.269772')[0m
+  [1m[36mTRANSACTION (2.3ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (2.7ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (1.3ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mTRANSACTION (1.3ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (1.8ms)[0m  [1m[34mSELECT 1 AS one FROM `users` WHERE `users`.`email` = BINARY 'user@example.com' LIMIT 1[0m
+  [1m[36mUser Create (1.4ms)[0m  [1m[32mINSERT INTO `users` (`email`, `encrypted_password`, `reset_password_token`, `reset_password_sent_at`, `remember_created_at`, `created_at`, `updated_at`, `name`, `provider`, `bio`, `uid`) VALUES ('user@example.com', '$2a$04$f0QAkeTQa5FhfnwW2xNM5.4aS/MTIL.kkS.rn0WptQ7fn8D1xWpSa', NULL, NULL, NULL, '2025-09-09 08:49:32.288508', '2025-09-09 08:49:32.288508', NULL, NULL, NULL, NULL)[0m
+  [1m[36mTRANSACTION (2.3ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (1.1ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mTrack Create (1.7ms)[0m  [1m[32mINSERT INTO `tracks` (`user_id`, `title`, `description`, `yt_url`, `bpm`, `key`, `genre`, `ai_text`, `created_at`, `updated_at`) VALUES (10, 'Test Track', NULL, 'https://youtube.com/watch?v=test', NULL, NULL, NULL, NULL, '2025-09-09 08:49:32.293391', '2025-09-09 08:49:32.293391')[0m
+  [1m[36mTRANSACTION (1.2ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (1.5ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mCommission Create (1.3ms)[0m  [1m[32mINSERT INTO `commissions` (`user_id`, `track_id`, `description`, `budget`, `status`, `created_at`, `updated_at`) VALUES (10, 9, 'Test commission', 5000, 'pending', '2025-09-09 08:49:32.298696', '2025-09-09 08:49:32.298696')[0m
+  [1m[36mTRANSACTION (1.5ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (3.2ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (1.4ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mTRANSACTION (2.2ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (1.4ms)[0m  [1m[34mSELECT 1 AS one FROM `users` WHERE `users`.`email` = BINARY 'user@example.com' LIMIT 1[0m
+  [1m[36mUser Create (1.4ms)[0m  [1m[32mINSERT INTO `users` (`email`, `encrypted_password`, `reset_password_token`, `reset_password_sent_at`, `remember_created_at`, `created_at`, `updated_at`, `name`, `provider`, `bio`, `uid`) VALUES ('user@example.com', '$2a$04$DZmqou5YqzUhkRqaJ//Z6eyKI.papA1.SKhqekQcYpdT8X51xCFM.', NULL, NULL, NULL, '2025-09-09 08:49:32.317445', '2025-09-09 08:49:32.317445', NULL, NULL, NULL, NULL)[0m
+  [1m[36mTRANSACTION (2.0ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (3.4ms)[0m  [1m[31mROLLBACK[0m
+  [1m[36mTRANSACTION (1.1ms)[0m  [1m[35mBEGIN[0m
+  [1m[36mTRANSACTION (1.1ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mUser Exists? (1.2ms)[0m  [1m[34mSELECT 1 AS one FROM `users` WHERE `users`.`email` = BINARY 'user@example.com' LIMIT 1[0m
+  [1m[36mUser Create (1.4ms)[0m  [1m[32mINSERT INTO `users` (`email`, `encrypted_password`, `reset_password_token`, `reset_password_sent_at`, `remember_created_at`, `created_at`, `updated_at`, `name`, `provider`, `bio`, `uid`) VALUES ('user@example.com', '$2a$04$tdVSIvPX2RJM4urHVaAAtOBIYiuodsoy5QMdHCoi6Usoa.u9iPYpW', NULL, NULL, NULL, '2025-09-09 08:49:32.334097', '2025-09-09 08:49:32.334097', NULL, NULL, NULL, NULL)[0m
+  [1m[36mTRANSACTION (2.0ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (2.0ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mTrack Create (2.0ms)[0m  [1m[32mINSERT INTO `tracks` (`user_id`, `title`, `description`, `yt_url`, `bpm`, `key`, `genre`, `ai_text`, `created_at`, `updated_at`) VALUES (12, 'Test Track', NULL, 'https://youtube.com/watch?v=test', NULL, NULL, NULL, NULL, '2025-09-09 08:49:32.338954', '2025-09-09 08:49:32.338954')[0m
+  [1m[36mTRANSACTION (1.4ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (3.6ms)[0m  [1m[35mSAVEPOINT active_record_1[0m
+  [1m[36mCommission Create (4.3ms)[0m  [1m[32mINSERT INTO `commissions` (`user_id`, `track_id`, `description`, `budget`, `status`, `created_at`, `updated_at`) VALUES (12, 10, 'Test commission', 5000, 'pending', '2025-09-09 08:49:32.346831', '2025-09-09 08:49:32.346831')[0m
+  [1m[36mTRANSACTION (2.2ms)[0m  [1m[35mRELEASE SAVEPOINT active_record_1[0m
+  [1m[36mTRANSACTION (5.7ms)[0m  [1m[31mROLLBACK[0m
