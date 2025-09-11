@@ -10,6 +10,6 @@ class Api::V1::TracksController < ApplicationController
     file_path = audio_file ? audio_file.original_filename : "test.wav"
     
     result = AnalyzerRunner.call(file_path)
-    render json: { message: "load_wav created", result: result }
+    render json: { message: "load_wav created", data: result }
   end
 end
