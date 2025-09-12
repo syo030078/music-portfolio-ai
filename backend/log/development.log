@@ -326,3 +326,57 @@ Processing by Rails::WelcomeController#index as */*
 Completed 200 OK in 45ms (Views: 22.4ms | ActiveRecord: 0.0ms | Allocations: 5164)
 
 
+Started GET "/api/v1/tracks" for ::1 at 2025-09-11 19:41:49 +0900
+  [1m[36mActiveRecord::SchemaMigration Pluck (39.5ms)[0m  [1m[34mSELECT `schema_migrations`.`version` FROM `schema_migrations` ORDER BY `schema_migrations`.`version` ASC[0m
+Processing by Api::V1::TracksController#index as */*
+Completed 200 OK in 11ms (Views: 0.6ms | ActiveRecord: 0.0ms | Allocations: 2458)
+
+
+Started POST "/api/v1/tracks" for ::1 at 2025-09-11 19:44:33 +0900
+Processing by Api::V1::TracksController#create as JSON
+  Parameters: {"audio_file"=>#<ActionDispatch::Http::UploadedFile:0x00000001076a2d38 @tempfile=#<Tempfile:/var/folders/1j/wl4bkjws56bg5n0c1yj2t0y40000gn/T/RackMultipart20250911-65554-lr6euo.wav>, @content_type="application/octet-stream", @original_filename="demo_song.wav", @headers="Content-Disposition: form-data; name=\"audio_file\"; filename=\"demo_song.wav\"\r\nContent-Type: application/octet-stream\r\n">, "title"=>"Electric Dreams Demo"}
+Completed 200 OK in 1ms (Views: 0.2ms | ActiveRecord: 0.0ms | Allocations: 360)
+
+
+Started POST "/api/v1/tracks" for ::1 at 2025-09-11 19:44:56 +0900
+Processing by Api::V1::TracksController#create as JSON
+  Parameters: {"audio_file"=>#<ActionDispatch::Http::UploadedFile:0x00000001076e38d8 @tempfile=#<Tempfile:/var/folders/1j/wl4bkjws56bg5n0c1yj2t0y40000gn/T/RackMultipart20250911-65554-hnsu06.mp3>, @content_type="application/octet-stream", @original_filename="jazz_demo.mp3", @headers="Content-Disposition: form-data; name=\"audio_file\"; filename=\"jazz_demo.mp3\"\r\nContent-Type: application/octet-stream\r\n">, "title"=>"Midnight Blues Jazz Demo"}
+Completed 200 OK in 0ms (Views: 0.2ms | ActiveRecord: 0.0ms | Allocations: 188)
+
+
+Started POST "/api/v1/tracks" for ::1 at 2025-09-11 19:46:32 +0900
+Processing by Api::V1::TracksController#create as */*
+  Parameters: {"audio_file"=>#<ActionDispatch::Http::UploadedFile:0x0000000107729a68 @tempfile=#<Tempfile:/var/folders/1j/wl4bkjws56bg5n0c1yj2t0y40000gn/T/RackMultipart20250911-65554-4486ll.mp3>, @content_type="audio/mpeg", @original_filename="test.mp3", @headers="Content-Disposition: form-data; name=\"audio_file\"; filename=\"test.mp3\"\r\nContent-Type: audio/mpeg\r\n">}
+Completed 200 OK in 1ms (Views: 0.4ms | ActiveRecord: 0.0ms | Allocations: 170)
+
+
+Started POST "/api/v1/tracks" for ::1 at 2025-09-11 19:46:33 +0900
+Processing by Api::V1::TracksController#create as */*
+  Parameters: {"audio_file"=>#<ActionDispatch::Http::UploadedFile:0x0000000107772790 @tempfile=#<Tempfile:/var/folders/1j/wl4bkjws56bg5n0c1yj2t0y40000gn/T/RackMultipart20250911-65554-vd2aon.mp3>, @content_type="audio/mpeg", @original_filename="test.mp3", @headers="Content-Disposition: form-data; name=\"audio_file\"; filename=\"test.mp3\"\r\nContent-Type: audio/mpeg\r\n">}
+Completed 200 OK in 1ms (Views: 0.4ms | ActiveRecord: 0.0ms | Allocations: 169)
+
+
+Started POST "/api/v1/tracks" for ::1 at 2025-09-11 19:46:41 +0900
+Processing by Api::V1::TracksController#create as */*
+  Parameters: {"audio_file"=>#<ActionDispatch::Http::UploadedFile:0x00000001077bad88 @tempfile=#<Tempfile:/var/folders/1j/wl4bkjws56bg5n0c1yj2t0y40000gn/T/RackMultipart20250911-65554-usnfl7.mp3>, @content_type="audio/mpeg", @original_filename="test.mp3", @headers="Content-Disposition: form-data; name=\"audio_file\"; filename=\"test.mp3\"\r\nContent-Type: audio/mpeg\r\n">}
+Completed 200 OK in 0ms (Views: 0.2ms | ActiveRecord: 0.0ms | Allocations: 169)
+
+
+Started POST "/api/v1/tracks" for ::1 at 2025-09-11 19:46:42 +0900
+Processing by Api::V1::TracksController#create as */*
+  Parameters: {"audio_file"=>#<ActionDispatch::Http::UploadedFile:0x00000001077e32d8 @tempfile=#<Tempfile:/var/folders/1j/wl4bkjws56bg5n0c1yj2t0y40000gn/T/RackMultipart20250911-65554-ivjk4a.mp3>, @content_type="audio/mpeg", @original_filename="test.mp3", @headers="Content-Disposition: form-data; name=\"audio_file\"; filename=\"test.mp3\"\r\nContent-Type: audio/mpeg\r\n">}
+Completed 200 OK in 0ms (Views: 0.2ms | ActiveRecord: 0.0ms | Allocations: 169)
+
+
+Started POST "/api/v1/tracks" for ::1 at 2025-09-11 19:48:02 +0900
+Processing by Api::V1::TracksController#create as */*
+  Parameters: {"audio_file"=>#<ActionDispatch::Http::UploadedFile:0x00000001076cba58 @tempfile=#<Tempfile:/var/folders/1j/wl4bkjws56bg5n0c1yj2t0y40000gn/T/RackMultipart20250911-65554-iruxua.mp3>, @content_type="audio/mpeg", @original_filename="test.mp3", @headers="Content-Disposition: form-data; name=\"audio_file\"; filename=\"test.mp3\"\r\nContent-Type: audio/mpeg\r\n">}
+Completed 200 OK in 6ms (Views: 6.0ms | ActiveRecord: 0.0ms | Allocations: 169)
+
+
+Started POST "/api/v1/tracks" for ::1 at 2025-09-11 19:53:42 +0900
+Processing by Api::V1::TracksController#create as */*
+  Parameters: {"audio_file"=>#<ActionDispatch::Http::UploadedFile:0x00000001074d80e8 @tempfile=#<Tempfile:/var/folders/1j/wl4bkjws56bg5n0c1yj2t0y40000gn/T/RackMultipart20250911-65554-nmelbi.mp3>, @content_type="audio/mpeg", @original_filename="test.mp3", @headers="Content-Disposition: form-data; name=\"audio_file\"; filename=\"test.mp3\"\r\nContent-Type: audio/mpeg\r\n">}
+Completed 200 OK in 2ms (Views: 1.1ms | ActiveRecord: 0.0ms | Allocations: 169)
+
+
