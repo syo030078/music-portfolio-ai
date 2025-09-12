@@ -20,19 +20,19 @@ def test_basic_imports():
         print("✅ json インポート成功")
     except ImportError:
         print("❌ json インポート失敗")
-        
+
     try:
         import argparse
         print("✅ argparse インポート成功")
     except ImportError:
         print("❌ argparse インポート失敗")
-        
+
     try:
         import librosa
         print("✅ librosa インポート成功")
     except ImportError:
         print("❌ librosa インポート失敗")
-        
+
     try:
         import numpy
         print("✅ numpy インポート成功")
@@ -43,15 +43,15 @@ def run_tests():
     """全テストを実行"""
     print("=== 基本テスト開始 ===")
     print()
-    
+
     print("1. ライブラリインポートテスト:")
     test_basic_imports()
     print()
-    
+
     print("2. 関数存在テスト:")
     test_load_wav_function_exists()
     print()
-    
+
     print("=== テスト完了 ===")
 
 if __name__ == "__main__":

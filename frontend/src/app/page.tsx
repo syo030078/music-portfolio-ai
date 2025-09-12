@@ -16,7 +16,7 @@ export default function Page() {
       if (audioUrl) {
         URL.revokeObjectURL(audioUrl);
       }
-      
+
       setAudioFile(file);
       const url = URL.createObjectURL(file);
       setAudioUrl(url);
