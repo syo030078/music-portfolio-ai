@@ -10,7 +10,12 @@ def load_wav(path):
 def estimate_bpm(y, sr):
     # テンポとビートを推定
     tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
-    return int(round(tempo)) if tempo is not None else 0
+    if tempo is not None:
+        # numpy配列の場合は最初の要素を取得
+        if hasattr(tempo, 'item'):
+            tempo = tempo.item()
+        return int(round(float(tempo)))
+    return 0
 
 def estimate_key(y, sr):
     chroma = librosa.feature.chroma_cqt(y=y, sr=sr)
