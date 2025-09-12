@@ -123,3 +123,5 @@ docker-compose.yml
 
 # Claude Code instruction file
 CLAUDE.md
+__pycache__/
+*.py[cod]
