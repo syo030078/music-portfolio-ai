@@ -7,7 +7,7 @@ export default function Page() {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioUrl, setAudioUrl] = useState<string>("");
   const [loading, setLoading] = useState(false);
-  const [filePath, setFilePath] = useState<string>("");
+  const [analysisResult, setAnalysisResult] = useState<any>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -33,10 +33,10 @@ export default function Page() {
       });
 
       const data = await res.json();
-      setFilePath(data.result?.file_path || "");
+      setAnalysisResult(data.data || null);
     } catch (error) {
       console.error("Analysis error:", error);
-      setFilePath("エラー");
+      setAnalysisResult({ error: "解析エラーが発生しました" });
     } finally {
       setLoading(false);
     }
@@ -44,7 +44,7 @@ export default function Page() {
 
   return (
     <div style={{ maxWidth: 600, margin: "50px auto", padding: 20 }}>
-      <h1>音楽解析</h1>
+      <h1>音源解析</h1>
 
       <div style={{ marginBottom: 20 }}>
         <input type="file" accept="audio/*" onChange={handleFileChange} />
@@ -77,7 +77,7 @@ export default function Page() {
         </div>
       )}
 
-      {filePath && (
+      {analysisResult && (
         <div
           style={{
             marginTop: 20,
@@ -86,12 +86,39 @@ export default function Page() {
             borderRadius: "4px",
           }}
         >
-          <h3>audio_file_path</h3>
-          <div
-            style={{ fontSize: "20px", fontWeight: "bold", color: "#007bff" }}
-          >
-            {filePath}
-          </div>
+          <h3>楽曲解析結果</h3>
+          {analysisResult.error ? (
+            <div style={{ color: "red", fontSize: "16px" }}>
+              {analysisResult.error}
+            </div>
+          ) : (
+            <div>
+              <div style={{ marginBottom: 10 }}>
+                <strong>BPM:</strong>{" "}
+                <span style={{ fontSize: "18px", color: "#007bff" }}>
+                  {analysisResult.bpm || "N/A"}
+                </span>
+              </div>
+              <div style={{ marginBottom: 10 }}>
+                <strong>キー:</strong>{" "}
+                <span style={{ fontSize: "18px", color: "#28a745" }}>
+                  {analysisResult.key || "N/A"}
+                </span>
+              </div>
+              <div style={{ marginBottom: 10 }}>
+                <strong>ジャンル:</strong>{" "}
+                <span style={{ fontSize: "18px", color: "#dc3545" }}>
+                  {analysisResult.genre || "N/A"}
+                </span>
+              </div>
+              <div style={{ marginBottom: 10 }}>
+                <strong>ファイル名:</strong>{" "}
+                <span style={{ fontSize: "14px", color: "#666" }}>
+                  {analysisResult.file_path || "N/A"}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
