@@ -120,3 +120,6 @@ frontend/.vercel/
 
 # Docker
 docker-compose.yml
+
+# Claude Code instruction file
+CLAUDE.md
