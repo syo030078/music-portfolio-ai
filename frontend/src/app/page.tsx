@@ -44,7 +44,7 @@ export default function Page() {
 
   return (
     <div style={{ maxWidth: 600, margin: "50px auto", padding: 20 }}>
-      <h1>音源解析</h1>
+      <h1>音楽解析</h1>
 
       <div style={{ marginBottom: 20 }}>
         <input type="file" accept="audio/*" onChange={handleFileChange} />
