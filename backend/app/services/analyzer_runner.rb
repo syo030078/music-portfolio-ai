@@ -15,8 +15,7 @@ class AnalyzerRunner
       # Open3.capture3でPython解析実行
       stdout, stderr, status = Open3.capture3(
         python_path.to_s, analyzer_script.to_s, "--file", audio_file_path,
-        chdir: Rails.root.join('..').to_s,
-        timeout: 30
+        chdir: Rails.root.join('..').to_s
       )
 
       if status.success?
