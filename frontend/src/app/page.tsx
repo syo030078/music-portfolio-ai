@@ -12,6 +12,11 @@ export default function Page() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // 前のBlobURLをクリーンアップ
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
+
       setAudioFile(file);
       const url = URL.createObjectURL(file);
       setAudioUrl(url);
