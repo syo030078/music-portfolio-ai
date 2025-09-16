@@ -9,8 +9,10 @@ class Api::V1::TracksController < ApplicationController
     audio_file = params[:audio_file]
     
     if audio_file
-      # 一時ファイル保存
-      temp_path = Rails.root.join('tmp', 'uploads', audio_file.original_filename)
+      # 一時ファイル保存（タイムスタンプ付きで重複回避）
+      timestamp = Time.current.strftime("%Y%m%d_%H%M%S_%L")
+      filename = "#{timestamp}_#{audio_file.original_filename}"
+      temp_path = Rails.root.join('tmp', 'uploads', filename)
       FileUtils.mkdir_p(File.dirname(temp_path))
       File.write(temp_path, audio_file.read, mode: 'wb')
       
