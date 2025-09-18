@@ -13,17 +13,31 @@ export default function Page() {
   const [copyStatus, setCopyStatus] = useState("");
   const [uploadHistory, setUploadHistory] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [ytUrl, setYtUrl] = useState("");
 
   useEffect(() => {
-    const savedHistory = localStorage.getItem('musicAnalysisHistory');
+    const savedHistory = localStorage.getItem("musicAnalysisHistory");
     if (savedHistory) {
       setUploadHistory(JSON.parse(savedHistory));
     }
+
+    // 登録済みトラック取得
+    fetchTracks();
   }, []);
+
+  const fetchTracks = async () => {
+    try {
+      const res = await fetch(`${API}/api/v1/tracks`);
+      const data = await res.json();
+      setTracks(data.data || []);
+    } catch (error) {
+      console.error("トラック取得エラー:", error);
+    }
+  };
 
   const saveToHistory = (result: any, fileName: string) => {
     if (!result || result.error) return;
-    
+
     const historyItem = {
       id: Date.now(),
       fileName,
@@ -31,12 +45,12 @@ export default function Page() {
       key: result.key,
       genre: result.genre,
       timestamp: new Date().toISOString(),
-      displayDate: new Date().toLocaleString('ja-JP')
+      displayDate: new Date().toLocaleString("ja-JP"),
     };
 
     const newHistory = [historyItem, ...uploadHistory].slice(0, 10); // Keep only last 10
     setUploadHistory(newHistory);
-    localStorage.setItem('musicAnalysisHistory', JSON.stringify(newHistory));
+    localStorage.setItem("musicAnalysisHistory", JSON.stringify(newHistory));
   };
 
   const processFile = (file: File) => {
@@ -55,18 +69,6 @@ export default function Page() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-<<<<<<< HEAD
-      // 前のBlobURLをクリーンアップ
-      if (audioUrl) {
-        URL.revokeObjectURL(audioUrl);
-      }
-
-      setAudioFile(file);
-      const url = URL.createObjectURL(file);
-      setAudioUrl(url);
-      // 前の解析結果をクリア
-      setAnalysisResult(null);
-=======
       processFile(file);
     }
   };
@@ -90,7 +92,6 @@ export default function Page() {
       if (file.type.startsWith("audio/")) {
         processFile(file);
       }
->>>>>>> 575dd7c (feat(frontend): implement user-first UI for music analysis)
     }
   };
 
@@ -156,14 +157,37 @@ BPM: ${analysisResult.bpm || "N/A"}
     URL.revokeObjectURL(url);
   };
 
+  const registerYoutube = async () => {
+    if (!ytUrl) return;
+
+    try {
+      const res = await fetch(`${API}/api/v1/tracks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ yt_url: ytUrl, title: "YouTube Video" }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setYtUrl("");
+        alert("YouTube動画を登録しました！");
+      } else {
+        alert("登録に失敗しました");
+      }
+    } catch (error) {
+      console.error("YouTube登録エラー:", error);
+      alert("登録エラーが発生しました");
+    }
+  };
+
   return (
     <div style={{ maxWidth: 600, margin: "50px auto", padding: 20 }}>
       <div style={{ textAlign: "center", marginBottom: 40 }}>
         <h1 style={{ fontSize: "24px", marginBottom: "8px", color: "#333" }}>
-          音楽をドロップするだけでBPM・キーを解析
+          音楽ポートフォリオ
         </h1>
         <p style={{ color: "#666", fontSize: "14px", margin: 0 }}>
-          MP3やWAVファイルから楽曲情報を自動抽出
+          あなたの音楽作品を管理・共有するプラットフォーム
         </p>
       </div>
 
@@ -205,10 +229,10 @@ BPM: ${analysisResult.bpm || "N/A"}
               marginBottom: "8px",
             }}
           >
-            音楽ファイルをここにドロップ
+            ここに音楽ファイルを入れてください
           </div>
           <div style={{ fontSize: "14px", color: "#666" }}>
-            または クリックしてファイルを選択
+            または クリックして選択もできます
           </div>
         </div>
       </div>
@@ -273,7 +297,14 @@ BPM: ${analysisResult.bpm || "N/A"}
             border: "1px solid #e9ecef",
           }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "16px",
+            }}
+          >
             <h3 style={{ margin: 0, color: "#333" }}>楽曲解析結果</h3>
             {!analysisResult.error && (
               <button
@@ -292,33 +323,53 @@ BPM: ${analysisResult.bpm || "N/A"}
               </button>
             )}
           </div>
-          
+
           {copyStatus && (
-            <div style={{ 
-              color: "#28a745", 
-              fontSize: "12px", 
-              marginBottom: "12px",
-              fontWeight: "bold"
-            }}>
+            <div
+              style={{
+                color: "#28a745",
+                fontSize: "12px",
+                marginBottom: "12px",
+                fontWeight: "bold",
+              }}
+            >
               ✅ {copyStatus}
             </div>
           )}
-          
+
           {analysisResult.error ? (
             <div style={{ color: "red", fontSize: "16px" }}>
               {analysisResult.error}
             </div>
           ) : (
             <div>
-              <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div
+                style={{
+                  marginBottom: 16,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
                 <div>
                   <strong>BPM:</strong>{" "}
-                  <span style={{ fontSize: "20px", color: "#007bff", fontWeight: "bold" }}>
+                  <span
+                    style={{
+                      fontSize: "20px",
+                      color: "#007bff",
+                      fontWeight: "bold",
+                    }}
+                  >
                     {analysisResult.bpm || "N/A"}
                   </span>
                 </div>
                 <button
-                  onClick={() => copyToClipboard(analysisResult.bpm?.toString() || "N/A", "BPM")}
+                  onClick={() =>
+                    copyToClipboard(
+                      analysisResult.bpm?.toString() || "N/A",
+                      "BPM"
+                    )
+                  }
                   style={{
                     padding: "4px 8px",
                     backgroundColor: "#007bff",
@@ -332,15 +383,30 @@ BPM: ${analysisResult.bpm || "N/A"}
                   📋 コピー
                 </button>
               </div>
-              <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div
+                style={{
+                  marginBottom: 16,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
                 <div>
                   <strong>キー:</strong>{" "}
-                  <span style={{ fontSize: "20px", color: "#28a745", fontWeight: "bold" }}>
+                  <span
+                    style={{
+                      fontSize: "20px",
+                      color: "#28a745",
+                      fontWeight: "bold",
+                    }}
+                  >
                     {analysisResult.key || "N/A"}
                   </span>
                 </div>
                 <button
-                  onClick={() => copyToClipboard(analysisResult.key || "N/A", "キー")}
+                  onClick={() =>
+                    copyToClipboard(analysisResult.key || "N/A", "キー")
+                  }
                   style={{
                     padding: "4px 8px",
                     backgroundColor: "#28a745",
@@ -354,15 +420,30 @@ BPM: ${analysisResult.bpm || "N/A"}
                   📋 コピー
                 </button>
               </div>
-              <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div
+                style={{
+                  marginBottom: 16,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
                 <div>
                   <strong>ジャンル:</strong>{" "}
-                  <span style={{ fontSize: "18px", color: "#dc3545", fontWeight: "bold" }}>
+                  <span
+                    style={{
+                      fontSize: "18px",
+                      color: "#dc3545",
+                      fontWeight: "bold",
+                    }}
+                  >
                     {analysisResult.genre || "N/A"}
                   </span>
                 </div>
                 <button
-                  onClick={() => copyToClipboard(analysisResult.genre || "N/A", "ジャンル")}
+                  onClick={() =>
+                    copyToClipboard(analysisResult.genre || "N/A", "ジャンル")
+                  }
                   style={{
                     padding: "4px 8px",
                     backgroundColor: "#dc3545",
@@ -376,21 +457,29 @@ BPM: ${analysisResult.bpm || "N/A"}
                   📋 コピー
                 </button>
               </div>
-              <div style={{ marginBottom: 16, fontSize: "12px", color: "#666" }}>
+              <div
+                style={{ marginBottom: 16, fontSize: "12px", color: "#666" }}
+              >
                 <strong>ファイル名:</strong> {analysisResult.file_path || "N/A"}
               </div>
-              <div style={{ 
-                marginTop: 16, 
-                paddingTop: 16, 
-                borderTop: "1px solid #e9ecef",
-                display: "flex",
-                gap: "8px"
-              }}>
+              <div
+                style={{
+                  marginTop: 16,
+                  paddingTop: 16,
+                  borderTop: "1px solid #e9ecef",
+                  display: "flex",
+                  gap: "8px",
+                }}
+              >
                 <button
-                  onClick={() => copyToClipboard(
-                    `BPM: ${analysisResult.bpm || "N/A"}, キー: ${analysisResult.key || "N/A"}, ジャンル: ${analysisResult.genre || "N/A"}`, 
-                    "全データ"
-                  )}
+                  onClick={() =>
+                    copyToClipboard(
+                      `BPM: ${analysisResult.bpm || "N/A"}, キー: ${
+                        analysisResult.key || "N/A"
+                      }, ジャンル: ${analysisResult.genre || "N/A"}`,
+                      "全データ"
+                    )
+                  }
                   style={{
                     flex: 1,
                     padding: "8px 12px",
@@ -411,9 +500,22 @@ BPM: ${analysisResult.bpm || "N/A"}
       )}
 
       {uploadHistory.length > 0 && (
-        <div style={{ marginTop: 40, borderTop: "1px solid #e9ecef", paddingTop: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-            <h4 style={{ margin: 0, color: "#666" }}>過去の解析履歴</h4>
+        <div
+          style={{
+            marginTop: 40,
+            borderTop: "1px solid #e9ecef",
+            paddingTop: 20,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
+          >
+            <h4 style={{ margin: 0, color: "#666" }}>これまでに解析した曲</h4>
             <button
               onClick={() => setShowHistory(!showHistory)}
               style={{
@@ -429,15 +531,17 @@ BPM: ${analysisResult.bpm || "N/A"}
               {showHistory ? "非表示" : `履歴を表示 (${uploadHistory.length})`}
             </button>
           </div>
-          
+
           {showHistory && (
-            <div style={{ 
-              maxHeight: "200px", 
-              overflowY: "auto",
-              backgroundColor: "#f8f9fa",
-              borderRadius: "6px",
-              padding: "12px"
-            }}>
+            <div
+              style={{
+                maxHeight: "200px",
+                overflowY: "auto",
+                backgroundColor: "#f8f9fa",
+                borderRadius: "6px",
+                padding: "12px",
+              }}
+            >
               {uploadHistory.map((item) => (
                 <div
                   key={item.id}
@@ -453,21 +557,30 @@ BPM: ${analysisResult.bpm || "N/A"}
                   }}
                 >
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: "12px", fontWeight: "bold", marginBottom: "2px" }}>
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: "bold",
+                        marginBottom: "2px",
+                      }}
+                    >
                       {item.fileName}
                     </div>
                     <div style={{ fontSize: "11px", color: "#666" }}>
-                      BPM: {item.bpm} | キー: {item.key} | ジャンル: {item.genre}
+                      BPM: {item.bpm} | キー: {item.key} | ジャンル:{" "}
+                      {item.genre}
                     </div>
                     <div style={{ fontSize: "10px", color: "#999" }}>
                       {item.displayDate}
                     </div>
                   </div>
                   <button
-                    onClick={() => copyToClipboard(
-                      `BPM: ${item.bpm}, キー: ${item.key}, ジャンル: ${item.genre}`,
-                      "履歴データ"
-                    )}
+                    onClick={() =>
+                      copyToClipboard(
+                        `BPM: ${item.bpm}, キー: ${item.key}, ジャンル: ${item.genre}`,
+                        "履歴データ"
+                      )
+                    }
                     style={{
                       padding: "4px 8px",
                       backgroundColor: "#6c757d",
@@ -486,6 +599,42 @@ BPM: ${analysisResult.bpm || "N/A"}
           )}
         </div>
       )}
+
+      {/* YouTube登録フォーム */}
+      <div
+        style={{
+          marginBottom: 40,
+          padding: 20,
+          border: "2px dashed #dc3545",
+          borderRadius: "8px",
+        }}
+      >
+        <h3></h3>
+        <input
+          value={ytUrl}
+          onChange={(e) => setYtUrl(e.target.value)}
+          placeholder="Youtube"
+          style={{
+            width: "100%",
+            padding: "12px",
+            marginBottom: "12px",
+            border: "1px solid #ddd",
+            borderRadius: "6px",
+          }}
+        />
+        <button
+          onClick={registerYoutube}
+          style={{
+            padding: "12px 24px",
+            backgroundColor: "#dc3545",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+          }}
+        >
+          📺 登録
+        </button>
+      </div>
     </div>
   );
 }
