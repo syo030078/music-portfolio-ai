@@ -20,20 +20,7 @@ export default function Page() {
     if (savedHistory) {
       setUploadHistory(JSON.parse(savedHistory));
     }
-
-    // 登録済みトラック取得
-    fetchTracks();
   }, []);
-
-  const fetchTracks = async () => {
-    try {
-      const res = await fetch(`${API}/api/v1/tracks`);
-      const data = await res.json();
-      setTracks(data.data || []);
-    } catch (error) {
-      console.error("トラック取得エラー:", error);
-    }
-  };
 
   const saveToHistory = (result: any, fileName: string) => {
     if (!result || result.error) return;
