@@ -1,31 +1,59 @@
 "use client";
 import { useState, useEffect } from "react";
 
+type AnalysisResult = {
+  bpm?: number | null;
+  key?: string | null;
+  genre?: string | null;
+  file_path?: string | null;
+  error?: string;
+};
+
+type ApiResponse = {
+  data?: AnalysisResult | null;
+};
+
+type HistoryItem = {
+  id: number;
+  fileName: string;
+  bpm?: number | null;
+  key?: string | null;
+  genre?: string | null;
+  timestamp: string;
+  displayDate: string;
+};
+
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
 export default function Page() {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioUrl, setAudioUrl] = useState<string>("");
   const [loading, setLoading] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(
+    null
+  );
   const [isDragOver, setIsDragOver] = useState(false);
   const [progressStep, setProgressStep] = useState("");
   const [copyStatus, setCopyStatus] = useState("");
-  const [uploadHistory, setUploadHistory] = useState<any[]>([]);
+  const [uploadHistory, setUploadHistory] = useState<HistoryItem[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [ytUrl, setYtUrl] = useState("");
+  const [notification, setNotification] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
 
   useEffect(() => {
     const savedHistory = localStorage.getItem("musicAnalysisHistory");
     if (savedHistory) {
-      setUploadHistory(JSON.parse(savedHistory));
+      setUploadHistory(JSON.parse(savedHistory) as HistoryItem[]);
     }
   }, []);
 
-  const saveToHistory = (result: any, fileName: string) => {
+  const saveToHistory = (result: AnalysisResult | null, fileName: string) => {
     if (!result || result.error) return;
 
-    const historyItem = {
+    const historyItem: HistoryItem = {
       id: Date.now(),
       fileName,
       bpm: result.bpm,
@@ -98,14 +126,14 @@ export default function Page() {
       });
 
       setProgressStep("結果を処理中...");
-      const data = await res.json();
-      setAnalysisResult(data.data || null);
-      if (data.data && !data.data.error && audioFile) {
-        saveToHistory(data.data, audioFile.name);
+      const data = (await res.json()) as ApiResponse;
+      const resultData = data.data || null;
+      setAnalysisResult(resultData);
+      if (resultData && !resultData.error && audioFile) {
+        saveToHistory(resultData, audioFile.name);
       }
       setProgressStep("解析完了！");
-    } catch (error) {
-      console.error("Analysis error:", error);
+    } catch {
       setAnalysisResult({ error: "解析エラーが発生しました" });
       setProgressStep("");
     } finally {
@@ -119,7 +147,7 @@ export default function Page() {
       await navigator.clipboard.writeText(text);
       setCopyStatus(`${type}をコピーしました！`);
       setTimeout(() => setCopyStatus(""), 2000);
-    } catch (error) {
+    } catch {
       setCopyStatus("コピーに失敗しました");
       setTimeout(() => setCopyStatus(""), 2000);
     }
@@ -130,9 +158,9 @@ export default function Page() {
 
     const exportText = `楽曲解析結果
 ファイル名: ${analysisResult.file_path || "N/A"}
-BPM: ${analysisResult.bpm || "N/A"}
-キー: ${analysisResult.key || "N/A"}
-ジャンル: ${analysisResult.genre || "N/A"}
+BPM: ${analysisResult.bpm ?? "N/A"}
+キー: ${analysisResult.key ?? "N/A"}
+ジャンル: ${analysisResult.genre ?? "N/A"}
 解析日時: ${new Date().toLocaleString("ja-JP")}`;
 
     const blob = new Blob([exportText], { type: "text/plain" });
@@ -154,15 +182,13 @@ BPM: ${analysisResult.bpm || "N/A"}
         body: JSON.stringify({ yt_url: ytUrl, title: "YouTube Video" }),
       });
 
-      const data = await res.json();
       if (res.ok) {
         setYtUrl("");
         alert("YouTube動画を登録しました！");
       } else {
         alert("登録に失敗しました");
       }
-    } catch (error) {
-      console.error("YouTube登録エラー:", error);
+    } catch {
       alert("登録エラーが発生しました");
     }
   };
@@ -171,10 +197,10 @@ BPM: ${analysisResult.bpm || "N/A"}
     <div style={{ maxWidth: 600, margin: "50px auto", padding: 20 }}>
       <div style={{ textAlign: "center", marginBottom: 40 }}>
         <h1 style={{ fontSize: "24px", marginBottom: "8px", color: "#333" }}>
-          音楽ポートフォリオ
+          music-portfolio-ai
         </h1>
         <p style={{ color: "#666", fontSize: "14px", margin: 0 }}>
-          あなたの音楽作品を管理・共有するプラットフォーム
+          あなたの音楽作品を管理・共有するマッチング・プラットフォーム
         </p>
       </div>
 
