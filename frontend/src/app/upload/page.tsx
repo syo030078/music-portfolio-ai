@@ -128,9 +128,14 @@ export default function Page() {
       if (resultData && !resultData.error && audioFile) {
         saveToHistory(resultData, audioFile.name);
       }
-      setProgressStep("解析完了！");
-    } catch {
-      setAnalysisResult({ error: "解析エラーが発生しました" });
+      if (!resultData?.error) {
+        setProgressStep("解析完了！");
+      } else {
+        setProgressStep("");
+      }
+    } catch (error) {
+      console.error("解析エラー:", error);
+      setAnalysisResult({ error: "サーバーとの通信に失敗しました" });
       setProgressStep("");
     } finally {
       setLoading(false);
