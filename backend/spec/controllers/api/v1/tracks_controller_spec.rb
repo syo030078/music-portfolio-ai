@@ -23,7 +23,7 @@ RSpec.describe Api::V1::TracksController, type: :controller do
     end
 
     context "when audio_file is provided" do
-      let(:audio_file) { fixture_file_upload(Rails.root.join('spec', 'fixtures', 'test.wav'), 'audio/wav') }
+      let(:audio_file) { fixture_file_upload('test.wav', 'audio/wav') }
 
       before do
         allow(AnalyzerRunner).to receive(:call).and_return({
@@ -47,7 +47,7 @@ RSpec.describe Api::V1::TracksController, type: :controller do
     end
 
     context "when analysis fails" do
-      let(:audio_file) { fixture_file_upload(Rails.root.join('spec', 'fixtures', 'test.wav'), 'audio/wav') }
+      let(:audio_file) { fixture_file_upload('test.wav', 'audio/wav') }
 
       before do
         allow(AnalyzerRunner).to receive(:call).and_return({
