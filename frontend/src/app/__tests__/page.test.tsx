@@ -23,4 +23,13 @@ describe("HomePage", () => {
     expect(screen.getByText("佐藤 花子")).toBeInTheDocument();
     expect(screen.getByText("鈴木 一郎")).toBeInTheDocument();
   });
+
+  it("renders matching link", () => {
+    render(<HomePage />);
+
+    const matchingLink = screen.getByRole("link", {
+      name: /企業向けマッチング/,
+    });
+    expect(matchingLink).toHaveAttribute("href", "/matching");
+  });
 });
