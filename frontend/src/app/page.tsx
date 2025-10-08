@@ -58,12 +58,20 @@ export default function HomePage() {
           <Link href="/" className="text-2xl font-bold text-gray-900">
             Music Portfolio
           </Link>
-          <Link
-            href="/upload"
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200"
-          >
-            楽曲アップロード
-          </Link>
+          <div className="flex gap-4 items-center">
+            <Link
+              href="/matching"
+              className="text-gray-600 hover:text-gray-900 px-4 py-2 transition-colors duration-200"
+            >
+              企業向けマッチング
+            </Link>
+            <Link
+              href="/upload"
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+            >
+              楽曲アップロード
+            </Link>
+          </div>
         </nav>
       </header>
 
