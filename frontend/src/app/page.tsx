@@ -1,227 +1,98 @@
 "use client";
-import { useState, useEffect } from "react";
 
-const API = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+import MusicianCard from "@/components/MusicianCard";
+import Link from "next/link";
 
-type Track = {
-  id: number;
-  title?: string | null;
-  yt_url: string;
-  bpm?: number | null;
-  key?: string | null;
-  genre?: string | null;
-  ai_text?: string | null;
-};
+// モックデータ（後でAPI接続）
+const mockMusicians = [
+  {
+    id: 1,
+    name: "田中 太郎",
+    bio: "ロック・ポップス専門の作曲家。10年以上の制作実績があります。",
+    genre: "Rock, Pop",
+    trackCount: 15,
+  },
+  {
+    id: 2,
+    name: "佐藤 花子",
+    bio: "エレクトロニック・アンビエント音楽を得意としています。",
+    genre: "Electronic, Ambient",
+    trackCount: 23,
+  },
+  {
+    id: 3,
+    name: "鈴木 一郎",
+    bio: "ジャズ・フュージョンを中心に活動。企業CM音楽多数。",
+    genre: "Jazz, Fusion",
+    trackCount: 31,
+  },
+  {
+    id: 4,
+    name: "高橋 美咲",
+    bio: "アコースティック・フォーク音楽が専門です。",
+    genre: "Acoustic, Folk",
+    trackCount: 12,
+  },
+  {
+    id: 5,
+    name: "伊藤 健太",
+    bio: "Hip-Hop・R&Bトラック制作。ビートメイカーとして活動中。",
+    genre: "Hip-Hop, R&B",
+    trackCount: 27,
+  },
+  {
+    id: 6,
+    name: "渡辺 さくら",
+    bio: "クラシック・オーケストラ編曲を得意としています。",
+    genre: "Classical, Orchestral",
+    trackCount: 8,
+  },
+];
 
-export default function Page() {
-  const [url, setUrl] = useState("");
-  const [tracks, setTracks] = useState<Track[]>([]);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
-
-  async function fetchTracks() {
-    try {
-      const res = await fetch(`${API}/api/v1/tracks`);
-      if (!res.ok) throw new Error(await res.text());
-      setTracks(await res.json());
-      setError("");
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function createTrack() {
-    if (!url.trim()) return;
-    try {
-      const res = await fetch(`${API}/api/v1/tracks`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ yt_url: url }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      setUrl("");
-      await fetchTracks();
-    } catch (e: any) {
-      alert(e.message);
-    }
-  }
-
-  useEffect(() => {
-    fetchTracks();
-    const id = setInterval(fetchTracks, 15000);
-    return () => clearInterval(id);
-  }, []);
-
+export default function HomePage() {
   return (
-    <div
-      style={{ maxWidth: 700, margin: "20px auto", fontFamily: "sans-serif" }}
-    >
-      <h1>Music Portfolio AI (MVP)</h1>
-
-      {!API && (
-        <p style={{ color: "red" }}>
-          NEXT_PUBLIC_API_BASE_URL が未設定です (.env.local)
-        </p>
-      )}
-
-      <div style={{ marginTop: 12 }}>
-        <input
-          style={{ padding: 6, width: "70%" }}
-          placeholder="YouTube URL"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-        />
-        <button
-          style={{ padding: "6px 12px", marginLeft: 8 }}
-          onClick={createTrack}
-        >
-          登録して解析
-        </button>
-      </div>
-
-      <h2 style={{ marginTop: 24 }}>登録済みトラック</h2>
-      {loading ? (
-        <p>読み込み中...</p>
-      ) : error ? (
-        <p style={{ color: "red" }}>{error}</p>
-      ) : tracks.length === 0 ? (
-        <p>まだありません</p>
-      ) : (
-        <ul style={{ padding: 0, listStyle: "none" }}>
-          {tracks.map((t) => (
-            <li
-              key={t.id}
-              style={{ border: "1px solid #ddd", margin: "8px 0", padding: 8 }}
+    <div className="min-h-screen bg-gray-50">
+      {/* ヘッダー */}
+      <header className="bg-white border-b border-gray-200">
+        <nav className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+          <Link href="/" className="text-2xl font-bold text-gray-900">
+            Music Portfolio
+          </Link>
+          <div className="flex gap-4 items-center">
+            <Link
+              href="/matching"
+              className="text-gray-600 hover:text-gray-900 px-4 py-2 transition-colors duration-200"
             >
-              <div>
-                <b>{t.title || "(no title)"}</b>
-              </div>
-              <div>
-                <a href={t.yt_url} target="_blank">
-                  {t.yt_url}
-                </a>
-              </div>
-              <div>
-                BPM: {t.bpm ?? "-"}, Key: {t.key ?? "-"}, Genre:{" "}
-                {t.genre ?? "-"}
-              </div>
-              {t.ai_text && (
-                <div
-                  style={{ marginTop: 6, background: "#f5f5f5", padding: 6 }}
-                >
-                  {t.ai_text}
-                </div>
-              )}
-            </li>
+              企業向けマッチング
+            </Link>
+            <Link
+              href="/upload"
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+            >
+              楽曲アップロード
+            </Link>
+          </div>
+        </nav>
+      </header>
+
+      {/* メインコンテンツ */}
+      <main className="max-w-7xl mx-auto px-4 py-12">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            音楽家を探す
+          </h1>
+          <p className="text-gray-600">
+            プロの音楽家に楽曲制作を依頼できます
+          </p>
+        </div>
+
+        {/* 音楽家カードグリッド */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {mockMusicians.map((musician) => (
+            <MusicianCard key={musician.id} {...musician} />
           ))}
-        </ul>
-      )}
+        </div>
+      </main>
     </div>
   );
 }
-
-// import Image from "next/image";
-
-// export default function Home() {
-//   return (
-//     <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-//       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-//         <Image
-//           className="dark:invert"
-//           src="/next.svg"
-//           alt="Next.js logo"
-//           width={180}
-//           height={38}
-//           priority
-//         />
-//         <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-//           <li className="mb-2 tracking-[-.01em]">
-//             Get started by editing{" "}
-//             <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-//               src/app/page.tsx
-//             </code>
-//             .
-//           </li>
-//           <li className="tracking-[-.01em]">
-//             Save and see your changes instantly.
-//           </li>
-//         </ol>
-
-//         <div className="flex gap-4 items-center flex-col sm:flex-row">
-//           <a
-//             className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-//             href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-//             target="_blank"
-//             rel="noopener noreferrer"
-//           >
-//             <Image
-//               className="dark:invert"
-//               src="/vercel.svg"
-//               alt="Vercel logomark"
-//               width={20}
-//               height={20}
-//             />
-//             Deploy now
-//           </a>
-//           <a
-//             className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-//             href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-//             target="_blank"
-//             rel="noopener noreferrer"
-//           >
-//             Read our docs
-//           </a>
-//         </div>
-//       </main>
-//       <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-//         <a
-//           className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-//           href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-//           target="_blank"
-//           rel="noopener noreferrer"
-//         >
-//           <Image
-//             aria-hidden
-//             src="/file.svg"
-//             alt="File icon"
-//             width={16}
-//             height={16}
-//           />
-//           Learn
-//         </a>
-//         <a
-//           className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-//           href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-//           target="_blank"
-//           rel="noopener noreferrer"
-//         >
-//           <Image
-//             aria-hidden
-//             src="/window.svg"
-//             alt="Window icon"
-//             width={16}
-//             height={16}
-//           />
-//           Examples
-//         </a>
-//         <a
-//           className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-//           href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-//           target="_blank"
-//           rel="noopener noreferrer"
-//         >
-//           <Image
-//             aria-hidden
-//             src="/globe.svg"
-//             alt="Globe icon"
-//             width={16}
-//             height={16}
-//           />
-//           Go to nextjs.org →
-//         </a>
-//       </footer>
-//     </div>
-//   );
-// }
