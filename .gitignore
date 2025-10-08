@@ -115,6 +115,9 @@ frontend/.vercel/
 *.wav
 *.m4a
 
+# Allow test fixtures
+!backend/spec/fixtures/files/*.wav
+
 # Python venv
 .venv/
 
