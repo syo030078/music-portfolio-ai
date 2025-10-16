@@ -196,15 +196,41 @@ BPM: ${analysisResult.bpm ?? "N/A"}
 
   return (
     <div style={{ maxWidth: 600, margin: "50px auto", padding: 20 }}>
-      <div style={{ textAlign: "center", marginBottom: 40 }}>
-        <h1 style={{ fontSize: "24px", marginBottom: "8px", color: "#333" }}>
-          music-portfolio-ai
-        </h1>
-        <p style={{ color: "#666", fontSize: "14px", margin: 0 }}>
-          あなたの音楽作品を管理・共有するマッチング・プラットフォーム
-        </p>
+      {/* YouTube登録フォーム */}
+      <div
+        style={{
+          marginBottom: 40,
+          padding: 20,
+          border: "2px dashed #dc3545",
+          borderRadius: "8px",
+        }}
+      >
+        <h3></h3>
+        <input
+          value={ytUrl}
+          onChange={(e) => setYtUrl(e.target.value)}
+          placeholder="Youtube"
+          style={{
+            width: "100%",
+            padding: "12px",
+            marginBottom: "12px",
+            border: "1px solid #ddd",
+            borderRadius: "6px",
+          }}
+        />
+        <button
+          onClick={registerYoutube}
+          style={{
+            padding: "12px 24px",
+            backgroundColor: "#dc3545",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+          }}
+        >
+          📺 登録
+        </button>
       </div>
-
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -613,42 +639,6 @@ BPM: ${analysisResult.bpm ?? "N/A"}
           )}
         </div>
       )}
-
-      {/* YouTube登録フォーム */}
-      <div
-        style={{
-          marginBottom: 40,
-          padding: 20,
-          border: "2px dashed #dc3545",
-          borderRadius: "8px",
-        }}
-      >
-        <h3></h3>
-        <input
-          value={ytUrl}
-          onChange={(e) => setYtUrl(e.target.value)}
-          placeholder="Youtube"
-          style={{
-            width: "100%",
-            padding: "12px",
-            marginBottom: "12px",
-            border: "1px solid #ddd",
-            borderRadius: "6px",
-          }}
-        />
-        <button
-          onClick={registerYoutube}
-          style={{
-            padding: "12px 24px",
-            backgroundColor: "#dc3545",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-          }}
-        >
-          📺 登録
-        </button>
-      </div>
     </div>
   );
 }

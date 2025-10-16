@@ -55,15 +55,12 @@ export default function HomePage() {
       {/* ヘッダー */}
       <header className="bg-white border-b border-gray-200">
         <nav className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold text-gray-900">
-            Music Portfolio
-          </Link>
           <div className="flex gap-4 items-center">
             <Link
               href="/matching"
               className="text-gray-600 hover:text-gray-900 px-4 py-2 transition-colors duration-200"
             >
-              企業向けマッチング
+              マッチング
             </Link>
             <Link
               href="/upload"
@@ -81,9 +78,7 @@ export default function HomePage() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             音楽家を探す
           </h1>
-          <p className="text-gray-600">
-            プロの音楽家に楽曲制作を依頼できます
-          </p>
+          <p className="text-gray-600">プロの音楽家に楽曲制作を依頼できます</p>
         </div>
 
         {/* 音楽家カードグリッド */}
