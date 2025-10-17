@@ -12,13 +12,47 @@ RSpec.describe Api::V1::TracksController, type: :controller do
   end
 
   describe "POST #create" do
-    context "when audio_file is missing" do
+    context "when both audio_file and yt_url are missing" do
       it "returns bad request error" do
         post :create, params: {}
         expect(response).to have_http_status(:bad_request)
 
         json = JSON.parse(response.body)
-        expect(json["data"]["error"]).to eq("音声ファイルが指定されていません")
+        expect(json["data"]["error"]).to eq("音声ファイルまたはYouTube URLを指定してください")
+      end
+    end
+
+    context "when yt_url is provided" do
+      let(:test_user) { User.create!(email: 'test@example.com', password: 'password123', name: 'Test User') }
+
+      before do
+        test_user # ユーザーを作成
+      end
+
+      it "creates a track with YouTube URL" do
+        post :create, params: { yt_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', title: 'Test Video' }
+        expect(response).to have_http_status(:created)
+
+        json = JSON.parse(response.body)
+        expect(json["message"]).to eq("YouTube動画を登録しました")
+        expect(json["data"]["yt_url"]).to eq('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+        expect(json["data"]["title"]).to eq('Test Video')
+      end
+
+      it "creates a track with default title when title is not provided" do
+        post :create, params: { yt_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' }
+        expect(response).to have_http_status(:created)
+
+        json = JSON.parse(response.body)
+        expect(json["data"]["title"]).to eq('Untitled')
+      end
+
+      it "returns error when yt_url is invalid" do
+        post :create, params: { yt_url: 'invalid-url', title: 'Test' }
+        expect(response).to have_http_status(:unprocessable_entity)
+
+        json = JSON.parse(response.body)
+        expect(json["data"]["error"]).to be_present
       end
     end
 
