@@ -7,7 +7,43 @@ class Api::V1::TracksController < ApplicationController
 
   def create
     audio_file = params[:audio_file]
+    yt_url = params[:yt_url]
+    title = params[:title]
 
+    # YouTube URL登録の処理
+    if yt_url.present?
+      # 仮ユーザーIDを使用（Phase 1: MVP実装）
+      user = User.first
+
+      if user.nil?
+        render json: { data: { error: "ユーザーが存在しません" } }, status: :internal_server_error
+        return
+      end
+
+      track = Track.new(
+        user_id: user.id,
+        yt_url: yt_url,
+        title: title || "Untitled"
+      )
+
+      if track.save
+        render json: {
+          message: "YouTube動画を登録しました",
+          data: {
+            id: track.id,
+            yt_url: track.yt_url,
+            title: track.title
+          }
+        }, status: :created
+      else
+        render json: {
+          data: { error: track.errors.full_messages.join(", ") }
+        }, status: :unprocessable_entity
+      end
+      return
+    end
+
+    # 音声ファイル解析の処理（既存機能）
     if audio_file
       # 一時ファイル保存
       temp_path = Rails.root.join('tmp', 'uploads', audio_file.original_filename)
@@ -32,7 +68,7 @@ class Api::V1::TracksController < ApplicationController
         File.delete(temp_path) if File.exist?(temp_path)
       end
     else
-      render json: { data: { error: "音声ファイルが指定されていません" } }, status: :bad_request
+      render json: { data: { error: "音声ファイルまたはYouTube URLを指定してください" } }, status: :bad_request
     end
   end
 end
