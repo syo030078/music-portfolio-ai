@@ -1,8 +1,94 @@
 class Api::V1::TracksController < ApplicationController
-  skip_before_action :authenticate_user!
+  skip_before_action :authenticate_user!, only: [:index, :show]
 
   def index
-    render json: { message: "load_wav", status: "ok" }
+    # ページネーション設定
+    page = params[:page]&.to_i || 1
+    per_page = params[:per_page]&.to_i || 10
+    per_page = [per_page, 50].min # 最大50件
+
+    # 基本クエリ（ユーザー情報を含む）
+    tracks = Track.includes(:user)
+
+    # フィルタリング: ジャンル
+    tracks = tracks.where(genre: params[:genre]) if params[:genre].present?
+
+    # フィルタリング: BPM範囲
+    if params[:bpm_min].present?
+      tracks = tracks.where('bpm >= ?', params[:bpm_min].to_f)
+    end
+    if params[:bpm_max].present?
+      tracks = tracks.where('bpm <= ?', params[:bpm_max].to_f)
+    end
+
+    # フィルタリング: キー
+    tracks = tracks.where(key: params[:key]) if params[:key].present?
+
+    # ソート（新しい順）
+    tracks = tracks.order(created_at: :desc)
+
+    # ページネーション適用
+    total_count = tracks.count
+    total_pages = (total_count.to_f / per_page).ceil
+    tracks = tracks.offset((page - 1) * per_page).limit(per_page)
+
+    # レスポンス生成
+    render json: {
+      tracks: tracks.map do |track|
+        {
+          id: track.id,
+          title: track.title,
+          description: track.description,
+          yt_url: track.yt_url,
+          bpm: track.bpm,
+          key: track.key,
+          genre: track.genre,
+          ai_text: track.ai_text,
+          created_at: track.created_at,
+          user: {
+            id: track.user.id,
+            name: track.user.name,
+            bio: track.user.bio
+          }
+        }
+      end,
+      pagination: {
+        current_page: page,
+        total_pages: total_pages,
+        total_count: total_count,
+        per_page: per_page
+      }
+    }
+  end
+
+  def show
+    track = Track.includes(:user).find_by(id: params[:id])
+
+    if track.nil?
+      render json: { error: "楽曲が見つかりません" }, status: :not_found
+      return
+    end
+
+    render json: {
+      track: {
+        id: track.id,
+        title: track.title,
+        description: track.description,
+        yt_url: track.yt_url,
+        bpm: track.bpm,
+        key: track.key,
+        genre: track.genre,
+        ai_text: track.ai_text,
+        created_at: track.created_at,
+        updated_at: track.updated_at,
+        user: {
+          id: track.user.id,
+          name: track.user.name,
+          bio: track.user.bio,
+          email: track.user.email
+        }
+      }
+    }
   end
 
   def create
