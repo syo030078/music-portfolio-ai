@@ -172,6 +172,13 @@ RSpec.describe Api::V1::TracksController, type: :controller do
   end
 
   describe "POST #create" do
+    let(:authenticated_user) { User.create!(email: 'auth@example.com', password: 'password123', name: 'Auth User') }
+
+    before do
+      # 認証済みユーザーとしてサインイン
+      sign_in authenticated_user
+    end
+
     context "when both audio_file and yt_url are missing" do
       it "returns bad request error" do
         post :create, params: {}
