@@ -1,4 +1,4 @@
-class Commission < ApplicationRecord
+class Job < ApplicationRecord
   belongs_to :user
   belongs_to :track
   has_many :messages, dependent: :destroy
