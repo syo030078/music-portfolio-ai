@@ -49,18 +49,18 @@ RSpec.describe User, type: :model do
   describe 'message associations' do
     let(:user) { User.create!(email: 'user@example.com', password: 'password123') }
     let(:track) { Track.create!(title: 'Test Track', user: user, yt_url: 'https://youtube.com/watch?v=test') }
-    let(:commission) { Commission.create!(user: user, track: track, description: 'Test commission', budget: 5000, status: 'pending') }
+    let(:job) { Job.create!(user: user, track: track, description: 'Test job', budget: 5000, status: 'pending') }
 
     it 'has many messages' do
-      message1 = user.messages.create!(commission: commission, content: 'First message')
-      message2 = user.messages.create!(commission: commission, content: 'Second message')
+      message1 = user.messages.create!(job: job, content: 'First message')
+      message2 = user.messages.create!(job: job, content: 'Second message')
 
       expect(user.messages.count).to eq(2)
       expect(user.messages).to include(message1, message2)
     end
 
     it 'destroys associated messages when user is deleted' do
-      message = user.messages.create!(commission: commission, content: 'Test message')
+      message = user.messages.create!(job: job, content: 'Test message')
       message_id = message.id
 
       user.destroy
@@ -68,15 +68,15 @@ RSpec.describe User, type: :model do
       expect(Message.find_by(id: message_id)).to be_nil
     end
 
-    it 'can send messages to different commissions' do
-      commission2 = Commission.create!(user: user, track: track, description: 'Another commission', budget: 3000, status: 'pending')
-      
-      message1 = user.messages.create!(commission: commission, content: 'Message to first commission')
-      message2 = user.messages.create!(commission: commission2, content: 'Message to second commission')
+    it 'can send messages to different jobs' do
+      job2 = Job.create!(user: user, track: track, description: 'Another job', budget: 3000, status: 'pending')
+
+      message1 = user.messages.create!(job: job, content: 'Message to first job')
+      message2 = user.messages.create!(job: job2, content: 'Message to second job')
 
       expect(user.messages.count).to eq(2)
-      expect(message1.commission).to eq(commission)
-      expect(message2.commission).to eq(commission2)
+      expect(message1.job).to eq(job)
+      expect(message2.job).to eq(job2)
     end
   end
 end
