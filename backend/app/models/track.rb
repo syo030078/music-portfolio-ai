@@ -1,6 +1,6 @@
 class Track < ApplicationRecord
   belongs_to :user
-  has_many :commissions, dependent: :destroy
+  has_many :jobs, dependent: :destroy
 
   before_validation :normalize_yt_url
 
