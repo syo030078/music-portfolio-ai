@@ -1,0 +1,229 @@
+@startuml
+' ===== Style =====
+hide circle
+hide methods
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam class {
+  BackgroundColor White
+  BorderColor #999999
+}
+!define PK <b><color:#1a73e8>PK</color></b>
+!define FK <color:#d93025>FK</color>
+
+' ===== Entities =====
+entity "users" as users {
+  PK id: uuid
+  email: citext (unique)
+  password_hash: text
+  display_name: text
+  timezone: text
+  is_musician: boolean
+  is_client: boolean
+  jti: text (unique)
+  deleted_at: timestamptz
+  created_at: timestamptz
+  updated_at: timestamptz
+}
+
+entity "musician_profiles" as musician_profiles {
+  PK user_id: uuid  {FK -> users.id}
+  headline: text
+  bio: text
+  hourly_rate_jpy: integer
+  remote_ok: boolean
+  onsite_ok: boolean
+  portfolio_url: text
+  avg_rating: numeric(2,1)
+  rating_count: integer
+  created_at: timestamptz
+  updated_at: timestamptz
+}
+
+entity "client_profiles" as client_profiles {
+  PK user_id: uuid  {FK -> users.id}
+  organization: text
+  verified: boolean
+  created_at: timestamptz
+  updated_at: timestamptz
+}
+
+entity "genres" as genres {
+  PK id: serial
+  name: text (unique)
+}
+entity "instruments" as instruments {
+  PK id: serial
+  name: text (unique)
+}
+entity "skills" as skills {
+  PK id: serial
+  name: text (unique)
+}
+
+entity "musician_genres" as musician_genres {
+  PK user_id: uuid {FK -> users.id}
+  PK genre_id: int {FK -> genres.id}
+}
+entity "musician_instruments" as musician_instruments {
+  PK user_id: uuid {FK -> users.id}
+  PK instrument_id: int {FK -> instruments.id}
+}
+entity "musician_skills" as musician_skills {
+  PK user_id: uuid {FK -> users.id}
+  PK skill_id: int {FK -> skills.id}
+}
+
+entity "jobs" as jobs {
+  PK id: uuid
+  client: uuid {FK -> users.id}  ' client_id相当
+  title: text
+  description: text
+  budget_min_jpy: integer
+  budget_max_jpy: integer
+  delivery_due_on: date
+  is_remote: boolean
+  location_note: text
+  status: enum(draft,published,in_review,contracted,completed,closed)
+  published_at: timestamptz
+  created_at: timestamptz
+  updated_at: timestamptz
+}
+
+entity "job_requirements" as job_requirements {
+  PK id: bigserial
+  job: uuid {FK -> jobs.id}
+  kind: enum(genre,instrument,skill)
+  ref_id: int  ' genres.id / instruments.id / skills.id を参照
+  created_at: timestamptz
+  updated_at: timestamptz
+}
+
+entity "proposals" as proposals {
+  PK id: uuid
+  job: uuid {FK -> jobs.id}
+  musician: uuid {FK -> users.id}
+  cover_message: text
+  quote_total_jpy: integer
+  delivery_days: integer
+  status: enum(submitted,shortlisted,accepted,rejected,withdrawn)
+  created_at: timestamptz
+  updated_at: timestamptz
+}
+
+entity "contracts" as contracts {
+  PK id: uuid
+  proposal_id: uuid {FK -> proposals.id} (unique)
+  client: uuid {FK -> users.id}
+  musician: uuid {FK -> users.id}
+  status: enum(active,in_progress,delivered,completed,canceled)
+  escrow_total_jpy: integer
+  created_at: timestamptz
+  updated_at: timestamptz
+}
+
+entity "contract_milestones" as contract_milestones {
+  PK id: uuid
+  contract_id: uuid {FK -> contracts.id}
+  title: text
+  amount_jpy: integer
+  due_on: date
+  status: enum(open,submitted,approved,rejected,paid)
+  created_at: timestamptz
+  updated_at: timestamptz
+}
+
+entity "threads" as threads {
+  PK id: uuid
+  job_id: uuid {FK -> jobs.id}        ' 契約前スレ
+  contract_id: uuid {FK -> contracts.id} ' 契約後スレ
+  created_at: timestamptz
+}
+
+entity "thread_participants" as thread_participants {
+  PK thread_id: uuid {FK -> threads.id}
+  PK user_id: uuid {FK -> users.id}
+}
+
+entity "messages" as messages {
+  PK id: uuid
+  thread_id: uuid {FK -> threads.id}
+  sender_id: uuid {FK -> users.id}
+  body: text
+  attachment_url: text
+  created_at: timestamptz
+}
+
+entity "reviews" as reviews {
+  PK id: uuid
+  contract_id: uuid {FK -> contracts.id} (unique)
+  reviewer_id: uuid {FK -> users.id}
+  reviewee_id: uuid {FK -> users.id}
+  rating: int (1..5)
+  comment: text
+  created_at: timestamptz
+}
+
+entity "transactions" as transactions {
+  PK id: uuid
+  contract_id: uuid {FK -> contracts.id}
+  milestone_id: uuid {FK -> contract_milestones.id}
+  kind: enum(escrow_deposit,milestone_payout,refund,platform_fee)
+  status: enum(authorized,captured,paid_out,failed,refunded)
+  amount_jpy: integer
+  provider: text
+  provider_ref: text
+  created_at: timestamptz
+}
+
+' ===== Relationships =====
+users ||--|| musician_profiles : has one
+users ||--|| client_profiles   : has one
+
+users ||--o{ jobs : client
+jobs  ||--o{ job_requirements
+
+users ||--o{ proposals : musician
+jobs  ||--o{ proposals
+
+proposals ||--|| contracts : creates
+users ||--o{ contracts : client/musician
+contracts ||--o{ contract_milestones
+
+' taxonomy
+users ||--o{ musician_genres
+genres ||--o{ musician_genres
+
+users ||--o{ musician_instruments
+instruments ||--o{ musician_instruments
+
+users ||--o{ musician_skills
+skills ||--o{ musician_skills
+
+' messaging
+jobs ||--o{ threads
+contracts ||--o{ threads
+threads ||--o{ thread_participants
+users ||--o{ thread_participants
+threads ||--o{ messages
+users ||--o{ messages : sender
+
+' reviews & payments
+users ||--o{ reviews : reviewer/reviewee
+contracts ||--o{ reviews
+contracts ||--o{ transactions
+contract_milestones ||--o{ transactions
+
+' ===== Notes =====
+note right of job_requirements
+ref_id は kind に応じて
+genres / instruments / skills の id を参照
+(アプリ側で整合性チェック)
+end note
+
+note right of contracts
+escrow_total_jpy は
+contract_milestones.amount_jpy の合計と一致
+end note
+
+@enduml
