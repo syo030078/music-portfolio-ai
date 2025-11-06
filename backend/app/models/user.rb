@@ -9,6 +9,7 @@ class User < ApplicationRecord
   has_many :jobs, dependent: :destroy
   has_many :messages, dependent: :destroy
   has_one :musician_profile, dependent: :destroy
+  has_one :client_profile, dependent: :destroy
 
   # Validations
   validates :timezone, inclusion: { in: ActiveSupport::TimeZone.all.map(&:name) }, allow_nil: true

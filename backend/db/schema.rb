@@ -10,7 +10,16 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_11_06_030207) do
+ActiveRecord::Schema[7.0].define(version: 2025_11_06_030620) do
+  create_table "client_profiles", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "organization"
+    t.boolean "verified", default: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_client_profiles_on_user_id", unique: true
+  end
+
   create_table "jobs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "track_id", null: false
@@ -94,6 +103,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_06_030207) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "client_profiles", "users"
   add_foreign_key "jobs", "tracks"
   add_foreign_key "jobs", "users"
   add_foreign_key "messages", "jobs"
