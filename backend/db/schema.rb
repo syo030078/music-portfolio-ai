@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_11_06_030011) do
+ActiveRecord::Schema[7.0].define(version: 2025_11_06_030207) do
   create_table "jobs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "track_id", null: false
@@ -39,6 +39,21 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_06_030011) do
     t.datetime "updated_at", null: false
     t.index ["job_id"], name: "index_messages_on_job_id"
     t.index ["user_id"], name: "index_messages_on_user_id"
+  end
+
+  create_table "musician_profiles", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.text "headline"
+    t.text "bio"
+    t.integer "hourly_rate_jpy"
+    t.boolean "remote_ok", default: false
+    t.boolean "onsite_ok", default: false
+    t.string "portfolio_url"
+    t.decimal "avg_rating", precision: 2, scale: 1, default: "0.0"
+    t.integer "rating_count", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_musician_profiles_on_user_id", unique: true
   end
 
   create_table "tracks", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -83,5 +98,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_06_030011) do
   add_foreign_key "jobs", "users"
   add_foreign_key "messages", "jobs"
   add_foreign_key "messages", "users"
+  add_foreign_key "musician_profiles", "users"
   add_foreign_key "tracks", "users"
 end
