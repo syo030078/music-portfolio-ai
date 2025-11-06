@@ -1,0 +1,23 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user: one
+  headline: MyText
+  bio: MyText
+  hourly_rate_jpy: 1
+  remote_ok: false
+  onsite_ok: false
+  portfolio_url: MyString
+  avg_rating: 9.99
+  rating_count: 1
+
+two:
+  user: two
+  headline: MyText
+  bio: MyText
+  hourly_rate_jpy: 1
+  remote_ok: false
+  onsite_ok: false
+  portfolio_url: MyString
+  avg_rating: 9.99
+  rating_count: 1

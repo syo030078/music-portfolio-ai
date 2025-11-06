@@ -1,6 +1,100 @@
 require 'rails_helper'
 
 RSpec.describe User, type: :model do
+  describe 'validations' do
+    it 'validates timezone is a valid timezone' do
+      user = User.new(email: 'test@example.com', password: 'password123', timezone: 'Invalid/Timezone')
+      expect(user).not_to be_valid
+      expect(user.errors[:timezone]).to include('is not included in the list')
+    end
+
+    it 'allows valid timezone' do
+      user = User.new(email: 'test@example.com', password: 'password123', timezone: 'Tokyo')
+      expect(user).to be_valid
+    end
+
+    it 'allows nil timezone' do
+      user = User.new(email: 'test@example.com', password: 'password123', timezone: nil)
+      expect(user).to be_valid
+    end
+
+    it 'validates display_name length' do
+      user = User.new(email: 'test@example.com', password: 'password123', display_name: 'a' * 51)
+      expect(user).not_to be_valid
+      expect(user.errors[:display_name]).to include('is too long (maximum is 50 characters)')
+    end
+
+    it 'allows blank display_name' do
+      user = User.new(email: 'test@example.com', password: 'password123', display_name: '')
+      expect(user).to be_valid
+    end
+  end
+
+  describe 'scopes' do
+    let!(:active_user) { User.create!(email: 'active@example.com', password: 'password123') }
+    let!(:deleted_user) { User.create!(email: 'deleted@example.com', password: 'password123', deleted_at: Time.current) }
+    let!(:musician) { User.create!(email: 'musician@example.com', password: 'password123', is_musician: true) }
+    let!(:client) { User.create!(email: 'client@example.com', password: 'password123', is_client: true) }
+
+    describe '.active' do
+      it 'returns only active users' do
+        expect(User.active).to include(active_user, musician, client)
+        expect(User.active).not_to include(deleted_user)
+      end
+    end
+
+    describe '.musicians' do
+      it 'returns only musicians' do
+        expect(User.musicians).to eq([musician])
+      end
+    end
+
+    describe '.clients' do
+      it 'returns only clients' do
+        expect(User.clients).to eq([client])
+      end
+    end
+  end
+
+  describe '#soft_delete' do
+    let(:user) { User.create!(email: 'test@example.com', password: 'password123') }
+
+    it 'sets deleted_at timestamp' do
+      expect(user.deleted_at).to be_nil
+      user.soft_delete
+      expect(user.deleted_at).not_to be_nil
+    end
+  end
+
+  describe '#active?' do
+    it 'returns true when deleted_at is nil' do
+      user = User.create!(email: 'test@example.com', password: 'password123')
+      expect(user.active?).to be true
+    end
+
+    it 'returns false when deleted_at is set' do
+      user = User.create!(email: 'test@example.com', password: 'password123', deleted_at: Time.current)
+      expect(user.active?).to be false
+    end
+  end
+
+  describe 'default values' do
+    it 'sets default timezone to UTC' do
+      user = User.create!(email: 'test@example.com', password: 'password123')
+      expect(user.timezone).to eq('UTC')
+    end
+
+    it 'sets default is_musician to false' do
+      user = User.create!(email: 'test@example.com', password: 'password123')
+      expect(user.is_musician).to be false
+    end
+
+    it 'sets default is_client to false' do
+      user = User.create!(email: 'test@example.com', password: 'password123')
+      expect(user.is_client).to be false
+    end
+  end
+
   describe 'new attributes' do
     it 'can save with provider and uid' do
       user = User.create!(
