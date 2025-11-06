@@ -534,4 +534,58 @@ mysqldump -u root music_portfolio_ai_development > dump.sql
 
 ---
 
-最終更新: 2025-11-05
+## 実装進捗
+
+### ✅ Phase 1: ユーザープロファイル拡張（完了）
+
+**ブランチ**: `feature/user-profiles`
+**実装日**: 2025-11-06
+
+#### ✅ Task 1-1: users テーブル拡張（完了）
+- **コミット**: `7e26bd6` - feat(users): add display_name, timezone, role flags to users table
+- **マイグレーション**: `20251106030011_add_profile_fields_to_users.rb`
+- **実装内容**:
+  - display_name, timezone, is_musician, is_client, deleted_at カラム追加
+  - deleted_at インデックス追加
+  - バリデーション実装（timezone, display_name）
+  - スコープ実装（active, musicians, clients）
+  - ソフトデリート機能実装
+- **テスト**: 21 examples, 0 failures
+
+#### ✅ Task 1-2: musician_profiles テーブル作成（完了）
+- **コミット**: `d3d15cd` - feat(musician_profiles): create musician_profiles table
+- **マイグレーション**: `20251106030207_create_musician_profiles.rb`
+- **実装内容**:
+  - musician_profiles テーブル作成
+  - user_id に unique インデックス
+  - デフォルト値設定（remote_ok=false, onsite_ok=false, avg_rating=0.0, rating_count=0）
+  - バリデーション実装（hourly_rate_jpy, avg_rating, rating_count, portfolio_url, headline）
+  - User モデルに has_one :musician_profile 関連追加
+- **テスト**: 23 examples, 0 failures
+
+#### ✅ Task 1-3: client_profiles テーブル作成（完了）
+- **コミット**: `26f74bd` - feat(client_profiles): create client_profiles table
+- **マイグレーション**: `20251106030620_create_client_profiles.rb`
+- **実装内容**:
+  - client_profiles テーブル作成
+  - user_id に unique インデックス
+  - デフォルト値設定（verified=false）
+  - バリデーション実装（organization）
+  - User モデルに has_one :client_profile 関連追加
+- **テスト**: 6 examples, 0 failures
+
+### 🔄 Phase 2: タクソノミーシステム（未着手）
+
+予定実装内容:
+- Task 2-1: マスターテーブル作成（genres, instruments, skills）
+- Task 2-2: 中間テーブル作成（musician_genres, musician_instruments, musician_skills）
+
+### 🔄 Phase 3: jobs テーブル拡張（未着手）
+
+予定実装内容:
+- Task 3-1: jobs テーブル拡張
+- Task 3-2: job_requirements テーブル作成
+
+---
+
+最終更新: 2025-11-06
