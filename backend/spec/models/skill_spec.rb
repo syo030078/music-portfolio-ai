@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe Skill, type: :model do
   describe 'validations' do
-    subject { Skill.new(name: 'Composition') }
+    subject { Skill.new(name: 'Editing') }
 
     it 'is valid with a name' do
       expect(subject).to be_valid
@@ -14,9 +14,11 @@ RSpec.describe Skill, type: :model do
     end
 
     it 'validates uniqueness of name' do
-      Skill.create!(name: 'Composition')
+      # Use existing seed data
+      existing_skill = Skill.find_by(name: 'Composition')
       duplicate = Skill.new(name: 'Composition')
       expect(duplicate).not_to be_valid
+      expect(existing_skill).to be_present
     end
   end
 

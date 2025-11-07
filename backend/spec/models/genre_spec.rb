@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe Genre, type: :model do
   describe 'validations' do
-    subject { Genre.new(name: 'Rock') }
+    subject { Genre.new(name: 'Alternative') }
 
     it 'is valid with a name' do
       expect(subject).to be_valid
@@ -14,9 +14,11 @@ RSpec.describe Genre, type: :model do
     end
 
     it 'validates uniqueness of name' do
-      Genre.create!(name: 'Rock')
+      # Use existing seed data
+      existing_genre = Genre.find_by(name: 'Rock')
       duplicate = Genre.new(name: 'Rock')
       expect(duplicate).not_to be_valid
+      expect(existing_genre).to be_present
     end
   end
 

@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe MusicianInstrument, type: :model do
   let(:user) { User.create!(email: 'test@example.com', password: 'password123') }
-  let(:instrument) { Instrument.create!(name: 'Piano') }
+  let(:instrument) { Instrument.find_by(name: 'Piano') || Instrument.create!(name: 'Piano') }
 
   describe 'associations' do
     it 'belongs to user' do

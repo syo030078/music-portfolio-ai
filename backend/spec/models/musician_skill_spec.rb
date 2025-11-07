@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe MusicianSkill, type: :model do
   let(:user) { User.create!(email: 'test@example.com', password: 'password123') }
-  let(:skill) { Skill.create!(name: 'Composition') }
+  let(:skill) { Skill.find_by(name: 'Composition') || Skill.create!(name: 'Composition') }
 
   describe 'associations' do
     it 'belongs to user' do

@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe Instrument, type: :model do
   describe 'validations' do
-    subject { Instrument.new(name: 'Piano') }
+    subject { Instrument.new(name: 'Flute') }
 
     it 'is valid with a name' do
       expect(subject).to be_valid
@@ -14,9 +14,11 @@ RSpec.describe Instrument, type: :model do
     end
 
     it 'validates uniqueness of name' do
-      Instrument.create!(name: 'Piano')
+      # Use existing seed data
+      existing_instrument = Instrument.find_by(name: 'Piano')
       duplicate = Instrument.new(name: 'Piano')
       expect(duplicate).not_to be_valid
+      expect(existing_instrument).to be_present
     end
   end
 

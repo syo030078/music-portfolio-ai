@@ -176,9 +176,9 @@ RSpec.describe User, type: :model do
 
   describe 'taxonomy associations' do
     let(:user) { User.create!(email: 'musician@example.com', password: 'password123') }
-    let(:genre) { Genre.create!(name: 'Rock') }
-    let(:instrument) { Instrument.create!(name: 'Guitar') }
-    let(:skill) { Skill.create!(name: 'Composition') }
+    let(:genre) { Genre.find_by(name: 'Rock') || Genre.create!(name: 'Rock') }
+    let(:instrument) { Instrument.find_by(name: 'Guitar') || Instrument.create!(name: 'Guitar') }
+    let(:skill) { Skill.find_by(name: 'Composition') || Skill.create!(name: 'Composition') }
 
     it 'has many genres through musician_genres' do
       user.genres << genre
