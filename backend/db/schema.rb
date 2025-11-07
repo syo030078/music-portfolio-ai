@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_11_06_030620) do
+ActiveRecord::Schema[7.0].define(version: 2025_11_07_102954) do
   create_table "client_profiles", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "organization"
@@ -18,6 +18,20 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_06_030620) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_client_profiles_on_user_id", unique: true
+  end
+
+  create_table "genres", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_genres_on_name", unique: true
+  end
+
+  create_table "instruments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_instruments_on_name", unique: true
   end
 
   create_table "jobs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -50,6 +64,22 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_06_030620) do
     t.index ["user_id"], name: "index_messages_on_user_id"
   end
 
+  create_table "musician_genres", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "genre_id", null: false
+    t.index ["genre_id"], name: "index_musician_genres_on_genre_id"
+    t.index ["user_id", "genre_id"], name: "index_musician_genres_on_user_id_and_genre_id", unique: true
+    t.index ["user_id"], name: "index_musician_genres_on_user_id"
+  end
+
+  create_table "musician_instruments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "instrument_id", null: false
+    t.index ["instrument_id"], name: "index_musician_instruments_on_instrument_id"
+    t.index ["user_id", "instrument_id"], name: "index_musician_instruments_on_user_id_and_instrument_id", unique: true
+    t.index ["user_id"], name: "index_musician_instruments_on_user_id"
+  end
+
   create_table "musician_profiles", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.text "headline"
@@ -63,6 +93,21 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_06_030620) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_musician_profiles_on_user_id", unique: true
+  end
+
+  create_table "musician_skills", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "skill_id", null: false
+    t.index ["skill_id"], name: "index_musician_skills_on_skill_id"
+    t.index ["user_id", "skill_id"], name: "index_musician_skills_on_user_id_and_skill_id", unique: true
+    t.index ["user_id"], name: "index_musician_skills_on_user_id"
+  end
+
+  create_table "skills", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_skills_on_name", unique: true
   end
 
   create_table "tracks", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -108,6 +153,12 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_06_030620) do
   add_foreign_key "jobs", "users"
   add_foreign_key "messages", "jobs"
   add_foreign_key "messages", "users"
+  add_foreign_key "musician_genres", "genres"
+  add_foreign_key "musician_genres", "users"
+  add_foreign_key "musician_instruments", "instruments"
+  add_foreign_key "musician_instruments", "users"
   add_foreign_key "musician_profiles", "users"
+  add_foreign_key "musician_skills", "skills"
+  add_foreign_key "musician_skills", "users"
   add_foreign_key "tracks", "users"
 end
