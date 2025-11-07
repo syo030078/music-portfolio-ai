@@ -616,13 +616,60 @@ mysqldump -u root music_portfolio_ai_development > dump.sql
   - テストを既存シードデータと共存するように更新
 - **テスト**: 109 examples, 0 failures
 
-### 🔄 Phase 3: jobs テーブル拡張（未着手）
+### ✅ Phase 3: jobs テーブル拡張（完了）
 
-予定実装内容:
+**ブランチ**: `feature/jobs-expansion`
+**PR**: (作成予定)
 
-- Task 3-1: jobs テーブル拡張
-- Task 3-2: job_requirements テーブル作成
+#### ✅ Task 3-1: jobs テーブル拡張（完了）
+
+- **コミット**: `339ccf3` - feat(jobs): Task 3-1 - expand jobs table and update model (Phase 3)
+- **マイグレーション**: `20251107113000_expand_jobs_table.rb`
+- **実装内容**:
+  - 新規カラム追加:
+    - `title`: string（案件タイトル、必須、最大255文字）
+    - `budget_min_jpy`: integer（予算下限、正の整数、nullable）
+    - `budget_max_jpy`: integer（予算上限、正の整数、nullable、下限以上であること）
+    - `delivery_due_on`: date（納期）
+    - `is_remote`: boolean（リモート可否、デフォルト true）
+    - `location_note`: text（場所に関するメモ）
+    - `published_at`: datetime（公開日時、index 追加）
+  - カラム名変更:
+    - `user_id` → `client_id`（依頼者を明示）
+    - `budget` → `budget_jpy`（通貨を明示）
+  - track_id を optional に変更
+  - status に index 追加、デフォルト値 'draft' 設定
+  - Job モデル更新:
+    - enum status に 6 つのステータス追加（draft, published, in_review, contracted, completed, closed）
+    - belongs_to :client 関連付け（User モデルへの参照）
+    - belongs_to :track, optional: true
+    - has_many :messages, dependent: :destroy
+    - has_many :job_requirements, dependent: :destroy
+    - バリデーション追加（title, description, budget 各種、budget_max >= budget_min）
+    - scope :published 追加
+  - User モデル更新:
+    - has_many :jobs, foreign_key: 'client_id' に変更
+  - 既存データ移行: title が nil のレコードに 'Untitled Job' を設定
+- **テスト**: job_spec.rb 更新（21 examples for Job model validations, enums, associations, scopes, defaults）
+
+#### ✅ Task 3-2: job_requirements テーブル作成（完了）
+
+- **コミット**: `c87144e` - feat(jobs): Task 3-2 - add job_requirements table and model (Phase 3)
+- **マイグレーション**: `20251107113100_create_job_requirements.rb`
+- **実装内容**:
+  - job_requirements テーブル作成:
+    - `job_id`: bigint（外部キー、NOT NULL）
+    - `kind`: string（'genre', 'instrument', 'skill' のいずれか、NOT NULL）
+    - `ref_id`: bigint（参照先 ID、NOT NULL）
+    - 複合 unique インデックス: (job_id, kind, ref_id)
+  - JobRequirement モデル実装:
+    - belongs_to :job
+    - enum kind（genre, instrument, skill）
+    - バリデーション（kind, ref_id の存在、ref_id の参照先存在チェック）
+    - ヘルパーメソッド: reference_object, reference_name
+  - Job モデルに has_many :job_requirements 追加
+- **テスト**: job_requirement_spec.rb 作成（20+ examples covering associations, validations, enums, helper methods, uniqueness）
 
 ---
 
-最終更新: 2025-11-06
+最終更新: 2025-11-07
