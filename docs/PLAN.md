@@ -672,4 +672,31 @@ mysqldump -u root music_portfolio_ai_development > dump.sql
 
 ---
 
+### ✅ PostgreSQL 移行（完了）
+
+**ブランチ**: `feature/postgresql-migration`
+**PR**: (作成予定)
+**実施日**: 2025-11-07
+
+#### 移行内容
+
+- **Gemfile**: mysql2 gem を pg gem に置換
+- **database.yml**: PostgreSQL adapter に変更（ポート 3306 → 5432）
+- **GitHub Actions**: MySQL サービスを PostgreSQL に変更（postgres:15 イメージ使用）
+
+#### 移行の利点
+
+1. **データ整合性の向上**: PostgreSQL のより厳格な型システム
+2. **将来の拡張性**: UUID 主キー、enum 型、citext 型などのサポート
+3. **本番環境での一般的な選択**: スケーラビリティと信頼性
+4. **既存マイグレーションの互換性**: 全マイグレーションがデータベース非依存で記述されているため、再実行のみで移行完了
+
+#### 注意事項
+
+- 既存のマイグレーションファイルは変更不要（Rails の抽象化により互換性あり）
+- データベース作成と既存マイグレーションの再実行のみで移行完了
+- 開発環境・CI環境ともに PostgreSQL 15 を使用
+
+---
+
 最終更新: 2025-11-07
