@@ -151,6 +151,41 @@ RSpec.describe Job, type: :model do
 
       expect(Message.find_by(id: message_id)).to be_nil
     end
+
+    it 'has many job_requirements' do
+      job = Job.create!(
+        client: client,
+        title: 'Test job',
+        description: 'Test description',
+        status: 'draft'
+      )
+
+      genre = Genre.find_by(name: 'Rock') || Genre.create!(name: 'Rock')
+      skill = Skill.find_by(name: 'Composition') || Skill.create!(name: 'Composition')
+
+      req1 = job.job_requirements.create!(kind: 'genre', ref_id: genre.id)
+      req2 = job.job_requirements.create!(kind: 'skill', ref_id: skill.id)
+
+      expect(job.job_requirements.count).to eq(2)
+      expect(job.job_requirements).to include(req1, req2)
+    end
+
+    it 'destroys associated job_requirements when job is deleted' do
+      job = Job.create!(
+        client: client,
+        title: 'Test job',
+        description: 'Test description',
+        status: 'draft'
+      )
+
+      genre = Genre.find_by(name: 'Rock') || Genre.create!(name: 'Rock')
+      requirement = job.job_requirements.create!(kind: 'genre', ref_id: genre.id)
+      requirement_id = requirement.id
+
+      job.destroy
+
+      expect(JobRequirement.find_by(id: requirement_id)).to be_nil
+    end
   end
 
   describe 'scopes' do

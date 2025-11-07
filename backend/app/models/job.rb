@@ -2,6 +2,7 @@ class Job < ApplicationRecord
   belongs_to :client, class_name: 'User', foreign_key: 'client_id'
   belongs_to :track, optional: true
   has_many :messages, dependent: :destroy
+  has_many :job_requirements, dependent: :destroy
 
   enum status: {
     draft: 'draft',
