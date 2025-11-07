@@ -3,7 +3,7 @@ require 'rails_helper'
 RSpec.describe Message, type: :model do
   let(:user) { User.create!(email: 'user@example.com', password: 'password123') }
   let(:track) { Track.create!(title: 'Test Track', user: user, yt_url: 'https://youtube.com/watch?v=test') }
-  let(:job) { Job.create!(user: user, track: track, description: 'Test job', budget: 5000, status: 'pending') }
+  let(:job) { Job.create!(client: user, track: track, title: 'Test Job', description: 'Test job', status: 'draft') }
 
   it 'creates a valid message' do
     message = Message.create!(

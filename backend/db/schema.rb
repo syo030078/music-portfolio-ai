@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_11_07_102954) do
+ActiveRecord::Schema[7.0].define(version: 2025_11_07_110928) do
   create_table "client_profiles", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "organization"
@@ -35,15 +35,24 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_07_102954) do
   end
 
   create_table "jobs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "user_id", null: false
-    t.bigint "track_id", null: false
+    t.bigint "client_id", null: false
+    t.bigint "track_id"
     t.text "description"
-    t.integer "budget"
-    t.string "status"
+    t.integer "budget_jpy"
+    t.string "status", default: "draft"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "title"
+    t.integer "budget_min_jpy"
+    t.integer "budget_max_jpy"
+    t.date "delivery_due_on"
+    t.boolean "is_remote", default: true
+    t.text "location_note"
+    t.datetime "published_at"
+    t.index ["client_id"], name: "index_jobs_on_client_id"
+    t.index ["published_at"], name: "index_jobs_on_published_at"
+    t.index ["status"], name: "index_jobs_on_status"
     t.index ["track_id"], name: "index_jobs_on_track_id"
-    t.index ["user_id"], name: "index_jobs_on_user_id"
   end
 
   create_table "jwt_denylists", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -111,7 +120,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_07_102954) do
   end
 
   create_table "tracks", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "user_id"
+    t.bigint "user_id", null: false
     t.string "title"
     t.text "description"
     t.string "yt_url"
@@ -140,8 +149,8 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_07_102954) do
     t.string "uid"
     t.string "display_name"
     t.string "timezone", default: "UTC"
-    t.boolean "is_musician", default: false, null: false
-    t.boolean "is_client", default: false, null: false
+    t.boolean "is_musician", default: false
+    t.boolean "is_client", default: false
     t.datetime "deleted_at"
     t.index ["deleted_at"], name: "index_users_on_deleted_at"
     t.index ["email"], name: "index_users_on_email", unique: true
@@ -150,7 +159,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_11_07_102954) do
 
   add_foreign_key "client_profiles", "users"
   add_foreign_key "jobs", "tracks"
-  add_foreign_key "jobs", "users"
+  add_foreign_key "jobs", "users", column: "client_id"
   add_foreign_key "messages", "jobs"
   add_foreign_key "messages", "users"
   add_foreign_key "musician_genres", "genres"
