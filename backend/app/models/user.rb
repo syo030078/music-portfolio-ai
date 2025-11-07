@@ -11,6 +11,16 @@ class User < ApplicationRecord
   has_one :musician_profile, dependent: :destroy
   has_one :client_profile, dependent: :destroy
 
+  # Taxonomy associations
+  has_many :musician_genres, dependent: :destroy
+  has_many :genres, through: :musician_genres
+
+  has_many :musician_instruments, dependent: :destroy
+  has_many :instruments, through: :musician_instruments
+
+  has_many :musician_skills, dependent: :destroy
+  has_many :skills, through: :musician_skills
+
   # Validations
   validates :timezone, inclusion: { in: ActiveSupport::TimeZone.all.map(&:name) }, allow_nil: true
   validates :display_name, length: { maximum: 50 }, allow_blank: true

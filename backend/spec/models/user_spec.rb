@@ -173,4 +173,38 @@ RSpec.describe User, type: :model do
       expect(message2.job).to eq(job2)
     end
   end
+
+  describe 'taxonomy associations' do
+    let(:user) { User.create!(email: 'musician@example.com', password: 'password123') }
+    let(:genre) { Genre.create!(name: 'Rock') }
+    let(:instrument) { Instrument.create!(name: 'Guitar') }
+    let(:skill) { Skill.create!(name: 'Composition') }
+
+    it 'has many genres through musician_genres' do
+      user.genres << genre
+      expect(user.genres).to include(genre)
+    end
+
+    it 'has many instruments through musician_instruments' do
+      user.instruments << instrument
+      expect(user.instruments).to include(instrument)
+    end
+
+    it 'has many skills through musician_skills' do
+      user.skills << skill
+      expect(user.skills).to include(skill)
+    end
+
+    it 'destroys join records when user is deleted' do
+      user.genres << genre
+      user.instruments << instrument
+      user.skills << skill
+
+      user.destroy
+
+      expect(MusicianGenre.where(user_id: user.id)).to be_empty
+      expect(MusicianInstrument.where(user_id: user.id)).to be_empty
+      expect(MusicianSkill.where(user_id: user.id)).to be_empty
+    end
+  end
 end
