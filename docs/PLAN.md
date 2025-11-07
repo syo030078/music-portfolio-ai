@@ -616,13 +616,52 @@ mysqldump -u root music_portfolio_ai_development > dump.sql
   - テストを既存シードデータと共存するように更新
 - **テスト**: 109 examples, 0 failures
 
-### 🔄 Phase 3: jobs テーブル拡張（未着手）
+### ✅ Phase 3: jobs テーブル拡張（完了）
+
+**ブランチ**: `feature/jobs-expansion`
+**PR**: #45
+
+#### ✅ Task 3-1: jobs テーブル拡張（完了）
+
+- **コミット**: `949bc1c` - feat(jobs): expand jobs table and update model (Phase 3)
+- **マイグレーション**: `20251107110928_expand_jobs_table.rb`
+- **実装内容**:
+  - 新規カラム追加:
+    - `title`: string（案件タイトル、必須、最大255文字）
+    - `budget_min_jpy`: integer（予算下限、正の整数、nullable）
+    - `budget_max_jpy`: integer（予算上限、正の整数、nullable、下限以上であること）
+    - `delivery_due_on`: date（納期）
+    - `is_remote`: boolean（リモート可否、デフォルト true）
+    - `location_note`: text（場所に関するメモ）
+    - `published_at`: datetime（公開日時、index 追加）
+  - カラム名変更:
+    - `user_id` → `client_id`（依頼者を明示）
+    - `budget` → `budget_jpy`（通貨を明示）
+  - track_id を optional に変更
+  - status に index 追加、デフォルト値 'draft' 設定
+  - Job モデル更新:
+    - enum status に 6 つのステータス追加（draft, published, in_review, contracted, completed, closed）
+    - belongs_to :client 関連付け（User モデルへの参照）
+    - belongs_to :track, optional: true
+    - has_many :messages, dependent: :destroy
+    - バリデーション追加（title, description, budget 各種、budget_max >= budget_min）
+    - scope :published 追加
+  - User モデル更新:
+    - has_many :jobs, foreign_key: 'client_id' に変更
+  - 既存データ移行: title が nil のレコードに 'Untitled Job' を設定
+- **テスト**: 126 examples, 0 failures
+  - Job モデル: 21 examples（validations, enum, associations, scopes, defaults）
+  - Message モデル: client 参照に対応
+  - User モデル: jobs 関連付けのテスト更新
+
+#### 🔄 Task 3-2: job_requirements テーブル作成（未着手）
 
 予定実装内容:
 
-- Task 3-1: jobs テーブル拡張
-- Task 3-2: job_requirements テーブル作成
+- job_requirements テーブル作成
+- JobRequirement モデル実装（ポリモーフィック関連付け）
+- Job モデルに has_many :job_requirements 追加
 
 ---
 
-最終更新: 2025-11-06
+最終更新: 2025-11-07
