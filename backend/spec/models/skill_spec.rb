@@ -14,11 +14,9 @@ RSpec.describe Skill, type: :model do
     end
 
     it 'validates uniqueness of name' do
-      # Use existing seed data
-      existing_skill = Skill.find_by(name: 'Composition')
+      Skill.find_or_create_by!(name: 'Composition')
       duplicate = Skill.new(name: 'Composition')
       expect(duplicate).not_to be_valid
-      expect(existing_skill).to be_present
     end
   end
 

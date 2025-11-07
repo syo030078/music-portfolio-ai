@@ -14,11 +14,9 @@ RSpec.describe Genre, type: :model do
     end
 
     it 'validates uniqueness of name' do
-      # Use existing seed data
-      existing_genre = Genre.find_by(name: 'Rock')
+      Genre.find_or_create_by!(name: 'Rock')
       duplicate = Genre.new(name: 'Rock')
       expect(duplicate).not_to be_valid
-      expect(existing_genre).to be_present
     end
   end
 

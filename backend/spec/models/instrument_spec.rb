@@ -14,11 +14,9 @@ RSpec.describe Instrument, type: :model do
     end
 
     it 'validates uniqueness of name' do
-      # Use existing seed data
-      existing_instrument = Instrument.find_by(name: 'Piano')
+      Instrument.find_or_create_by!(name: 'Piano')
       duplicate = Instrument.new(name: 'Piano')
       expect(duplicate).not_to be_valid
-      expect(existing_instrument).to be_present
     end
   end
 
