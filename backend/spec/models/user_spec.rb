@@ -143,7 +143,7 @@ RSpec.describe User, type: :model do
   describe 'message associations' do
     let(:user) { User.create!(email: 'user@example.com', password: 'password123') }
     let(:track) { Track.create!(title: 'Test Track', user: user, yt_url: 'https://youtube.com/watch?v=test') }
-    let(:job) { Job.create!(user: user, track: track, description: 'Test job', budget: 5000, status: 'pending') }
+    let(:job) { Job.create!(client: user, track: track, title: 'Test Job', description: 'Test job', status: 'draft') }
 
     it 'has many messages' do
       message1 = user.messages.create!(job: job, content: 'First message')
@@ -163,7 +163,7 @@ RSpec.describe User, type: :model do
     end
 
     it 'can send messages to different jobs' do
-      job2 = Job.create!(user: user, track: track, description: 'Another job', budget: 3000, status: 'pending')
+      job2 = Job.create!(client: user, track: track, title: 'Another Job', description: 'Another job', status: 'draft')
 
       message1 = user.messages.create!(job: job, content: 'Message to first job')
       message2 = user.messages.create!(job: job2, content: 'Message to second job')
