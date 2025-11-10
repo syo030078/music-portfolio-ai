@@ -6,54 +6,43 @@
 
 ## 現状分析
 
-### 既存スキーマ（MySQL 8.0）
+### 既存スキーマ（PostgreSQL 15）
 
-| テーブル名    | 主な用途       | 主キー型 | 備考                     |
-| ------------- | -------------- | -------- | ------------------------ |
-| users         | ユーザー管理   | bigint   | Devise + OAuth 対応済み  |
-| tracks        | 楽曲情報       | bigint   | YouTube URL、AI 解析結果 |
-| jobs          | 制作依頼       | bigint   | commissions から改名済み |
-| messages      | メッセージング | bigint   | job_id 依存              |
-| jwt_denylists | JWT 管理       | bigint   | 認証トークン管理         |
+| テーブル名    | 用途           | 主キー型 |
+| ------------- | -------------- | -------- |
+| users         | ユーザー管理   | bigint   |
+| tracks        | 楽曲情報       | bigint   |
+| jobs          | 制作依頼       | bigint   |
+| messages      | メッセージング | bigint   |
+| jwt_denylists | JWT 管理       | bigint   |
 
-### ER 図が示す理想形（PostgreSQL 前提）
+### ER 図との差分
 
-- **ID 型**: UUID 主キー
-- **PostgreSQL 固有型**: citext, timestamptz
-- **enum 型**: ネイティブサポート
-- **テーブル数**: 20 以上（完全実装時）
+| 項目        | ER 図      | 実装状況        | 移行予定       |
+| ----------- | ---------- | --------------- | -------------- |
+| 主キー      | UUID       | bigint (serial) | Phase 4.5      |
+| DB          | PostgreSQL | PostgreSQL 15   | 完了           |
+| citext      | あり       | 未使用          | Phase 5以降    |
+| timestamptz | あり       | timestamp       | 必要に応じて   |
+| enum 型     | ネイティブ | Rails string    | 現状維持       |
 
-### 技術的ギャップ
+## 設計判断
 
-| 項目        | ER 図      | 現状      | 対応方針                          |
-| ----------- | ---------- | --------- | --------------------------------- |
-| 主キー      | UUID       | bigint    | **bigint 継続**（移行コスト考慮） |
-| DB          | PostgreSQL | MySQL 8.0 | **MySQL 継続**（Phase 3 まで）    |
-| citext      | あり       | なし      | COLLATION 設定で代替              |
-| timestamptz | あり       | datetime  | アプリ層で UTC 管理               |
-| enum 型     | ネイティブ | なし      | string + Rails enum               |
+### PostgreSQL採用（Phase 3完了後に移行完了）
 
-## 設計判断の根拠
+- データ整合性の向上
+- UUID、enum型、citext型のサポート
+- 本番環境での標準DB
+- Railsマイグレーション互換性
 
-### なぜ MySQL 継続か？
+### bigint主キー継続
 
-1. **既存コードの安定性**: 既に MySQL 用マイグレーションが動作中
-2. **学習コスト**: 新技術習得より実装完了を優先
-3. **段階的移行**: Phase 3 完了後に PostgreSQL へ移行可能
-
-### なぜ bigint 継続か？
-
-1. **UUID のデメリット（MySQL）**:
-   - インデックスパフォーマンスの低下
-   - ストレージ使用量の増加（16 bytes vs 8 bytes）
-2. **移行の複雑さ**: 既存テーブルとの関連で外部キー制約の再構築が必要
-3. **PostgreSQL 移行時に検討**: DB 移行と同時に UUID 化する方が効率的
+- 段階的移行（UUID移行はPhase 4.5）
+- 既存コードの安定性維持
 
 ## 段階的実装計画
 
-### Phase 1: ユーザープロファイル拡張（優先度：最高）
-
-**目的**: 音楽家とクライアントの役割分離
+### Phase 1: ユーザープロファイル拡張
 
 #### Task 1-1: users テーブル拡張
 
@@ -68,17 +57,10 @@ add_column :users, :deleted_at, :datetime
 add_index :users, :deleted_at
 ```
 
-**バリデーション**:
-
 ```ruby
-# User model
 validates :timezone, inclusion: { in: ActiveSupport::TimeZone.all.map(&:name) }, allow_nil: true
 validates :display_name, length: { maximum: 50 }, allow_blank: true
 ```
-
-**ER 図との差分**:
-
-- `jti`カラムは見送り（jwt_denylists テーブルで管理継続）
 
 #### Task 1-2: musician_profiles テーブル作成
 
@@ -988,25 +970,6 @@ end
 
 ---
 
-## まとめ
-
-### 優先順位
-
-1. **Phase 4**: 提案・契約システム（最優先）
-2. **Phase 7**: API エンドポイント実装（Phase 4 と並行可能）
-3. **Phase 4.5**: UUID 主キー移行（Phase 4 完了後）
-4. **Phase 5**: メッセージング拡張
-5. **Phase 6**: レビュー・決済システム
-
-### 開発方針
-
-- **未知の作業を複数同時にやらない**: 各 Phase を順番に完了させる
-- **テスト駆動**: Model specs → Request specs の順で実装
-- **段階的リリース**: Phase ごとに PR を作成し、CI を通してマージ
-- **ドキュメント更新**: 各 Phase 完了時に PLAN.md を更新
-
----
-
 ## PostgreSQL 移行計画（オプション）
 
 ### 移行タイミング
@@ -1099,20 +1062,23 @@ mysqldump -u root music_portfolio_ai_development > dump.sql
 
 ### ER 図との整合性
 
-| 項目         | ER 図      | 実装                                           | 理由       |
-| ------------ | ---------- | ---------------------------------------------- | ---------- |
-| 主キー型     | UUID       | bigint（Phase 1-3）→ UUID（Phase 4 以降）      | 段階的移行 |
-| DB           | PostgreSQL | MySQL（Phase 1-3）→ PostgreSQL（Phase 4 以降） | リスク分散 |
-| enum 型      | ネイティブ | Rails enum                                     | MySQL 制約 |
-| テーブル構造 | ER 図通り  | ER 図通り                                      | 設計踏襲   |
+| 項目         | ER 図      | 実装状況                      | 備考                               |
+| ------------ | ---------- | ----------------------------- | ---------------------------------- |
+| 主キー型     | UUID       | bigint (serial)               | Phase 4.5でUUID移行予定            |
+| DB           | PostgreSQL | ✅ PostgreSQL 15              | Phase 3完了後に移行完了            |
+| enum 型      | ネイティブ | Rails string enum             | より柔軟なマイグレーション管理     |
+| テーブル構造 | ER 図通り  | ✅ ER 図通り                  | Phase 1-4で主要テーブル実装完了    |
 
-### 実装優先度
+### 実装進捗（2025-11-10更新）
 
-1. **Phase 1（最高）**: ユーザープロファイル → 設計力アピール
-2. **Phase 2（最高）**: タクソノミー → 多対多関連アピール
-3. **Phase 3（高）**: jobs 拡張 → 実務的な機能
-4. **PostgreSQL 移行（中）**: Phase 3 完了後に検討
-5. **Phase 4 以降（中〜低）**: 時間に応じて実装
+- ✅ **Phase 1**: ユーザープロファイル拡張
+- ✅ **Phase 2**: タクソノミーシステム
+- ✅ **Phase 3**: jobs テーブル拡張
+- ✅ **PostgreSQL 移行**: Phase 3完了後に実施
+- ✅ **Phase 4**: 提案・契約システム
+- ⏳ **Phase 5**: メッセージング拡張（スレッドベース）
+- 🔜 **Phase 6**: レビュー・決済システム（Stripe連携）
+- 🔜 **Phase 7**: API エンドポイント実装
 
 ### 所要時間見積もり
 
@@ -1208,7 +1174,8 @@ mysqldump -u root music_portfolio_ai_development > dump.sql
 ### ✅ Phase 3: jobs テーブル拡張（完了）
 
 **ブランチ**: `feature/jobs-expansion`
-**PR**: (作成予定)
+**実装日**: 2025-11-07
+**PR**: [#46](https://github.com/syo030078/music-portfolio-ai/pull/46)
 
 #### ✅ Task 3-1: jobs テーブル拡張（完了）
 
@@ -1286,6 +1253,86 @@ mysqldump -u root music_portfolio_ai_development > dump.sql
 - データベース作成と既存マイグレーションの再実行のみで移行完了
 - 開発環境・CI環境ともに PostgreSQL 15 を使用
 
+**PR**: [#47](https://github.com/syo030078/music-portfolio-ai/pull/47)
+
+### ✅ Phase 4: 提案・契約システム（完了）
+
+**ブランチ**: `feature/proposals-contracts`
+**実装日**: 2025-11-10
+**PR**: [#48](https://github.com/user/music-portfolio-ai/pull/48)
+
+#### ✅ Task 4-1: proposals テーブル作成（完了）
+
+- **コミット**: `66142e5` - feat(proposals): create proposals table and model (Phase 4)
+- **マイグレーション**: `20251110060532_create_proposals.rb`
+- **実装内容**:
+  - proposals テーブル作成:
+    - `job_id`: bigint（外部キー、NOT NULL）
+    - `musician_id`: bigint（外部キー to users、NOT NULL）
+    - `cover_message`: text（提案メッセージ、最大2000文字）
+    - `quote_total_jpy`: integer（見積金額、必須、正の整数）
+    - `delivery_days`: integer（納期日数、必須、正の整数）
+    - `status`: string（ステータス、デフォルト 'submitted'）
+  - 複合 unique インデックス: (job_id, musician_id) - 1案件1音楽家1提案
+  - status インデックス追加
+  - Proposal モデル実装:
+    - belongs_to :job, :musician
+    - has_one :contract, dependent: :destroy
+    - enum status（submitted, shortlisted, accepted, rejected, withdrawn）
+    - バリデーション（cover_message, quote_total_jpy, delivery_days）
+    - カスタムバリデーション（musician_cannot_be_job_owner, job_must_be_published）
+    - スコープ（for_job, by_musician, status別）
+  - Job モデルに has_many :proposals 追加
+  - User モデルに has_many :proposals, foreign_key: 'musician_id' 追加
+- **テスト**: proposal_spec.rb 作成（26 examples covering validations, enums, associations, scopes, business logic）
+
+#### ✅ Task 4-2: contracts テーブル作成（完了）
+
+- **コミット**: `66142e5` - feat(contracts): create contracts table and model (Phase 4)
+- **マイグレーション**: `20251110061558_create_contracts.rb`
+- **実装内容**:
+  - contracts テーブル作成:
+    - `proposal_id`: bigint（外部キー、NOT NULL、unique）
+    - `client_id`: bigint（外部キー to users、NOT NULL）
+    - `musician_id`: bigint（外部キー to users、NOT NULL）
+    - `escrow_total_jpy`: integer（エスクロー金額、必須、正の整数）
+    - `status`: string（ステータス、デフォルト 'active'）
+  - proposal_id に unique インデックス追加（1提案1契約）
+  - status インデックス追加
+  - Contract モデル実装:
+    - belongs_to :proposal, :client, :musician
+    - has_many :contract_milestones, dependent: :destroy
+    - enum status（active, in_progress, delivered, completed, canceled）
+    - バリデーション（escrow_total_jpy, proposal_id uniqueness）
+    - スコープ（for_client, for_musician, status別）
+  - User モデルに契約関連アソシエーション追加:
+    - has_many :client_contracts, class_name: 'Contract', foreign_key: 'client_id'
+    - has_many :musician_contracts, class_name: 'Contract', foreign_key: 'musician_id'
+  - Proposal モデルに has_one :contract 追加
+- **テスト**: contract_spec.rb 作成（19 examples covering validations, enums, associations, scopes, dependent destroy）
+
+#### ✅ Task 4-3: contract_milestones テーブル作成（完了）
+
+- **コミット**: `66142e5` - feat(contract_milestones): create contract_milestones table and model (Phase 4)
+- **マイグレーション**: `20251110062303_create_contract_milestones.rb`
+- **実装内容**:
+  - contract_milestones テーブル作成:
+    - `contract_id`: bigint（外部キー、NOT NULL）
+    - `title`: string（マイルストーンタイトル、必須、最大255文字）
+    - `amount_jpy`: integer（金額、必須、正の整数）
+    - `due_on`: date（期限日、nullable）
+    - `status`: string（ステータス、デフォルト 'open'）
+  - status インデックス追加
+  - ContractMilestone モデル実装:
+    - belongs_to :contract
+    - enum status（open, submitted, approved, rejected, paid）
+    - バリデーション（title, amount_jpy, status）
+    - スコープ（for_contract, status別）
+  - Contract モデルに has_many :contract_milestones 追加
+- **テスト**: contract_milestone_spec.rb 作成（21 examples covering validations, enums, associations, scopes, default values）
+
+**Phase 4 総テスト数**: 66 examples, 0 failures
+
 ---
 
-最終更新: 2025-11-07
+最終更新: 2025-11-10

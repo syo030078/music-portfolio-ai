@@ -37,14 +37,8 @@ class AddUuidToAllTables < ActiveRecord::Migration[7.0]
     add_column :musician_skills, :uuid, :uuid, default: 'gen_random_uuid()', null: false
     add_index :musician_skills, :uuid, unique: true
 
-    add_column :job_genres, :uuid, :uuid, default: 'gen_random_uuid()', null: false
-    add_index :job_genres, :uuid, unique: true
-
-    add_column :job_instruments, :uuid, :uuid, default: 'gen_random_uuid()', null: false
-    add_index :job_instruments, :uuid, unique: true
-
-    add_column :job_skills, :uuid, :uuid, default: 'gen_random_uuid()', null: false
-    add_index :job_skills, :uuid, unique: true
+    add_column :job_requirements, :uuid, :uuid, default: 'gen_random_uuid()', null: false
+    add_index :job_requirements, :uuid, unique: true
 
     add_column :proposals, :uuid, :uuid, default: 'gen_random_uuid()', null: false
     add_index :proposals, :uuid, unique: true
