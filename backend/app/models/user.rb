@@ -10,6 +10,9 @@ class User < ApplicationRecord
   has_many :messages, dependent: :destroy
   has_one :musician_profile, dependent: :destroy
   has_one :client_profile, dependent: :destroy
+  has_many :proposals, foreign_key: 'musician_id', dependent: :destroy
+  has_many :client_contracts, class_name: 'Contract', foreign_key: 'client_id', dependent: :destroy
+  has_many :musician_contracts, class_name: 'Contract', foreign_key: 'musician_id', dependent: :destroy
 
   # Taxonomy associations
   has_many :musician_genres, dependent: :destroy
