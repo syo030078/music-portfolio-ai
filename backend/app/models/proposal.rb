@@ -25,6 +25,15 @@ class Proposal < ApplicationRecord
   scope :shortlisted, -> { where(status: 'shortlisted') }
   scope :accepted, -> { where(status: 'accepted') }
 
+  # UUID support
+  def to_param
+    uuid
+  end
+
+  def self.find_by_uuid(uuid)
+    find_by(uuid: uuid)
+  end
+
   private
 
   def musician_cannot_be_job_owner
