@@ -392,29 +392,618 @@ has_many :job_requirements, dependent: :destroy
 
 ---
 
-## 将来の拡張計画（Phase 4 以降）
+## Phase 4 以降の実装計画
 
-### Phase 4: 提案・契約システム（優先度：中）
+### Phase 4: 提案・契約システム（優先度：高）
 
-- proposals テーブル（音楽家が案件に提案）
-- contracts テーブル（提案が受諾されたら契約）
-- contract_milestones テーブル（マイルストーン管理）
+**目的**: 音楽家が案件に提案し、契約・マイルストーン管理を行う基本機能
 
-**実装時の注意**:
+**実装方針**:
+- PostgreSQL 移行完了済みのため、PostgreSQL の機能を活用可能
+- UUID 主キーへの移行は Phase 4 完了後に別途実施（Phase 4.5）
+- 現状は bigint (serial) 主キーで実装し、動作確認を優先
 
-- この段階で UUID 主キー導入を検討
-- PostgreSQL 移行も検討（UUID, enum 型のネイティブサポート）
+#### Task 4-1: proposals テーブル作成
 
-### Phase 5: メッセージング拡張（優先度：低）
+**目的**: 音楽家が案件に提案を送信する機能
 
-- threads テーブル（スレッド管理）
-- thread_participants テーブル（参加者管理）
-- messages テーブルの移行（job_id → thread_id）
+**テーブル設計**:
+```ruby
+create_table :proposals do |t|
+  t.references :job, null: false, foreign_key: true, type: :bigint
+  t.references :musician, null: false, foreign_key: { to_table: :users }, type: :bigint
+  t.text :cover_message
+  t.integer :quote_total_jpy, null: false
+  t.integer :delivery_days, null: false
+  t.string :status, null: false, default: 'submitted'
+  t.timestamps
+end
+
+add_index :proposals, [:job_id, :musician_id], unique: true  # 1案件1音楽家1提案
+add_index :proposals, :status
+```
+
+**モデル設計**:
+```ruby
+class Proposal < ApplicationRecord
+  belongs_to :job
+  belongs_to :musician, class_name: 'User', foreign_key: 'musician_id'
+  has_one :contract, dependent: :destroy
+
+  enum status: {
+    submitted: 'submitted',      # 提出済み
+    shortlisted: 'shortlisted',  # 候補リスト入り
+    accepted: 'accepted',        # 受諾済み（契約作成）
+    rejected: 'rejected',        # 却下
+    withdrawn: 'withdrawn'       # 撤回
+  }
+
+  validates :cover_message, presence: true, length: { maximum: 2000 }
+  validates :quote_total_jpy, presence: true, numericality: { greater_than: 0 }
+  validates :delivery_days, presence: true, numericality: { greater_than: 0 }
+  validates :status, presence: true
+  validate :musician_cannot_be_job_owner
+  validate :job_must_be_published
+
+  scope :for_job, ->(job_id) { where(job_id: job_id) }
+  scope :by_musician, ->(musician_id) { where(musician_id: musician_id) }
+
+  private
+
+  def musician_cannot_be_job_owner
+    return unless musician_id && job
+    errors.add(:musician_id, 'cannot propose to own job') if musician_id == job.client_id
+  end
+
+  def job_must_be_published
+    return unless job
+    errors.add(:job, 'must be published') unless job.published?
+  end
+end
+```
+
+**関連付け更新**:
+- `Job` モデル: `has_many :proposals, dependent: :destroy`
+- `User` モデル: `has_many :proposals, foreign_key: 'musician_id', dependent: :destroy`
+
+#### Task 4-2: contracts テーブル作成
+
+**目的**: 提案が受諾されたら契約を作成
+
+**テーブル設計**:
+```ruby
+create_table :contracts do |t|
+  t.references :proposal, null: false, foreign_key: true, type: :bigint, index: { unique: true }
+  t.references :client, null: false, foreign_key: { to_table: :users }, type: :bigint
+  t.references :musician, null: false, foreign_key: { to_table: :users }, type: :bigint
+  t.integer :escrow_total_jpy, null: false
+  t.string :status, null: false, default: 'active'
+  t.timestamps
+end
+
+add_index :contracts, :status
+add_index :contracts, [:client_id, :musician_id]
+```
+
+**モデル設計**:
+```ruby
+class Contract < ApplicationRecord
+  belongs_to :proposal
+  belongs_to :client, class_name: 'User', foreign_key: 'client_id'
+  belongs_to :musician, class_name: 'User', foreign_key: 'musician_id'
+  has_many :milestones, class_name: 'ContractMilestone', dependent: :destroy
+
+  enum status: {
+    active: 'active',           # アクティブ（作業開始前）
+    in_progress: 'in_progress', # 進行中
+    delivered: 'delivered',     # 納品済み
+    completed: 'completed',     # 完了
+    canceled: 'canceled'        # キャンセル
+  }
+
+  validates :escrow_total_jpy, presence: true, numericality: { greater_than: 0 }
+  validates :status, presence: true
+  validate :escrow_matches_milestone_total, if: -> { milestones.any? }
+
+  after_create :update_proposal_and_job_status
+
+  scope :for_client, ->(client_id) { where(client_id: client_id) }
+  scope :for_musician, ->(musician_id) { where(musician_id: musician_id) }
+
+  private
+
+  def escrow_matches_milestone_total
+    total = milestones.sum(:amount_jpy)
+    errors.add(:escrow_total_jpy, "must equal milestone total (#{total})") if escrow_total_jpy != total
+  end
+
+  def update_proposal_and_job_status
+    proposal.update!(status: 'accepted')
+    proposal.job.update!(status: 'contracted')
+  end
+end
+```
+
+**関連付け更新**:
+- `User` モデル:
+  - `has_many :contracts_as_client, class_name: 'Contract', foreign_key: 'client_id', dependent: :destroy`
+  - `has_many :contracts_as_musician, class_name: 'Contract', foreign_key: 'musician_id', dependent: :destroy`
+- `Proposal` モデル: `has_one :contract, dependent: :destroy`
+
+#### Task 4-3: contract_milestones テーブル作成
+
+**目的**: 契約のマイルストーン管理
+
+**テーブル設計**:
+```ruby
+create_table :contract_milestones do |t|
+  t.references :contract, null: false, foreign_key: true, type: :bigint
+  t.string :title, null: false
+  t.integer :amount_jpy, null: false
+  t.date :due_on
+  t.string :status, null: false, default: 'open'
+  t.timestamps
+end
+
+add_index :contract_milestones, :status
+add_index :contract_milestones, [:contract_id, :status]
+```
+
+**モデル設計**:
+```ruby
+class ContractMilestone < ApplicationRecord
+  belongs_to :contract
+
+  enum status: {
+    open: 'open',           # 未着手
+    submitted: 'submitted', # 提出済み（音楽家が提出）
+    approved: 'approved',   # 承認済み（クライアントが承認）
+    rejected: 'rejected',   # 却下（クライアントが却下）
+    paid: 'paid'           # 支払済み
+  }
+
+  validates :title, presence: true, length: { maximum: 255 }
+  validates :amount_jpy, presence: true, numericality: { greater_than: 0 }
+  validates :status, presence: true
+
+  scope :for_contract, ->(contract_id) { where(contract_id: contract_id) }
+  scope :pending, -> { where(status: ['open', 'submitted']) }
+  scope :completed, -> { where(status: ['approved', 'paid']) }
+end
+```
+
+**ビジネスロジック**:
+- 契約作成時に escrow_total_jpy とマイルストーンの合計金額が一致することを検証
+- マイルストーンが全て approved/paid になったら契約を completed にする（Phase 5 で実装）
+
+#### ER 図との差分
+
+- **主キー**: ER 図では UUID、実装では bigint (serial) を使用
+  - UUID 移行は Phase 4.5 で実施予定
+- **enum 型**: PostgreSQL の enum 型ではなく、Rails の string enum を使用
+  - より柔軟で、マイグレーションが容易
+- **proposal_id の uniqueness**: contracts テーブルの proposal_id に unique index を設定（1提案1契約）
+
+---
+
+### Phase 4.5: UUID 主キー移行（優先度：中）
+
+**目的**: セキュリティ向上と将来の分散システム対応
+
+**実装方針**:
+- Phase 4 完了後、動作確認が取れてから実施
+- 段階的に移行（まず新規テーブルから、その後既存テーブル）
+
+#### UUID 拡張の有効化
+
+```ruby
+class EnableUuidExtension < ActiveRecord::Migration[7.0]
+  def change
+    enable_extension 'pgcrypto' unless extension_enabled?('pgcrypto')
+  end
+end
+```
+
+#### 新規テーブル（proposals, contracts, milestones）の UUID 化
+
+```ruby
+class MigrateProposalsToUuid < ActiveRecord::Migration[7.0]
+  def change
+    # 新しいUUIDカラムを追加
+    add_column :proposals, :uuid, :uuid, default: 'gen_random_uuid()', null: false
+    add_index :proposals, :uuid, unique: true
+
+    # 古いIDを参照する外部キーを削除
+    remove_foreign_key :contracts, :proposals
+
+    # contractsテーブルにもUUIDカラム追加
+    add_column :contracts, :uuid, :uuid, default: 'gen_random_uuid()', null: false
+    add_column :contracts, :proposal_uuid, :uuid
+
+    # データ移行
+    reversible do |dir|
+      dir.up do
+        execute <<-SQL
+          UPDATE contracts
+          SET proposal_uuid = proposals.uuid
+          FROM proposals
+          WHERE contracts.proposal_id = proposals.id
+        SQL
+      end
+    end
+
+    # 主キーの切り替え（要注意：ダウンタイムが発生）
+    # 本番環境では別途慎重に実施
+  end
+end
+```
+
+#### 既存テーブル（users, jobs など）の UUID 化
+
+**注意**: 既存データが多い場合、ダウンタイムが発生する可能性あり
+- Blue-Green デプロイメントの検討
+- または段階的移行（二重カラム方式）
+
+**実装手順**:
+1. UUID 拡張の有効化
+2. 新規テーブルの UUID 化とテスト
+3. 既存テーブルの UUID 化計画策定
+4. 段階的移行とテスト
+
+---
+
+### Phase 5: メッセージング拡張（優先度：中〜低）
+
+**目的**: 現在の job ベースのメッセージングを thread ベースに拡張
+
+**現状の問題**:
+- messages テーブルが job_id に直接紐づいている
+- 契約後のコミュニケーション（契約に関する議論）が job に紐づいてしまう
+- 複数の参加者（クライアント、音楽家、プロジェクトマネージャーなど）の管理が困難
+
+**目指す設計**:
+- thread ベースのメッセージング
+- job や contract に紐づく thread
+- thread_participants で参加者管理
+
+#### Task 5-1: threads テーブル作成
+
+```ruby
+create_table :threads do |t|
+  t.references :job, foreign_key: true, type: :bigint
+  t.references :contract, foreign_key: true, type: :bigint
+  t.timestamps
+end
+
+add_index :threads, :job_id
+add_index :threads, :contract_id
+# job_id と contract_id は排他的（どちらか一方のみ設定）
+add_check_constraint :threads,
+  '(job_id IS NULL AND contract_id IS NOT NULL) OR (job_id IS NOT NULL AND contract_id IS NULL)',
+  name: 'threads_job_or_contract_check'
+```
+
+#### Task 5-2: thread_participants テーブル作成
+
+```ruby
+create_table :thread_participants do |t|
+  t.references :thread, null: false, foreign_key: true, type: :bigint
+  t.references :user, null: false, foreign_key: true, type: :bigint
+  t.timestamps
+end
+
+add_index :thread_participants, [:thread_id, :user_id], unique: true
+```
+
+#### Task 5-3: messages テーブルの移行
+
+**段階的移行**:
+1. 新しい thread_id カラムを追加
+2. 既存の job_id ベースのメッセージを thread に移行
+3. job_id カラムを非推奨化（後方互換性のため残す）
+4. 新規メッセージは thread_id ベースで作成
+
+```ruby
+class MigrateMessagesToThreads < ActiveRecord::Migration[7.0]
+  def change
+    # thread_id カラムを追加
+    add_reference :messages, :thread, foreign_key: true, type: :bigint
+
+    # 既存データの移行
+    reversible do |dir|
+      dir.up do
+        # 各 job に対して thread を作成
+        execute <<-SQL
+          INSERT INTO threads (job_id, created_at, updated_at)
+          SELECT DISTINCT job_id, NOW(), NOW()
+          FROM messages
+          WHERE job_id IS NOT NULL
+        SQL
+
+        # messages の thread_id を設定
+        execute <<-SQL
+          UPDATE messages
+          SET thread_id = threads.id
+          FROM threads
+          WHERE messages.job_id = threads.job_id
+        SQL
+      end
+    end
+
+    # 将来的には job_id を削除予定（Phase 6 以降）
+    # change_column_null :messages, :thread_id, false
+  end
+end
+```
+
+#### モデル設計
+
+```ruby
+class Thread < ApplicationRecord
+  belongs_to :job, optional: true
+  belongs_to :contract, optional: true
+  has_many :participants, class_name: 'ThreadParticipant', dependent: :destroy
+  has_many :users, through: :participants
+  has_many :messages, dependent: :destroy
+
+  validate :job_or_contract_present
+
+  private
+
+  def job_or_contract_present
+    errors.add(:base, 'must have either job or contract') if job_id.nil? && contract_id.nil?
+    errors.add(:base, 'cannot have both job and contract') if job_id.present? && contract_id.present?
+  end
+end
+
+class ThreadParticipant < ApplicationRecord
+  belongs_to :thread
+  belongs_to :user
+
+  validates :thread_id, uniqueness: { scope: :user_id }
+end
+
+class Message < ApplicationRecord
+  belongs_to :thread
+  belongs_to :sender, class_name: 'User', foreign_key: 'sender_id'
+  # 後方互換性のため job も残す（非推奨）
+  belongs_to :job, optional: true
+
+  validates :body, presence: true, length: { maximum: 5000 }
+end
+```
+
+---
 
 ### Phase 6: レビュー・決済システム（優先度：中〜低）
 
-- reviews テーブル（評価システム）
-- transactions テーブル（決済・エスクロー）
+**目的**: 契約完了後のレビュー機能と決済・エスクロー管理
+
+#### Task 6-1: reviews テーブル作成
+
+**目的**: 契約完了後に相互レビュー
+
+```ruby
+create_table :reviews do |t|
+  t.references :contract, null: false, foreign_key: true, type: :bigint, index: { unique: true }
+  t.references :reviewer, null: false, foreign_key: { to_table: :users }, type: :bigint
+  t.references :reviewee, null: false, foreign_key: { to_table: :users }, type: :bigint
+  t.integer :rating, null: false
+  t.text :comment
+  t.timestamps
+end
+
+add_index :reviews, [:reviewer_id, :reviewee_id]
+add_check_constraint :reviews, 'rating >= 1 AND rating <= 5', name: 'reviews_rating_range'
+```
+
+**モデル設計**:
+```ruby
+class Review < ApplicationRecord
+  belongs_to :contract
+  belongs_to :reviewer, class_name: 'User'
+  belongs_to :reviewee, class_name: 'User'
+
+  validates :rating, presence: true, inclusion: { in: 1..5 }
+  validates :comment, length: { maximum: 1000 }
+  validate :contract_must_be_completed
+  validate :reviewer_must_be_contract_party
+
+  after_create :update_reviewee_rating
+
+  private
+
+  def contract_must_be_completed
+    return unless contract
+    errors.add(:contract, 'must be completed') unless contract.completed?
+  end
+
+  def reviewer_must_be_contract_party
+    return unless contract && reviewer
+    unless [contract.client_id, contract.musician_id].include?(reviewer_id)
+      errors.add(:reviewer, 'must be part of contract')
+    end
+  end
+
+  def update_reviewee_rating
+    # MusicianProfile の avg_rating と rating_count を更新
+    profile = reviewee.musician_profile
+    return unless profile
+
+    profile.rating_count += 1
+    total = (profile.avg_rating * (profile.rating_count - 1)) + rating
+    profile.avg_rating = (total / profile.rating_count.to_f).round(1)
+    profile.save!
+  end
+end
+```
+
+#### Task 6-2: transactions テーブル作成
+
+**目的**: 決済・エスクロー管理（Stripe など外部決済サービスとの連携）
+
+```ruby
+create_table :transactions do |t|
+  t.references :contract, null: false, foreign_key: true, type: :bigint
+  t.references :milestone, foreign_key: { to_table: :contract_milestones }, type: :bigint
+  t.string :kind, null: false
+  t.string :status, null: false
+  t.integer :amount_jpy, null: false
+  t.string :provider
+  t.string :provider_ref
+  t.timestamps
+end
+
+add_index :transactions, :kind
+add_index :transactions, :status
+add_index :transactions, [:contract_id, :kind]
+```
+
+**モデル設計**:
+```ruby
+class Transaction < ApplicationRecord
+  belongs_to :contract
+  belongs_to :milestone, class_name: 'ContractMilestone', optional: true
+
+  enum kind: {
+    escrow_deposit: 'escrow_deposit',     # エスクロー預託
+    milestone_payout: 'milestone_payout', # マイルストーン支払い
+    refund: 'refund',                     # 返金
+    platform_fee: 'platform_fee'          # プラットフォーム手数料
+  }
+
+  enum status: {
+    authorized: 'authorized', # 承認済み
+    captured: 'captured',     # 確定
+    paid_out: 'paid_out',     # 支払済み
+    failed: 'failed',         # 失敗
+    refunded: 'refunded'      # 返金済み
+  }
+
+  validates :amount_jpy, presence: true, numericality: { greater_than: 0 }
+  validates :kind, presence: true
+  validates :status, presence: true
+  validates :provider_ref, presence: true, if: -> { provider.present? }
+
+  scope :for_contract, ->(contract_id) { where(contract_id: contract_id) }
+  scope :successful, -> { where(status: ['captured', 'paid_out']) }
+end
+```
+
+**Stripe 連携例**:
+```ruby
+class TransactionService
+  def self.create_escrow_deposit(contract, payment_method)
+    # Stripe で PaymentIntent を作成
+    intent = Stripe::PaymentIntent.create({
+      amount: contract.escrow_total_jpy,
+      currency: 'jpy',
+      payment_method: payment_method,
+      confirm: true,
+      capture_method: 'manual' # エスクロー用に手動キャプチャ
+    })
+
+    # Transaction レコードを作成
+    Transaction.create!(
+      contract: contract,
+      kind: 'escrow_deposit',
+      status: 'authorized',
+      amount_jpy: contract.escrow_total_jpy,
+      provider: 'stripe',
+      provider_ref: intent.id
+    )
+  end
+
+  def self.payout_milestone(milestone)
+    # マイルストーン承認後、音楽家に支払い
+    contract = milestone.contract
+
+    # Stripe Transfer で音楽家の Stripe Connect アカウントに送金
+    transfer = Stripe::Transfer.create({
+      amount: milestone.amount_jpy,
+      currency: 'jpy',
+      destination: contract.musician.stripe_account_id
+    })
+
+    Transaction.create!(
+      contract: contract,
+      milestone: milestone,
+      kind: 'milestone_payout',
+      status: 'paid_out',
+      amount_jpy: milestone.amount_jpy,
+      provider: 'stripe',
+      provider_ref: transfer.id
+    )
+  end
+end
+```
+
+---
+
+### Phase 7: API エンドポイント実装（優先度：高）
+
+**目的**: フロントエンドとの連携のための RESTful API
+
+#### 認証・認可
+
+- Devise + JWT で実装済み
+- Pundit などで認可ポリシーを追加
+
+#### エンドポイント一覧
+
+**Users**:
+- `POST /api/v1/users` - ユーザー登録
+- `POST /api/v1/users/sign_in` - ログイン
+- `DELETE /api/v1/users/sign_out` - ログアウト
+- `GET /api/v1/users/me` - 現在のユーザー情報
+- `PATCH /api/v1/users/me` - ユーザー情報更新
+
+**Jobs**:
+- `GET /api/v1/jobs` - 案件一覧（公開中）
+- `GET /api/v1/jobs/:id` - 案件詳細
+- `POST /api/v1/jobs` - 案件作成（要認証）
+- `PATCH /api/v1/jobs/:id` - 案件更新（要認証・要所有者）
+- `DELETE /api/v1/jobs/:id` - 案件削除（要認証・要所有者）
+- `POST /api/v1/jobs/:id/publish` - 案件公開
+
+**Proposals**:
+- `GET /api/v1/jobs/:job_id/proposals` - 案件の提案一覧（要認証・要所有者）
+- `POST /api/v1/jobs/:job_id/proposals` - 提案作成（要認証）
+- `GET /api/v1/proposals/:id` - 提案詳細
+- `PATCH /api/v1/proposals/:id` - 提案更新
+- `POST /api/v1/proposals/:id/accept` - 提案受諾（契約作成）
+- `POST /api/v1/proposals/:id/reject` - 提案却下
+
+**Contracts**:
+- `GET /api/v1/contracts` - 契約一覧（自分の契約のみ）
+- `GET /api/v1/contracts/:id` - 契約詳細
+- `PATCH /api/v1/contracts/:id` - 契約更新
+
+**Milestones**:
+- `GET /api/v1/contracts/:contract_id/milestones` - マイルストーン一覧
+- `POST /api/v1/contracts/:contract_id/milestones` - マイルストーン作成
+- `PATCH /api/v1/milestones/:id` - マイルストーン更新
+- `POST /api/v1/milestones/:id/submit` - 提出
+- `POST /api/v1/milestones/:id/approve` - 承認
+
+---
+
+## まとめ
+
+### 優先順位
+
+1. **Phase 4**: 提案・契約システム（最優先）
+2. **Phase 7**: API エンドポイント実装（Phase 4 と並行可能）
+3. **Phase 4.5**: UUID 主キー移行（Phase 4 完了後）
+4. **Phase 5**: メッセージング拡張
+5. **Phase 6**: レビュー・決済システム
+
+### 開発方針
+
+- **未知の作業を複数同時にやらない**: 各 Phase を順番に完了させる
+- **テスト駆動**: Model specs → Request specs の順で実装
+- **段階的リリース**: Phase ごとに PR を作成し、CI を通してマージ
+- **ドキュメント更新**: 各 Phase 完了時に PLAN.md を更新
 
 ---
 
