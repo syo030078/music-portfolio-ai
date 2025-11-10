@@ -24,6 +24,15 @@ class Job < ApplicationRecord
 
   scope :published, -> { where(status: 'published').where.not(published_at: nil) }
 
+  # UUID support
+  def to_param
+    uuid
+  end
+
+  def self.find_by_uuid(uuid)
+    find_by(uuid: uuid)
+  end
+
   private
 
   def budget_max_greater_than_min

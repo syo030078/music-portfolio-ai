@@ -33,6 +33,15 @@ class User < ApplicationRecord
   scope :musicians, -> { where(is_musician: true) }
   scope :clients, -> { where(is_client: true) }
 
+  # UUID support
+  def to_param
+    uuid
+  end
+
+  def self.find_by_uuid(uuid)
+    find_by(uuid: uuid)
+  end
+
   # Soft delete
   def soft_delete
     update(deleted_at: Time.current)

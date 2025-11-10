@@ -20,4 +20,13 @@ class Contract < ApplicationRecord
   scope :for_musician, ->(musician_id) { where(musician_id: musician_id) }
   scope :active, -> { where(status: 'active') }
   scope :in_progress, -> { where(status: 'in_progress') }
+
+  # UUID support
+  def to_param
+    uuid
+  end
+
+  def self.find_by_uuid(uuid)
+    find_by(uuid: uuid)
+  end
 end
