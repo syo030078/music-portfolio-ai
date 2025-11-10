@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe 'UUID Support', type: :model do
   describe User do
-    let(:user) { User.create!(email: 'test@example.com', password: 'password123') }
+    let(:user) { User.create!(email: 'test@example.com', password: 'password123').reload }
 
     it 'generates UUID on creation' do
       expect(user.uuid).to be_present
@@ -10,7 +10,7 @@ RSpec.describe 'UUID Support', type: :model do
     end
 
     it 'has unique UUID' do
-      user2 = User.create!(email: 'test2@example.com', password: 'password123')
+      user2 = User.create!(email: 'test2@example.com', password: 'password123').reload
       expect(user.uuid).not_to eq(user2.uuid)
     end
 
@@ -25,10 +25,10 @@ RSpec.describe 'UUID Support', type: :model do
   end
 
   describe Proposal do
-    let(:client) { User.create!(email: 'client@example.com', password: 'password123', is_client: true) }
-    let(:musician) { User.create!(email: 'musician@example.com', password: 'password123', is_musician: true) }
-    let(:job) { Job.create!(client: client, title: 'Test job', description: 'Test', status: 'published', published_at: Time.current) }
-    let(:proposal) { Proposal.create!(job: job, musician: musician, quote_total_jpy: 50000, delivery_days: 7) }
+    let(:client) { User.create!(email: 'client@example.com', password: 'password123', is_client: true).reload }
+    let(:musician) { User.create!(email: 'musician@example.com', password: 'password123', is_musician: true).reload }
+    let(:job) { Job.create!(client: client, title: 'Test job', description: 'Test', status: 'published', published_at: Time.current).reload }
+    let(:proposal) { Proposal.create!(job: job, musician: musician, quote_total_jpy: 50000, delivery_days: 7).reload }
 
     it 'generates UUID on creation' do
       expect(proposal.uuid).to be_present
@@ -46,11 +46,11 @@ RSpec.describe 'UUID Support', type: :model do
   end
 
   describe Contract do
-    let(:client) { User.create!(email: 'client@example.com', password: 'password123', is_client: true) }
-    let(:musician) { User.create!(email: 'musician@example.com', password: 'password123', is_musician: true) }
-    let(:job) { Job.create!(client: client, title: 'Test job', description: 'Test', status: 'published', published_at: Time.current) }
-    let(:proposal) { Proposal.create!(job: job, musician: musician, quote_total_jpy: 50000, delivery_days: 7) }
-    let(:contract) { Contract.create!(proposal: proposal, client: client, musician: musician, escrow_total_jpy: 50000) }
+    let(:client) { User.create!(email: 'client@example.com', password: 'password123', is_client: true).reload }
+    let(:musician) { User.create!(email: 'musician@example.com', password: 'password123', is_musician: true).reload }
+    let(:job) { Job.create!(client: client, title: 'Test job', description: 'Test', status: 'published', published_at: Time.current).reload }
+    let(:proposal) { Proposal.create!(job: job, musician: musician, quote_total_jpy: 50000, delivery_days: 7).reload }
+    let(:contract) { Contract.create!(proposal: proposal, client: client, musician: musician, escrow_total_jpy: 50000).reload }
 
     it 'generates UUID on creation' do
       expect(contract.uuid).to be_present
@@ -68,8 +68,8 @@ RSpec.describe 'UUID Support', type: :model do
   end
 
   describe Job do
-    let(:client) { User.create!(email: 'client@example.com', password: 'password123', is_client: true) }
-    let(:job) { Job.create!(client: client, title: 'Test job', description: 'Test', status: 'draft') }
+    let(:client) { User.create!(email: 'client@example.com', password: 'password123', is_client: true).reload }
+    let(:job) { Job.create!(client: client, title: 'Test job', description: 'Test', status: 'draft').reload }
 
     it 'generates UUID on creation' do
       expect(job.uuid).to be_present
