@@ -3,6 +3,7 @@ class Job < ApplicationRecord
   belongs_to :track, optional: true
   has_many :messages, dependent: :destroy
   has_many :job_requirements, dependent: :destroy
+  has_many :proposals, dependent: :destroy
 
   enum status: {
     draft: 'draft',
