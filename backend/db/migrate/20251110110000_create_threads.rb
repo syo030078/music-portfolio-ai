@@ -6,9 +6,6 @@ class CreateThreads < ActiveRecord::Migration[7.0]
       t.timestamps
     end
 
-    add_index :threads, :job_id
-    add_index :threads, :contract_id
-
     # job_id と contract_id は排他的（どちらか一方のみ設定）
     execute <<-SQL
       ALTER TABLE threads ADD CONSTRAINT threads_job_or_contract_check
