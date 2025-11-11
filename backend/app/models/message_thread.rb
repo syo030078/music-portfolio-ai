@@ -3,9 +3,9 @@ class MessageThread < ApplicationRecord
 
   belongs_to :job, optional: true
   belongs_to :contract, optional: true
-  has_many :participants, class_name: 'MessageThreadParticipant', dependent: :destroy
+  has_many :participants, class_name: 'MessageThreadParticipant', foreign_key: 'thread_id', dependent: :destroy
   has_many :users, through: :participants
-  has_many :messages, dependent: :destroy
+  has_many :messages, foreign_key: 'thread_id', dependent: :destroy
 
   validate :job_or_contract_present
 
