@@ -7,7 +7,7 @@ RSpec.describe MessageThreadParticipant, type: :model do
   let(:thread) { MessageThread.create!(job: job).reload }
 
   describe 'associations' do
-    it { should belong_to(:thread) }
+    it { should belong_to(:thread).class_name('MessageThread') }
     it { should belong_to(:user) }
   end
 

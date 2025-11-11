@@ -39,8 +39,8 @@ RSpec.describe Message, type: :model do
     expect(message.errors[:content]).to include("is too short (minimum is 1 character)")
   end
 
-  it 'requires content to be at most 1000 characters' do
-    long_content = 'a' * 1001
+  it 'requires content to be at most 5000 characters' do
+    long_content = 'a' * 5001
     message = Message.new(
       job: job,
       sender: user,
@@ -48,7 +48,7 @@ RSpec.describe Message, type: :model do
     )
 
     expect(message).not_to be_valid
-    expect(message.errors[:content]).to include("is too long (maximum is 1000 characters)")
+    expect(message.errors[:content]).to include("is too long (maximum is 5000 characters)")
   end
 
   it 'requires either job or thread to be present' do
