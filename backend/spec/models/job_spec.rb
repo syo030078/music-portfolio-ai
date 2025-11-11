@@ -129,8 +129,8 @@ RSpec.describe Job, type: :model do
         status: 'draft'
       )
 
-      message1 = job.messages.create!(user: client, content: 'First message')
-      message2 = job.messages.create!(user: client, content: 'Second message')
+      message1 = job.messages.create!(sender: client, content: 'First message')
+      message2 = job.messages.create!(sender: client, content: 'Second message')
 
       expect(job.messages.count).to eq(2)
       expect(job.messages).to include(message1, message2)
@@ -144,7 +144,7 @@ RSpec.describe Job, type: :model do
         status: 'draft'
       )
 
-      message = job.messages.create!(user: client, content: 'Test message')
+      message = job.messages.create!(sender: client, content: 'Test message')
       message_id = message.id
 
       job.destroy

@@ -3,6 +3,10 @@ class Message < ApplicationRecord
   belongs_to :job, optional: true
   belongs_to :sender, class_name: 'User', foreign_key: 'user_id'
 
+  # 後方互換性のためのエイリアス
+  alias_method :user, :sender
+  alias_method :user=, :sender=
+
   validates :content, presence: true, length: { minimum: 1, maximum: 5000 }
   validate :thread_or_job_present
 

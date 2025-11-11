@@ -8,19 +8,19 @@ RSpec.describe Message, type: :model do
   it 'creates a valid message' do
     message = Message.create!(
       job: job,
-      user: user,
+      sender: user,
       content: 'This is a test message'
     )
 
     expect(message.job).to eq(job)
-    expect(message.user).to eq(user)
+    expect(message.sender).to eq(user)
     expect(message.content).to eq('This is a test message')
   end
 
   it 'requires content to be present' do
     message = Message.new(
       job: job,
-      user: user,
+      sender: user,
       content: ''
     )
 
@@ -31,7 +31,7 @@ RSpec.describe Message, type: :model do
   it 'requires content to be at least 1 character' do
     message = Message.new(
       job: job,
-      user: user,
+      sender: user,
       content: ''
     )
 
@@ -43,7 +43,7 @@ RSpec.describe Message, type: :model do
     long_content = 'a' * 1001
     message = Message.new(
       job: job,
-      user: user,
+      sender: user,
       content: long_content
     )
 
@@ -51,23 +51,23 @@ RSpec.describe Message, type: :model do
     expect(message.errors[:content]).to include("is too long (maximum is 1000 characters)")
   end
 
-  it 'requires job to be present' do
+  it 'requires either job or thread to be present' do
     message = Message.new(
-      user: user,
+      sender: user,
       content: 'Test message'
     )
 
     expect(message).not_to be_valid
-    expect(message.errors[:job]).to include("must exist")
+    expect(message.errors[:base]).to include("must have either thread or job")
   end
 
-  it 'requires user to be present' do
+  it 'requires sender to be present' do
     message = Message.new(
       job: job,
       content: 'Test message'
     )
 
     expect(message).not_to be_valid
-    expect(message.errors[:user]).to include("must exist")
+    expect(message.errors[:sender]).to include("must exist")
   end
 end
