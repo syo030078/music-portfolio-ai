@@ -1,4 +1,6 @@
-class Thread < ApplicationRecord
+class MessageThread < ApplicationRecord
+  self.table_name = 'threads'
+
   belongs_to :job, optional: true
   belongs_to :contract, optional: true
   has_many :participants, class_name: 'ThreadParticipant', dependent: :destroy

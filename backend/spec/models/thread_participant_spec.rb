@@ -4,7 +4,7 @@ RSpec.describe ThreadParticipant, type: :model do
   let(:client) { User.create!(email: 'client@example.com', password: 'password123', is_client: true).reload }
   let(:musician) { User.create!(email: 'musician@example.com', password: 'password123', is_musician: true).reload }
   let(:job) { Job.create!(client: client, title: 'Test job', description: 'Test', status: 'published', published_at: Time.current).reload }
-  let(:thread) { Thread.create!(job: job).reload }
+  let(:thread) { MessageThread.create!(job: job).reload }
 
   describe 'associations' do
     it { should belong_to(:thread) }
@@ -19,7 +19,7 @@ RSpec.describe ThreadParticipant, type: :model do
     end
 
     it 'allows same user in different threads' do
-      thread2 = Thread.create!(job: job).reload
+      thread2 = MessageThread.create!(job: job).reload
       ThreadParticipant.create!(thread: thread, user: client)
       participant2 = ThreadParticipant.new(thread: thread2, user: client)
       expect(participant2).to be_valid

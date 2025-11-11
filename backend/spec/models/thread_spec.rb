@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe Thread, type: :model do
+RSpec.describe MessageThread, type: :model do
   let(:client) { User.create!(email: 'client@example.com', password: 'password123', is_client: true).reload }
   let(:musician) { User.create!(email: 'musician@example.com', password: 'password123', is_musician: true).reload }
   let(:job) { Job.create!(client: client, title: 'Test job', description: 'Test', status: 'published', published_at: Time.current).reload }
@@ -19,7 +19,7 @@ RSpec.describe Thread, type: :model do
 
   describe 'validations' do
     context 'with job' do
-      let(:thread) { Thread.create!(job: job).reload }
+      let(:thread) { MessageThread.create!(job: job).reload }
 
       it 'is valid with job_id' do
         expect(thread).to be_valid
@@ -35,13 +35,13 @@ RSpec.describe Thread, type: :model do
       end
 
       it 'finds thread by UUID' do
-        found = Thread.find_by_uuid(thread.uuid)
+        found = MessageThread.find_by_uuid(thread.uuid)
         expect(found).to eq(thread)
       end
     end
 
     context 'with contract' do
-      let(:thread) { Thread.create!(contract: contract).reload }
+      let(:thread) { MessageThread.create!(contract: contract).reload }
 
       it 'is valid with contract_id' do
         expect(thread).to be_valid
@@ -49,7 +49,7 @@ RSpec.describe Thread, type: :model do
     end
 
     context 'without job or contract' do
-      let(:thread) { Thread.new }
+      let(:thread) { MessageThread.new }
 
       it 'is invalid without job or contract' do
         expect(thread).not_to be_valid
@@ -58,7 +58,7 @@ RSpec.describe Thread, type: :model do
     end
 
     context 'with both job and contract' do
-      let(:thread) { Thread.new(job: job, contract: contract) }
+      let(:thread) { MessageThread.new(job: job, contract: contract) }
 
       it 'is invalid with both job and contract' do
         expect(thread).not_to be_valid

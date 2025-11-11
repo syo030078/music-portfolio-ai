@@ -1,5 +1,5 @@
 class Message < ApplicationRecord
-  belongs_to :thread, optional: true
+  belongs_to :thread, class_name: 'MessageThread', foreign_key: 'thread_id', optional: true
   belongs_to :job, optional: true
   belongs_to :sender, class_name: 'User', foreign_key: 'user_id'
 
