@@ -20,11 +20,3 @@ RSpec.configure do |config|
   # Devise test helpers
   config.include Devise::Test::ControllerHelpers, type: :controller
 end
-
-# Shoulda Matchers configuration
-Shoulda::Matchers.configure do |config|
-  config.integrate do |with|
-    with.test_framework :rspec
-    with.library :rails
-  end
-end

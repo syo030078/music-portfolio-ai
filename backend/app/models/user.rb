@@ -7,7 +7,7 @@ class User < ApplicationRecord
 
   has_many :tracks, dependent: :destroy
   has_many :jobs, foreign_key: 'client_id', dependent: :destroy
-  has_many :messages, foreign_key: 'user_id', dependent: :destroy
+  has_many :messages, dependent: :destroy
   has_one :musician_profile, dependent: :destroy
   has_one :client_profile, dependent: :destroy
   has_many :proposals, foreign_key: 'musician_id', dependent: :destroy
