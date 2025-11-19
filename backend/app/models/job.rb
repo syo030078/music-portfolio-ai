@@ -22,6 +22,8 @@ class Job < ApplicationRecord
   validates :status, presence: true
   validate :budget_max_greater_than_min
 
+  before_create :generate_uuid
+
   scope :published, -> { where(status: 'published').where.not(published_at: nil) }
 
   # UUID support
@@ -34,6 +36,10 @@ class Job < ApplicationRecord
   end
 
   private
+
+  def generate_uuid
+    self.uuid ||= SecureRandom.uuid
+  end
 
   def budget_max_greater_than_min
     return unless budget_min_jpy && budget_max_jpy
