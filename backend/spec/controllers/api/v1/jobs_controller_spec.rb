@@ -268,8 +268,9 @@ RSpec.describe Api::V1::JobsController, type: :controller do
     end
 
     it "deletes job as owner" do
+      job_to_delete = job # Force evaluation before the expectation
       expect {
-        delete :destroy, params: { id: job.uuid }
+        delete :destroy, params: { id: job_to_delete.uuid }
       }.to change(Job, :count).by(-1)
 
       expect(response).to have_http_status(:ok)
@@ -278,9 +279,10 @@ RSpec.describe Api::V1::JobsController, type: :controller do
     end
 
     it "returns 403 when deleting as non-owner" do
+      job_to_delete = job # Force evaluation before the expectation
       sign_in musician_user
       expect {
-        delete :destroy, params: { id: job.uuid }
+        delete :destroy, params: { id: job_to_delete.uuid }
       }.to_not change(Job, :count)
 
       expect(response).to have_http_status(:forbidden)
