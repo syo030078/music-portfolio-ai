@@ -12,6 +12,8 @@ class User < ApplicationRecord
   has_many :proposals, foreign_key: 'musician_id', dependent: :destroy
   has_many :client_contracts, class_name: 'Contract', foreign_key: 'client_id', dependent: :destroy
   has_many :musician_contracts, class_name: 'Contract', foreign_key: 'musician_id', dependent: :destroy
+  has_many :given_reviews, class_name: 'Review', foreign_key: 'reviewer_id', dependent: :destroy
+  has_many :received_reviews, class_name: 'Review', foreign_key: 'reviewee_id', dependent: :destroy
 
   # Conversation associations
   has_many :conversation_participants, dependent: :destroy
@@ -55,5 +57,4 @@ class User < ApplicationRecord
     deleted_at.nil?
   end
 end
-
 

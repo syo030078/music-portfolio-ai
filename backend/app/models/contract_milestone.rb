@@ -1,5 +1,6 @@
 class ContractMilestone < ApplicationRecord
   belongs_to :contract
+  has_many :transactions, class_name: 'Transaction', foreign_key: :milestone_id, dependent: :nullify
 
   enum status: {
     open: 'open',
