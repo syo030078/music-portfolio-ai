@@ -1,73 +1,65 @@
 require 'rails_helper'
 
 RSpec.describe Message, type: :model do
-  let(:user) { User.create!(email: 'user@example.com', password: 'password123') }
+  let(:user) { User.create!(email: 'test@example.com', password: 'password123') }
   let(:track) { Track.create!(title: 'Test Track', user: user, yt_url: 'https://youtube.com/watch?v=test') }
-  let(:job) { Job.create!(client: user, track: track, title: 'Test Job', description: 'Test job', status: 'draft') }
+  let(:job) { Job.create!(client: user, track: track, title: 'Test Job', description: 'Test description', status: 'draft') }
+  let(:conversation) { Conversation.create!(job: job) }
+  let(:sender) { User.create!(email: 'sender@example.com', password: 'password123') }
 
-  it 'creates a valid message' do
-    message = Message.create!(
-      job: job,
-      user: user,
-      content: 'This is a test message'
-    )
+  describe 'associations' do
+    it 'belongs to conversation' do
+      message = Message.new(conversation: conversation, sender: sender, body: 'Test')
+      expect(message.conversation).to eq(conversation)
+    end
 
-    expect(message.job).to eq(job)
-    expect(message.user).to eq(user)
-    expect(message.content).to eq('This is a test message')
+    it 'belongs to sender' do
+      message = Message.new(conversation: conversation, sender: sender, body: 'Test')
+      expect(message.sender).to eq(sender)
+    end
   end
 
-  it 'requires content to be present' do
-    message = Message.new(
-      job: job,
-      user: user,
-      content: ''
-    )
+  describe 'validations' do
+    it 'requires body to be present' do
+      message = Message.new(conversation: conversation, sender: sender, body: '')
+      expect(message).not_to be_valid
+      expect(message.errors[:body]).to include("can't be blank")
+    end
 
-    expect(message).not_to be_valid
-    expect(message.errors[:content]).to include("can't be blank")
+    it 'requires body to be at least 1 character' do
+      message = Message.new(conversation: conversation, sender: sender, body: '')
+      expect(message).not_to be_valid
+      expect(message.errors[:body]).to include("is too short (minimum is 1 character)")
+    end
+
+    it 'requires body to be at most 1000 characters' do
+      long_body = 'a' * 1001
+      message = Message.new(conversation: conversation, sender: sender, body: long_body)
+      expect(message).not_to be_valid
+      expect(message.errors[:body]).to include("is too long (maximum is 1000 characters)")
+    end
   end
 
-  it 'requires content to be at least 1 character' do
-    message = Message.new(
-      job: job,
-      user: user,
-      content: ''
-    )
-
-    expect(message).not_to be_valid
-    expect(message.errors[:content]).to include("is too short (minimum is 1 character)")
+  describe '#to_param' do
+    it 'returns the UUID' do
+      message = Message.create!(conversation: conversation, sender: sender, body: 'Test message')
+      expect(message.to_param).to eq(message.uuid)
+    end
   end
 
-  it 'requires content to be at most 1000 characters' do
-    long_content = 'a' * 1001
-    message = Message.new(
-      job: job,
-      user: user,
-      content: long_content
-    )
+  describe 'after_create callback' do
+    it 'marks sender as read when message is created' do
+      participant = ConversationParticipant.create!(conversation: conversation, user: sender, last_read_at: nil)
 
-    expect(message).not_to be_valid
-    expect(message.errors[:content]).to include("is too long (maximum is 1000 characters)")
-  end
+      message = Message.create!(conversation: conversation, sender: sender, body: 'Test message')
 
-  it 'requires job to be present' do
-    message = Message.new(
-      user: user,
-      content: 'Test message'
-    )
+      expect(participant.reload.last_read_at).to be_within(1.second).of(Time.current)
+    end
 
-    expect(message).not_to be_valid
-    expect(message.errors[:job]).to include("must exist")
-  end
-
-  it 'requires user to be present' do
-    message = Message.new(
-      job: job,
-      content: 'Test message'
-    )
-
-    expect(message).not_to be_valid
-    expect(message.errors[:user]).to include("must exist")
+    it 'does not fail when sender is not a participant' do
+      expect {
+        Message.create!(conversation: conversation, sender: sender, body: 'Test message')
+      }.not_to raise_error
+    end
   end
 end
