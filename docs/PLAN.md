@@ -1288,4 +1288,49 @@ mysqldump -u root music_portfolio_ai_development > dump.sql
 
 ---
 
-最終更新: 2025-11-07
+### ✅ Phase 4: 提案・契約システム（完了）
+
+- **ブランチ**: ローカル作業
+- **実施日**: 2025-11-10
+- **内容**:
+  - proposals/contracts/contract_milestones を追加し、Job/Proposal/Contract の関連を整備
+  - Contract に status(enum)・スコープ・バリデーションを実装、マイルストーン管理を追加
+  - モデルスペックでバリデーション・enum・スコープ・依存削除を確認
+
+---
+
+### ✅ Phase 4.5: UUID サポート拡張（完了）
+
+- **ブランチ**: ローカル作業
+- **実施日**: 2025-11-10
+- **内容**:
+  - pgcrypto 有効化、全テーブルに uuid カラムと unique index を付与
+  - User/Job/Proposal/Contract 等に to_param/find_by_uuid を実装し、外部公開 ID を uuid 化
+  - uuid_support_spec で生成・公開 ID を検証
+
+---
+
+### ✅ Phase 5: メッセージング拡張（完了）
+
+- **ブランチ**: `feature/conversations-system`
+- **実施日**: 2025-11-27
+- **内容**:
+  - Conversation/ConversationParticipant を新設し、messages を conversation ベースに移行（job/contract と XOR 制約）
+  - Message を ER 図準拠に改修（body/sender/attachment_url）し、未読管理（last_read_at）を追加
+  - 統合テスト `messaging_system_spec`・モデルスペックで会話/参加者/未読処理を検証
+
+---
+
+### 🚧 Phase 6: レビュー・決済システム（着手）
+
+- **ブランチ**: `feature/phase6-reviews-transactions`
+- **実施日**: 2025-11-27（着手）
+- **内容**:
+  - reviews: contract 単位で 1 件、reviewer/reviewee の FK、rating (1-5) CHECK、uuid 付与
+  - transactions: contract 必須・milestone 任意、kind/status は enum 文字列、amount_jpy > 0 の CHECK、uuid 付与
+  - モデル: Review/Transaction を追加し、Contract に has_one :review / has_many :transactions、User に given/received_reviews を関連付け
+- **テスト**: review_spec, transaction_spec を追加し、schema_end_to_end_spec にレビュー・決済フローを組み込み
+
+---
+
+最終更新: 2025-11-27

@@ -1,4 +1,5 @@
 require 'rails_helper'
+require 'securerandom'
 
 RSpec.describe 'Messaging System Integration', type: :integration do
   let(:client) { User.create!(email: 'client@example.com', password: 'password123') }
@@ -218,6 +219,36 @@ RSpec.describe 'Messaging System Integration', type: :integration do
       expect(message.uuid).to be_present
       expect(message.uuid.length).to eq(36) # UUID format
       expect(message.to_param).to eq(message.uuid)
+    end
+  end
+
+  describe 'Database constraints' do
+    it 'enforces XOR parent constraint at the database level' do
+      proposal = Proposal.create!(job: job, musician: musician, cover_message: 'I can help', quote_total_jpy: 50000, delivery_days: 7)
+      contract = Contract.create!(proposal: proposal, client: client, musician: musician, escrow_total_jpy: 50000)
+      conversation = Conversation.create!(job: job)
+
+      expect {
+        conversation.update_column(:contract_id, contract.id)
+      }.to raise_error(ActiveRecord::StatementInvalid, /conversations_job_or_contract/)
+    end
+
+    it 'prevents duplicate participants via the unique index' do
+      conversation = Conversation.create!(job: job)
+      participant = ConversationParticipant.new(conversation: conversation, user: client)
+      participant.save(validate: false)
+
+      expect {
+        duplicate = ConversationParticipant.new(conversation: conversation, user: client)
+        duplicate.save(validate: false)
+      }.to raise_error(ActiveRecord::RecordNotUnique)
+    end
+
+    it 'rejects messages pointing to non-existent conversations' do
+      expect {
+        message = Message.new(conversation_id: SecureRandom.uuid, sender: client, body: 'Broken reference')
+        message.save(validate: false)
+      }.to raise_error(ActiveRecord::InvalidForeignKey)
     end
   end
 
