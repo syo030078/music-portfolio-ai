@@ -121,35 +121,37 @@ RSpec.describe Job, type: :model do
       expect(job.client).to eq(client)
     end
 
-    it 'has many messages' do
+    it 'has many conversations' do
       job = Job.create!(
         client: client,
         title: 'Test job',
         description: 'Test description',
-        status: 'draft'
+        status: 'published',
+        published_at: Time.current
       )
 
-      message1 = job.messages.create!(user: client, content: 'First message')
-      message2 = job.messages.create!(user: client, content: 'Second message')
+      conversation1 = job.conversations.create!
+      conversation2 = job.conversations.create!
 
-      expect(job.messages.count).to eq(2)
-      expect(job.messages).to include(message1, message2)
+      expect(job.conversations.count).to eq(2)
+      expect(job.conversations).to include(conversation1, conversation2)
     end
 
-    it 'destroys associated messages when job is deleted' do
+    it 'destroys associated conversations when job is deleted' do
       job = Job.create!(
         client: client,
         title: 'Test job',
         description: 'Test description',
-        status: 'draft'
+        status: 'published',
+        published_at: Time.current
       )
 
-      message = job.messages.create!(user: client, content: 'Test message')
-      message_id = message.id
+      conversation = job.conversations.create!
+      conversation_id = conversation.id
 
       job.destroy
 
-      expect(Message.find_by(id: message_id)).to be_nil
+      expect(Conversation.find_by(id: conversation_id)).to be_nil
     end
 
     it 'has many job_requirements' do

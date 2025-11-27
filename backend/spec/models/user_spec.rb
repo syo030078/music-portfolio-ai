@@ -143,18 +143,19 @@ RSpec.describe User, type: :model do
   describe 'message associations' do
     let(:user) { User.create!(email: 'user@example.com', password: 'password123') }
     let(:track) { Track.create!(title: 'Test Track', user: user, yt_url: 'https://youtube.com/watch?v=test') }
-    let(:job) { Job.create!(client: user, track: track, title: 'Test Job', description: 'Test job', status: 'draft') }
+    let(:job) { Job.create!(client: user, track: track, title: 'Test Job', description: 'Test job', status: 'published', published_at: Time.current) }
+    let(:conversation) { Conversation.create!(job: job) }
 
-    it 'has many messages' do
-      message1 = user.messages.create!(job: job, content: 'First message')
-      message2 = user.messages.create!(job: job, content: 'Second message')
+    it 'has many sent_messages' do
+      message1 = user.sent_messages.create!(conversation: conversation, body: 'First message')
+      message2 = user.sent_messages.create!(conversation: conversation, body: 'Second message')
 
-      expect(user.messages.count).to eq(2)
-      expect(user.messages).to include(message1, message2)
+      expect(user.sent_messages.count).to eq(2)
+      expect(user.sent_messages).to include(message1, message2)
     end
 
-    it 'destroys associated messages when user is deleted' do
-      message = user.messages.create!(job: job, content: 'Test message')
+    it 'destroys associated sent_messages when user is deleted' do
+      message = user.sent_messages.create!(conversation: conversation, body: 'Test message')
       message_id = message.id
 
       user.destroy
@@ -162,15 +163,16 @@ RSpec.describe User, type: :model do
       expect(Message.find_by(id: message_id)).to be_nil
     end
 
-    it 'can send messages to different jobs' do
-      job2 = Job.create!(client: user, track: track, title: 'Another Job', description: 'Another job', status: 'draft')
+    it 'can send messages to different conversations' do
+      job2 = Job.create!(client: user, track: track, title: 'Another Job', description: 'Another job', status: 'published', published_at: Time.current)
+      conversation2 = Conversation.create!(job: job2)
 
-      message1 = user.messages.create!(job: job, content: 'Message to first job')
-      message2 = user.messages.create!(job: job2, content: 'Message to second job')
+      message1 = user.sent_messages.create!(conversation: conversation, body: 'Message to first conversation')
+      message2 = user.sent_messages.create!(conversation: conversation2, body: 'Message to second conversation')
 
-      expect(user.messages.count).to eq(2)
-      expect(message1.job).to eq(job)
-      expect(message2.job).to eq(job2)
+      expect(user.sent_messages.count).to eq(2)
+      expect(message1.conversation).to eq(conversation)
+      expect(message2.conversation).to eq(conversation2)
     end
   end
 
