@@ -7,6 +7,12 @@ Rails.application.routes.draw do
     namespace :v1 do
       resource :user, only: [:show, :update]
       resources :tracks
+
+      resources :jobs, param: :uuid do
+        member do
+          post :publish
+        end
+      end
     end
   end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
