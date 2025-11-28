@@ -3,8 +3,6 @@ require 'rails_helper'
 RSpec.describe "Api::V1::Jobs", type: :request do
   let(:user) { create(:user) }
   let(:other_user) { create(:user) }
-  let(:auth_headers) { user.create_new_auth_token }
-  let(:other_auth_headers) { other_user.create_new_auth_token }
 
   describe "GET /api/v1/jobs" do
     context "公開中の案件が存在する場合" do
@@ -139,9 +137,11 @@ RSpec.describe "Api::V1::Jobs", type: :request do
     end
 
     context "認証済みユーザー" do
+      before { sign_in user }
+
       it "案件を作成できる" do
         expect {
-          post "/api/v1/jobs", params: valid_params, headers: auth_headers
+          post "/api/v1/jobs", params: valid_params
         }.to change(Job, :count).by(1)
 
         expect(response).to have_http_status(:created)
@@ -152,7 +152,7 @@ RSpec.describe "Api::V1::Jobs", type: :request do
       end
 
       it "初期statusはdraft" do
-        post "/api/v1/jobs", params: valid_params, headers: auth_headers
+        post "/api/v1/jobs", params: valid_params
         job = Job.last
         expect(job.status).to eq('draft')
         expect(job.published_at).to be_nil
@@ -167,11 +167,13 @@ RSpec.describe "Api::V1::Jobs", type: :request do
     end
 
     context "バリデーションエラー" do
+      before { sign_in user }
+
       it "titleがない場合422エラー" do
         invalid_params = valid_params.deep_dup
         invalid_params[:job][:title] = nil
 
-        post "/api/v1/jobs", params: invalid_params, headers: auth_headers
+        post "/api/v1/jobs", params: invalid_params
         expect(response).to have_http_status(:unprocessable_entity)
 
         json = JSON.parse(response.body)
@@ -182,7 +184,7 @@ RSpec.describe "Api::V1::Jobs", type: :request do
         invalid_params = valid_params.deep_dup
         invalid_params[:job][:description] = nil
 
-        post "/api/v1/jobs", params: invalid_params, headers: auth_headers
+        post "/api/v1/jobs", params: invalid_params
         expect(response).to have_http_status(:unprocessable_entity)
       end
     end
@@ -200,8 +202,10 @@ RSpec.describe "Api::V1::Jobs", type: :request do
     end
 
     context "所有者として" do
+      before { sign_in user }
+
       it "案件を更新できる" do
-        patch "/api/v1/jobs/#{job.uuid}", params: update_params, headers: auth_headers
+        patch "/api/v1/jobs/#{job.uuid}", params: update_params
         expect(response).to have_http_status(:ok)
 
         json = JSON.parse(response.body)
@@ -214,8 +218,10 @@ RSpec.describe "Api::V1::Jobs", type: :request do
     end
 
     context "非所有者として" do
+      before { sign_in other_user }
+
       it "403エラーを返す" do
-        patch "/api/v1/jobs/#{job.uuid}", params: update_params, headers: other_auth_headers
+        patch "/api/v1/jobs/#{job.uuid}", params: update_params
         expect(response).to have_http_status(:forbidden)
 
         json = JSON.parse(response.body)
@@ -231,21 +237,26 @@ RSpec.describe "Api::V1::Jobs", type: :request do
     end
 
     context "バリデーションエラー" do
+      before { sign_in user }
+
       it "不正な値で422エラー" do
-        invalid_params = { job: { title: "" } }
-        patch "/api/v1/jobs/#{job.uuid}", params: invalid_params, headers: auth_headers
+        invalid_params = { job: { title: '' } }
+        patch "/api/v1/jobs/#{job.uuid}", params: invalid_params
         expect(response).to have_http_status(:unprocessable_entity)
       end
     end
   end
 
   describe "DELETE /api/v1/jobs/:uuid" do
-    let!(:job) { create(:job, client: user) }
+    let(:job) { create(:job, client: user) }
 
     context "所有者として" do
+      before { sign_in user }
+
       it "案件を削除できる" do
+        job_uuid = job.uuid
         expect {
-          delete "/api/v1/jobs/#{job.uuid}", headers: auth_headers
+          delete "/api/v1/jobs/#{job_uuid}"
         }.to change(Job, :count).by(-1)
 
         expect(response).to have_http_status(:ok)
@@ -255,12 +266,14 @@ RSpec.describe "Api::V1::Jobs", type: :request do
     end
 
     context "非所有者として" do
-      it "403エラーを返す" do
-        expect {
-          delete "/api/v1/jobs/#{job.uuid}", headers: other_auth_headers
-        }.not_to change(Job, :count)
+      before { sign_in other_user }
 
+      it "403エラーを返す" do
+        delete "/api/v1/jobs/#{job.uuid}"
         expect(response).to have_http_status(:forbidden)
+
+        json = JSON.parse(response.body)
+        expect(json['error']).to eq("権限がありません")
       end
     end
 
@@ -273,11 +286,13 @@ RSpec.describe "Api::V1::Jobs", type: :request do
   end
 
   describe "POST /api/v1/jobs/:uuid/publish" do
-    let(:job) { create(:job, client: user, status: 'draft') }
+    let(:job) { create(:job, client: user, status: 'draft', published_at: nil) }
 
     context "所有者として" do
+      before { sign_in user }
+
       it "案件を公開できる" do
-        post "/api/v1/jobs/#{job.uuid}/publish", headers: auth_headers
+        post "/api/v1/jobs/#{job.uuid}/publish"
         expect(response).to have_http_status(:ok)
 
         json = JSON.parse(response.body)
@@ -286,23 +301,23 @@ RSpec.describe "Api::V1::Jobs", type: :request do
 
         job.reload
         expect(job.status).to eq('published')
-        expect(job.published_at).not_to be_nil
       end
 
       it "published_atが設定される" do
-        post "/api/v1/jobs/#{job.uuid}/publish", headers: auth_headers
+        post "/api/v1/jobs/#{job.uuid}/publish"
+
         job.reload
+        expect(job.published_at).not_to be_nil
         expect(job.published_at).to be_within(1.second).of(Time.current)
       end
     end
 
     context "非所有者として" do
-      it "403エラーを返す" do
-        post "/api/v1/jobs/#{job.uuid}/publish", headers: other_auth_headers
-        expect(response).to have_http_status(:forbidden)
+      before { sign_in other_user }
 
-        job.reload
-        expect(job.status).to eq('draft')
+      it "403エラーを返す" do
+        post "/api/v1/jobs/#{job.uuid}/publish"
+        expect(response).to have_http_status(:forbidden)
       end
     end
 

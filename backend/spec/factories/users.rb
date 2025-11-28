@@ -4,5 +4,9 @@ FactoryBot.define do
     password { "password123" }
     sequence(:name) { |n| "Test User #{n}" }
     bio { "Test bio" }
+
+    after(:create) do |user|
+      user.reload
+    end
   end
 end

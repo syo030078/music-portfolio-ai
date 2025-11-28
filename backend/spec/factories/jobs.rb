@@ -11,6 +11,10 @@ FactoryBot.define do
     location_note { "Tokyo" }
     status { 'draft' }
 
+    after(:create) do |job|
+      job.reload
+    end
+
     trait :published do
       status { 'published' }
       published_at { 1.day.ago }

@@ -13,14 +13,14 @@ class Api::V1::JobsController < ApplicationController
     # 公開中の案件のみ取得
     jobs = Job.published.includes(:client)
 
-    # フィルタリング: budget_min
+    # フィルタリング: budget_min（案件の最低予算が指定額以上）
     if params[:budget_min].present?
-      jobs = jobs.where('budget_min_jpy >= ? OR budget_jpy >= ?', params[:budget_min].to_i, params[:budget_min].to_i)
+      jobs = jobs.where('budget_min_jpy >= ?', params[:budget_min].to_i)
     end
 
-    # フィルタリング: budget_max
+    # フィルタリング: budget_max（案件の最高予算が指定額以下）
     if params[:budget_max].present?
-      jobs = jobs.where('budget_max_jpy <= ? OR budget_jpy <= ?', params[:budget_max].to_i, params[:budget_max].to_i)
+      jobs = jobs.where('budget_max_jpy <= ?', params[:budget_max].to_i)
     end
 
     # フィルタリング: is_remote
