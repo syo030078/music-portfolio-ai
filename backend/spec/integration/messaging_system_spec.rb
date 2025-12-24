@@ -123,17 +123,17 @@ RSpec.describe 'Messaging System Integration', type: :integration do
   describe 'Message validation and constraints' do
     let(:conversation) { Conversation.create!(job: job) }
 
-    it 'validates message body presence and length' do
+    it 'validates message content presence and length' do
       # Empty body
       message = Message.new(conversation: conversation, sender: client, content: '')
       expect(message).not_to be_valid
-      expect(message.errors[:body]).to include("can't be blank")
+      expect(message.errors[:content]).to include("can't be blank")
 
       # Too long body
       long_body = 'a' * 1001
       message = Message.new(conversation: conversation, sender: client, content: long_body)
       expect(message).not_to be_valid
-      expect(message.errors[:body]).to include('is too long (maximum is 1000 characters)')
+      expect(message.errors[:content]).to include('is too long (maximum is 1000 characters)')
 
       # Valid body
       message = Message.new(conversation: conversation, sender: client, content: 'Valid message')
