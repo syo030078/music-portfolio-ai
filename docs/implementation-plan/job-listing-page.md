@@ -213,6 +213,113 @@ conversation.messages.includes(:sender).order(:created_at)
 
 ---
 
+## Rails API ⇔ Next.js 接続ベストプラクティス
+
+### 現在の構成
+- **Rails API**: `http://localhost:3000` (ポート3000)
+- **Next.js Frontend**: `http://localhost:3001` (ポート3001)
+
+### 採用アプローチ: 環境変数 + CORS (開発環境)
+
+#### なぜこのアプローチか？
+1. **シンプルで理解しやすい**: Server ComponentからRails APIに直接アクセス
+2. **開発が速い**: 余分なレイヤーがなく、デバッグが容易
+3. **段階的移行が可能**: 本番環境では別のアプローチに変更可能
+
+#### 実装ステップ
+
+**ステップ1: CORS設定 (Rails側)**
+
+```ruby
+# backend/Gemfile
+gem 'rack-cors'
+
+# backend/config/initializers/cors.rb
+Rails.application.config.middleware.insert_before 0, Rack::Cors do
+  allow do
+    origins ENV.fetch('FRONTEND_URL', 'http://localhost:3001')
+
+    resource '*',
+      headers: :any,
+      methods: [:get, :post, :put, :patch, :delete, :options, :head],
+      credentials: true
+  end
+end
+```
+
+**ステップ2: 環境変数設定**
+
+```bash
+# backend/.env
+FRONTEND_URL=http://localhost:3001
+
+# frontend/.env.local
+NEXT_PUBLIC_API_URL=http://localhost:3000
+```
+
+**ステップ3: フロントエンド実装パターン**
+
+```typescript
+// Server Component (推奨)
+async function getJobs() {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  const res = await fetch(`${apiUrl}/api/v1/jobs`, {
+    cache: 'no-store', // SSRで常に最新データ
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to fetch jobs');
+  }
+
+  return res.json();
+}
+```
+
+#### 本番環境への移行計画
+
+本番環境では以下のいずれかに移行:
+
+**案1: Next.js Rewrites (推奨)**
+```javascript
+// next.config.js
+module.exports = {
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${process.env.BACKEND_URL}/api/:path*`,
+      },
+    ];
+  },
+};
+```
+
+**案2: Next.js API Routes (認証が複雑な場合)**
+```typescript
+// app/api/v1/jobs/route.ts
+export async function GET() {
+  const res = await fetch(`${process.env.BACKEND_URL}/api/v1/jobs`);
+  const data = await res.json();
+  return Response.json(data);
+}
+```
+
+### トラブルシューティング
+
+#### 問題1: CORS エラー
+**原因**: Rails側でCORS設定が不足
+**解決**: `rack-cors` gemをインストールし、initializerを作成
+
+#### 問題2: 環境変数が反映されない
+**原因**: Next.jsの開発サーバーが環境変数を読み込んでいない
+**解決**: Next.jsを再起動 (`npm run dev`)
+
+#### 問題3: Server Componentでデータが取得できない
+**原因**: `NEXT_PUBLIC_API_URL`が正しく設定されていない
+**解決**: `.env.local`を確認し、ポート3000に設定
+
+---
+
 ## 備考
 
 - **認証について**: 現在は環境変数で簡易認証、本番では Cookie/localStorage
