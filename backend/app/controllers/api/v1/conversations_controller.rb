@@ -1,10 +1,12 @@
 class Api::V1::ConversationsController < ApplicationController
+  skip_before_action :authenticate_user! # TODO: MVP後に認証実装
+  before_action :set_current_user
   before_action :set_conversation, only: [:show]
 
   # GET /api/v1/conversations
   def index
     # 現在のユーザーが参加している会話を取得（N+1防止）
-    conversations = current_user.conversations
+    conversations = @current_user.conversations
       .includes(:participants, :messages, :job, :contract)
       .order(updated_at: :desc)
 
@@ -25,7 +27,7 @@ class Api::V1::ConversationsController < ApplicationController
               created_at: msg.created_at
             }
           end,
-          unread_count: conversation.unread_count_for(current_user)
+          unread_count: conversation.unread_count_for(@current_user)
         }
       end
     }
@@ -34,7 +36,7 @@ class Api::V1::ConversationsController < ApplicationController
   # GET /api/v1/conversations/:id
   def show
     # 権限チェック
-    unless @conversation.participant?(current_user)
+    unless @conversation.participant?(@current_user)
       render json: { error: 'アクセス権限がありません' }, status: :forbidden
       return
     end
@@ -78,8 +80,8 @@ class Api::V1::ConversationsController < ApplicationController
       end
 
       # 作成者も参加者に追加
-      unless participant_ids.include?(current_user.id)
-        conversation.conversation_participants.create!(user_id: current_user.id)
+      unless participant_ids.include?(@current_user.id)
+        conversation.conversation_participants.create!(user_id: @current_user.id)
       end
 
       render json: {
@@ -105,5 +107,10 @@ class Api::V1::ConversationsController < ApplicationController
 
   def conversation_params
     params.require(:conversation).permit(:job_id, :contract_id)
+  end
+
+  def set_current_user
+    # TODO: MVP後に認証実装、現在はテストユーザーを使用
+    @current_user = User.find_by(email: 'client1@example.com')
   end
 end
