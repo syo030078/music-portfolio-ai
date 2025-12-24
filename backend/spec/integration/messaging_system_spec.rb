@@ -109,8 +109,8 @@ RSpec.describe 'Messaging System Integration', type: :integration do
       message2 = Message.create!(conversation: conversation, sender: musician, content: 'I will start today')
 
       expect(conversation.messages.count).to eq(2)
-      expect(conversation.messages.order(:created_at).first.body).to eq('Please start working on the project')
-      expect(conversation.messages.order(:created_at).last.body).to eq('I will start today')
+      expect(conversation.messages.order(:created_at).first.content).to eq('Please start working on the project')
+      expect(conversation.messages.order(:created_at).last.content).to eq('I will start today')
     end
 
     it 'prevents conversation from belonging to both job and contract' do
