@@ -23,7 +23,7 @@ RSpec.describe 'Messaging System Integration', type: :integration do
       expect(conversation.participant?(musician)).to be true
 
       # Step 3: Client sends a message
-      message1 = Message.create!(conversation: conversation, sender: client, body: 'Hello, are you available?')
+      message1 = Message.create!(conversation: conversation, sender: client, content: 'Hello, are you available?')
       expect(message1).to be_persisted
 
       # Client should be marked as read automatically (because client is the sender)
@@ -39,7 +39,7 @@ RSpec.describe 'Messaging System Integration', type: :integration do
       musician_participant.mark_as_read!
       expect(conversation.unread_count_for(musician)).to eq(0)
 
-      message2 = Message.create!(conversation: conversation, sender: musician, body: 'Yes, I am available!')
+      message2 = Message.create!(conversation: conversation, sender: musician, content: 'Yes, I am available!')
       expect(message2).to be_persisted
 
       # Musician should be marked as read automatically
@@ -50,12 +50,12 @@ RSpec.describe 'Messaging System Integration', type: :integration do
       expect(conversation.unread_count_for(musician)).to eq(0)
 
       # Step 5: Multiple messages exchange
-      message3 = Message.create!(conversation: conversation, sender: client, body: 'Great! What is your rate?')
+      message3 = Message.create!(conversation: conversation, sender: client, content: 'Great! What is your rate?')
       # After message3, client is auto-marked as read, musician has 1 unread (message3)
       expect(conversation.unread_count_for(musician)).to eq(1)
       expect(conversation.unread_count_for(client)).to eq(0)
 
-      message4 = Message.create!(conversation: conversation, sender: musician, body: 'My rate is $100/hour')
+      message4 = Message.create!(conversation: conversation, sender: musician, content: 'My rate is $100/hour')
       # After message4, musician is auto-marked as read, client has 1 unread (message4)
       expect(conversation.unread_count_for(client)).to eq(1)
       expect(conversation.unread_count_for(musician)).to eq(0)
@@ -105,8 +105,8 @@ RSpec.describe 'Messaging System Integration', type: :integration do
       ConversationParticipant.create!(conversation: conversation, user: musician)
 
       # Step 3: Exchange messages about contract details
-      message1 = Message.create!(conversation: conversation, sender: client, body: 'Please start working on the project')
-      message2 = Message.create!(conversation: conversation, sender: musician, body: 'I will start today')
+      message1 = Message.create!(conversation: conversation, sender: client, content: 'Please start working on the project')
+      message2 = Message.create!(conversation: conversation, sender: musician, content: 'I will start today')
 
       expect(conversation.messages.count).to eq(2)
       expect(conversation.messages.order(:created_at).first.body).to eq('Please start working on the project')
@@ -125,23 +125,23 @@ RSpec.describe 'Messaging System Integration', type: :integration do
 
     it 'validates message body presence and length' do
       # Empty body
-      message = Message.new(conversation: conversation, sender: client, body: '')
+      message = Message.new(conversation: conversation, sender: client, content: '')
       expect(message).not_to be_valid
       expect(message.errors[:body]).to include("can't be blank")
 
       # Too long body
       long_body = 'a' * 1001
-      message = Message.new(conversation: conversation, sender: client, body: long_body)
+      message = Message.new(conversation: conversation, sender: client, content: long_body)
       expect(message).not_to be_valid
       expect(message.errors[:body]).to include('is too long (maximum is 1000 characters)')
 
       # Valid body
-      message = Message.new(conversation: conversation, sender: client, body: 'Valid message')
+      message = Message.new(conversation: conversation, sender: client, content: 'Valid message')
       expect(message).to be_valid
     end
 
     it 'requires conversation and sender' do
-      message = Message.new(body: 'Test')
+      message = Message.new(content: 'Test')
       expect(message).not_to be_valid
       expect(message.errors[:conversation]).to be_present
       expect(message.errors[:sender]).to be_present
@@ -157,11 +157,11 @@ RSpec.describe 'Messaging System Integration', type: :integration do
       participant.update(last_read_at: 2.hours.ago)
 
       # Create old messages (before last_read_at)
-      old_message = Message.create!(conversation: conversation, sender: client, body: 'Old message', created_at: 3.hours.ago)
+      old_message = Message.create!(conversation: conversation, sender: client, content: 'Old message', created_at: 3.hours.ago)
 
       # Create new messages (after last_read_at)
-      new_message1 = Message.create!(conversation: conversation, sender: client, body: 'New message 1', created_at: 1.hour.ago)
-      new_message2 = Message.create!(conversation: conversation, sender: client, body: 'New message 2', created_at: 30.minutes.ago)
+      new_message1 = Message.create!(conversation: conversation, sender: client, content: 'New message 1', created_at: 1.hour.ago)
+      new_message2 = Message.create!(conversation: conversation, sender: client, content: 'New message 2', created_at: 30.minutes.ago)
 
       expect(conversation.unread_count_for(musician)).to eq(2)
     end
@@ -169,7 +169,7 @@ RSpec.describe 'Messaging System Integration', type: :integration do
     it 'returns all messages as unread when last_read_at is nil' do
       participant.update(last_read_at: nil)
 
-      5.times { Message.create!(conversation: conversation, sender: client, body: 'Message') }
+      5.times { Message.create!(conversation: conversation, sender: client, content: 'Message') }
 
       expect(conversation.unread_count_for(musician)).to eq(5)
     end
@@ -178,11 +178,11 @@ RSpec.describe 'Messaging System Integration', type: :integration do
       participant.update(last_read_at: 1.hour.ago)
 
       # Create some unread messages
-      3.times { Message.create!(conversation: conversation, sender: client, body: 'Unread message') }
+      3.times { Message.create!(conversation: conversation, sender: client, content: 'Unread message') }
       expect(conversation.unread_count_for(musician)).to eq(3)
 
       # Musician sends a message
-      Message.create!(conversation: conversation, sender: musician, body: 'My reply')
+      Message.create!(conversation: conversation, sender: musician, content: 'My reply')
 
       # Musician should now have 0 unread messages (all marked as read)
       expect(conversation.unread_count_for(musician)).to eq(0)
@@ -211,7 +211,7 @@ RSpec.describe 'Messaging System Integration', type: :integration do
 
     it 'message to_param returns uuid after reload' do
       conversation = Conversation.create!(job: job)
-      message = Message.create!(conversation: conversation, sender: client, body: 'Test')
+      message = Message.create!(conversation: conversation, sender: client, content: 'Test')
 
       # UUID is generated by PostgreSQL default, need to reload to see it
       message.reload
@@ -246,7 +246,7 @@ RSpec.describe 'Messaging System Integration', type: :integration do
 
     it 'rejects messages pointing to non-existent conversations' do
       expect {
-        message = Message.new(conversation_id: SecureRandom.uuid, sender: client, body: 'Broken reference')
+        message = Message.new(conversation_id: SecureRandom.uuid, sender: client, content: 'Broken reference')
         message.save(validate: false)
       }.to raise_error(ActiveRecord::InvalidForeignKey)
     end
@@ -256,7 +256,7 @@ RSpec.describe 'Messaging System Integration', type: :integration do
     it 'deletes conversation_participants and messages when conversation is deleted' do
       conversation = Conversation.create!(job: job)
       participant = ConversationParticipant.create!(conversation: conversation, user: client)
-      message = Message.create!(conversation: conversation, sender: client, body: 'Test')
+      message = Message.create!(conversation: conversation, sender: client, content: 'Test')
 
       expect { conversation.destroy }.to change { ConversationParticipant.count }.by(-1)
         .and change { Message.count }.by(-1)
@@ -303,9 +303,9 @@ RSpec.describe 'Messaging System Integration', type: :integration do
 
     it 'allows user to access their sent messages' do
       conversation = Conversation.create!(job: job)
-      message1 = Message.create!(conversation: conversation, sender: client, body: 'Message 1')
-      message2 = Message.create!(conversation: conversation, sender: client, body: 'Message 2')
-      musician_message = Message.create!(conversation: conversation, sender: musician, body: 'Musician message')
+      message1 = Message.create!(conversation: conversation, sender: client, content: 'Message 1')
+      message2 = Message.create!(conversation: conversation, sender: client, content: 'Message 2')
+      musician_message = Message.create!(conversation: conversation, sender: musician, content: 'Musician message')
 
       expect(client.sent_messages).to include(message1, message2)
       expect(client.sent_messages).not_to include(musician_message)
