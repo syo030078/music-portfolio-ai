@@ -31,6 +31,18 @@ client2 = User.find_or_create_by!(email: 'client2@example.com') do |u|
   u.bio = 'YouTubeクリエイター。動画のBGM制作を依頼しています。'
 end
 
+musician1 = User.find_or_create_by!(email: 'musician1@example.com') do |u|
+  u.password = 'password123'
+  u.name = '田中一郎'
+  u.bio = '作曲家・ギタリストです。ゲーム音楽を中心に活動しています。'
+end
+
+musician2 = User.find_or_create_by!(email: 'musician2@example.com') do |u|
+  u.password = 'password123'
+  u.name = '鈴木美咲'
+  u.bio = 'Lo-Fi HipHop プロデューサー。チルな曲作りが得意です。'
+end
+
 # Test jobs
 puts "Seeding test jobs..."
 Job.find_or_create_by!(
@@ -67,6 +79,49 @@ Job.find_or_create_by!(
   job.delivery_due_on = 60.days.from_now
   job.status = 'published'
   job.published_at = 1.day.ago
+end
+
+# Test conversations and messages
+puts "Seeding test conversations..."
+first_job = Job.find_by(title: 'ゲーム用BGM制作依頼')
+
+if first_job
+  conv1 = Conversation.find_or_create_by!(job: first_job)
+
+  # Add participants
+  ConversationParticipant.find_or_create_by!(conversation: conv1, user: client1) do |cp|
+    cp.last_read_at = 1.hour.ago
+  end
+
+  ConversationParticipant.find_or_create_by!(conversation: conv1, user: musician1) do |cp|
+    cp.last_read_at = 2.hours.ago
+  end
+
+  # Test messages
+  puts "Seeding test messages..."
+  Message.find_or_create_by!(
+    conversation: conv1,
+    sender: client1,
+    content: 'はじめまして。ゲーム用BGM制作の件でご連絡させていただきました。'
+  )
+
+  Message.find_or_create_by!(
+    conversation: conv1,
+    sender: musician1,
+    content: 'はじめまして、田中と申します。ゲーム音楽の制作は得意分野です。詳細をお聞かせいただけますでしょうか？'
+  )
+
+  Message.find_or_create_by!(
+    conversation: conv1,
+    sender: client1,
+    content: 'ありがとうございます。RPGのフィールドBGMで、冒険心をかき立てるようなファンタジー系の曲を希望しています。納期は1ヶ月程度を考えています。'
+  )
+
+  Message.find_or_create_by!(
+    conversation: conv1,
+    sender: musician1,
+    content: '承知しました。参考音源などはありますでしょうか？'
+  )
 end
 
 puts "Seed data created successfully!"

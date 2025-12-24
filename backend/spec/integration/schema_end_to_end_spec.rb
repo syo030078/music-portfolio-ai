@@ -52,10 +52,10 @@ RSpec.describe 'Schema End-to-End Integration', type: :integration do
     contract_cp_client = ConversationParticipant.create!(conversation: contract_conversation, user: client)
     contract_cp_musician = ConversationParticipant.create!(conversation: contract_conversation, user: musician)
 
-    Message.create!(conversation: job_conversation, sender: client, body: 'Please start with the chorus')
-    Message.create!(conversation: job_conversation, sender: musician, body: 'Got it, starting now')
-    Message.create!(conversation: contract_conversation, sender: client, body: 'Sharing milestone details')
-    Message.create!(conversation: contract_conversation, sender: musician, body: 'Will deliver by the due date')
+    Message.create!(conversation: job_conversation, sender: client, content: 'Please start with the chorus')
+    Message.create!(conversation: job_conversation, sender: musician, content: 'Got it, starting now')
+    Message.create!(conversation: contract_conversation, sender: client, content: 'Sharing milestone details')
+    Message.create!(conversation: contract_conversation, sender: musician, content: 'Will deliver by the due date')
 
     # JWT denylist (revoked token)
     JwtDenylist.create!(jti: SecureRandom.uuid, exp: 1.day.from_now)

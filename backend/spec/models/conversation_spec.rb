@@ -115,7 +115,7 @@ RSpec.describe Conversation, type: :model do
       participant = ConversationParticipant.create!(conversation: conversation, user: participant_user)
 
       sender = User.create!(email: 'sender@example.com', password: 'password123')
-      3.times { Message.create!(conversation: conversation, sender: sender, body: 'Test message') }
+      3.times { Message.create!(conversation: conversation, sender: sender, content: 'Test message') }
 
       expect(conversation.unread_count_for(participant_user)).to eq(3)
     end
@@ -126,8 +126,8 @@ RSpec.describe Conversation, type: :model do
       participant = ConversationParticipant.create!(conversation: conversation, user: participant_user, last_read_at: 1.hour.ago)
 
       sender = User.create!(email: 'sender@example.com', password: 'password123')
-      Message.create!(conversation: conversation, sender: sender, body: 'Old message', created_at: 2.hours.ago)
-      2.times { Message.create!(conversation: conversation, sender: sender, body: 'New message', created_at: 30.minutes.ago) }
+      Message.create!(conversation: conversation, sender: sender, content: 'Old message', created_at: 2.hours.ago)
+      2.times { Message.create!(conversation: conversation, sender: sender, content: 'New message', created_at: 30.minutes.ago) }
 
       expect(conversation.unread_count_for(participant_user)).to eq(2)
     end

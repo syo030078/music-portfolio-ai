@@ -74,18 +74,35 @@ entity "musician_skills" as musician_skills {
   PK skill_id: int {FK -> skills.id}
 }
 
+entity "tracks" as tracks {
+  PK id: bigserial
+  FK user_id: bigint {FK -> users.id}
+  title: varchar(255)
+  description: text (nullable)
+  yt_url: text (nullable)
+  bpm: float (nullable)
+  key: varchar(50) (nullable)
+  genre: varchar(100) (nullable)
+  ai_text: text (nullable)
+  created_at: timestamptz
+  updated_at: timestamptz
+}
+
 entity "jobs" as jobs {
-  PK id: uuid
-  client: uuid {FK -> users.id}  ' client_id相当
-  title: text
+  PK id: bigserial
+  uuid: uuid (unique, indexed)  ' 公開用ID
+  FK client_id: bigint {FK -> users.id}
+  FK track_id: bigint {FK -> tracks.id} (nullable)
+  title: varchar(255)
   description: text
-  budget_min_jpy: integer
-  budget_max_jpy: integer
-  delivery_due_on: date
-  is_remote: boolean
-  location_note: text
+  budget_jpy: integer (nullable)
+  budget_min_jpy: integer (nullable)
+  budget_max_jpy: integer (nullable)
+  delivery_due_on: date (nullable)
+  is_remote: boolean (default: false)
+  location_note: text (nullable)
   status: enum(draft,published,in_review,contracted,completed,closed)
-  published_at: timestamptz
+  published_at: timestamptz (nullable)
   created_at: timestamptz
   updated_at: timestamptz
 }
@@ -133,25 +150,34 @@ entity "contract_milestones" as contract_milestones {
   updated_at: timestamptz
 }
 
-entity "threads" as threads {
-  PK id: uuid
-  job_id: uuid {FK -> jobs.id}        ' 契約前スレ
-  contract_id: uuid {FK -> contracts.id} ' 契約後スレ
+entity "conversations" as conversations {
+  PK id: bigserial
+  FK job_id: bigint {FK -> jobs.id} (nullable)
+  FK contract_id: bigint {FK -> contracts.id} (nullable)
   created_at: timestamptz
+  updated_at: timestamptz
+  --
+  XOR制約: job_id OR contract_id のいずれか必須
 }
 
-entity "thread_participants" as thread_participants {
-  PK thread_id: uuid {FK -> threads.id}
-  PK user_id: uuid {FK -> users.id}
+entity "conversation_participants" as conversation_participants {
+  PK id: bigserial
+  FK conversation_id: bigint {FK -> conversations.id}
+  FK user_id: bigint {FK -> users.id}
+  last_read_at: timestamptz (nullable)
+  created_at: timestamptz
+  updated_at: timestamptz
+  --
+  unique: (conversation_id, user_id)
 }
 
 entity "messages" as messages {
-  PK id: uuid
-  thread_id: uuid {FK -> threads.id}
-  sender_id: uuid {FK -> users.id}
-  body: text
-  attachment_url: text
+  PK id: bigserial
+  FK conversation_id: bigint {FK -> conversations.id}
+  FK sender_id: bigint {FK -> users.id}
+  content: text
   created_at: timestamptz
+  updated_at: timestamptz
 }
 
 entity "reviews" as reviews {
@@ -180,6 +206,9 @@ entity "transactions" as transactions {
 users ||--|| musician_profiles : has one
 users ||--|| client_profiles   : has one
 
+users ||--o{ tracks : musician
+tracks ||--o{ jobs : optional
+
 users ||--o{ jobs : client
 jobs  ||--o{ job_requirements
 
@@ -200,12 +229,12 @@ instruments ||--o{ musician_instruments
 users ||--o{ musician_skills
 skills ||--o{ musician_skills
 
-' messaging
-jobs ||--o{ threads
-contracts ||--o{ threads
-threads ||--o{ thread_participants
-users ||--o{ thread_participants
-threads ||--o{ messages
+' messaging (conversations)
+jobs ||--o{ conversations
+contracts ||--o{ conversations
+conversations ||--o{ conversation_participants
+users ||--o{ conversation_participants
+conversations ||--o{ messages
 users ||--o{ messages : sender
 
 ' reviews & payments
@@ -219,6 +248,24 @@ note right of job_requirements
 ref_id は kind に応じて
 genres / instruments / skills の id を参照
 (アプリ側で整合性チェック)
+end note
+
+note right of conversations
+XOR制約:
+job_id と contract_id のいずれか一方のみ設定可能
+- job_id: 契約前のやり取り
+- contract_id: 契約後のやり取り
+Cascade削除: Job/Contract削除時に会話も削除
+end note
+
+note right of jobs
+UUID:
+- id: 内部用の連番ID
+- uuid: 公開用のUUID (URL安全)
+Budget:
+- budget_jpy: 固定予算
+- budget_min_jpy, budget_max_jpy: 範囲予算
+(いずれかを設定)
 end note
 
 note right of contracts

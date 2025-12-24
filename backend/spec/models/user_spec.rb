@@ -147,15 +147,15 @@ RSpec.describe User, type: :model do
     let(:conversation) { Conversation.create!(job: job) }
 
     it 'has many sent_messages' do
-      message1 = user.sent_messages.create!(conversation: conversation, body: 'First message')
-      message2 = user.sent_messages.create!(conversation: conversation, body: 'Second message')
+      message1 = user.sent_messages.create!(conversation: conversation, content: 'First message')
+      message2 = user.sent_messages.create!(conversation: conversation, content: 'Second message')
 
       expect(user.sent_messages.count).to eq(2)
       expect(user.sent_messages).to include(message1, message2)
     end
 
     it 'destroys associated sent_messages when user is deleted' do
-      message = user.sent_messages.create!(conversation: conversation, body: 'Test message')
+      message = user.sent_messages.create!(conversation: conversation, content: 'Test message')
       message_id = message.id
 
       user.destroy
@@ -167,8 +167,8 @@ RSpec.describe User, type: :model do
       job2 = Job.create!(client: user, track: track, title: 'Another Job', description: 'Another job', status: 'published', published_at: Time.current)
       conversation2 = Conversation.create!(job: job2)
 
-      message1 = user.sent_messages.create!(conversation: conversation, body: 'Message to first conversation')
-      message2 = user.sent_messages.create!(conversation: conversation2, body: 'Message to second conversation')
+      message1 = user.sent_messages.create!(conversation: conversation, content: 'Message to first conversation')
+      message2 = user.sent_messages.create!(conversation: conversation2, content: 'Message to second conversation')
 
       expect(user.sent_messages.count).to eq(2)
       expect(message1.conversation).to eq(conversation)
