@@ -35,6 +35,7 @@ class Api::V1::JobsController < ApplicationController
 
     render json: {
       job: {
+        id: job.id,
         uuid: job.uuid,
         title: job.title,
         description: job.description,
