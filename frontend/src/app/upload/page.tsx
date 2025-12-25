@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 type AnalysisResult = {
   bpm?: number | null;
@@ -26,6 +27,7 @@ type HistoryItem = {
 const API = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
 export default function Page() {
+  const router = useRouter();
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioUrl, setAudioUrl] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -194,8 +196,28 @@ BPM: ${analysisResult.bpm ?? "N/A"}
     }
   };
 
+  const handleLogout = () => {
+    localStorage.clear();
+    router.push("/login");
+  };
+
   return (
     <div style={{ maxWidth: 600, margin: "50px auto", padding: 20 }}>
+      <button
+        onClick={handleLogout}
+        style={{
+          padding: "8px 16px",
+          backgroundColor: "#6c757d",
+          color: "white",
+          border: "none",
+          borderRadius: "4px",
+          cursor: "pointer",
+          marginBottom: "20px",
+          fontSize: "14px",
+        }}
+      >
+        ログアウト
+      </button>
       {/* YouTube登録フォーム */}
       <div
         style={{
