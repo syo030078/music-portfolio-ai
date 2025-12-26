@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-// import "./globals.css"; // 必要なら残す
+import Header from "@/components/Header";
 
 export const metadata: Metadata = {
-  title: "Music Portfolio AI",
-  description: "MVP Frontend",
+  title: "MusicWork - 音楽仕事マッチングプラットフォーム",
+  description: "音楽家と依頼者をつなぐマッチングサービス",
 };
 
 export default function RootLayout({
@@ -12,13 +12,10 @@ export default function RootLayout({
   return (
     <html lang="ja" suppressHydrationWarning>
       <body
-        style={{
-          margin: 0,
-          fontFamily:
-            'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
-        }}
+        className="min-h-screen bg-gray-50"
         suppressHydrationWarning
       >
+        <Header />
         {children}
       </body>
     </html>
