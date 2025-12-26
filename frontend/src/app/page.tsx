@@ -1,7 +1,6 @@
 "use client";
 
 import MusicianCard from "@/components/MusicianCard";
-import Link from "next/link";
 
 // モックデータ（後でAPI接続）
 const mockMusicians = [
@@ -52,37 +51,31 @@ const mockMusicians = [
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* ヘッダー */}
-      <header className="bg-white border-b border-gray-200">
-        <nav className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex gap-4 items-center">
-            <Link
-              href="/matching"
-              className="text-gray-600 hover:text-gray-900 px-4 py-2 transition-colors duration-200"
-            >
-              マッチング
-            </Link>
-            <Link
-              href="/upload"
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200"
-            >
-              楽曲アップロード
-            </Link>
-          </div>
-        </nav>
-      </header>
+      {/* ヒーローセクション */}
+      <div className="bg-gradient-to-r from-purple-600 to-blue-600 py-16">
+        <div className="mx-auto max-w-7xl px-4">
+          <h1 className="mb-4 text-5xl font-bold text-white">
+            プロの音楽家を見つけよう
+          </h1>
+          <p className="text-xl text-purple-100">
+            あなたのプロジェクトにぴったりの音楽家がここにいます
+          </p>
+        </div>
+      </div>
 
       {/* メインコンテンツ */}
-      <main className="max-w-7xl mx-auto px-4 py-12">
+      <main className="mx-auto max-w-7xl px-4 py-12">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            音楽家を探す
-          </h1>
-          <p className="text-gray-600">プロの音楽家に楽曲制作を依頼できます</p>
+          <h2 className="mb-2 text-2xl font-bold text-gray-900">
+            おすすめの音楽家
+          </h2>
+          <p className="text-gray-600">
+            {mockMusicians.length}人の音楽家が登録しています
+          </p>
         </div>
 
         {/* 音楽家カードグリッド */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {mockMusicians.map((musician) => (
             <MusicianCard key={musician.id} {...musician} />
           ))}

@@ -43,53 +43,77 @@ export default async function JobsPage() {
   const jobs = await getJobs();
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">案件一覧</h1>
-
-      {jobs.length === 0 ? (
-        <p className="text-gray-500">現在公開中の案件はありません。</p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {jobs.map((job) => (
-            <div
-              key={job.uuid}
-              className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow"
-            >
-              <h2 className="text-xl font-semibold mb-2">{job.title}</h2>
-
-              <p className="text-gray-600 mb-4 line-clamp-3">
-                {job.description}
-              </p>
-
-              <div className="space-y-2 mb-4">
-                <div className="flex items-center text-sm">
-                  <span className="font-medium mr-2">予算:</span>
-                  <span className="text-green-600">{formatBudget(job)}</span>
-                </div>
-
-                <div className="flex items-center text-sm">
-                  <span className="font-medium mr-2">リモート:</span>
-                  <span className={job.is_remote ? 'text-blue-600' : 'text-gray-500'}>
-                    {job.is_remote ? '可' : '不可'}
-                  </span>
-                </div>
-
-                <div className="flex items-center text-sm">
-                  <span className="font-medium mr-2">依頼者:</span>
-                  <span className="text-gray-700">{job.client.name}</span>
-                </div>
-              </div>
-
-              <Link
-                href={`/jobs/${job.uuid}`}
-                className="inline-block w-full text-center bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors"
-              >
-                詳細を見る
-              </Link>
-            </div>
-          ))}
+    <div className="min-h-screen bg-gray-50">
+      {/* ヒーローセクション */}
+      <div className="bg-gradient-to-r from-green-600 to-green-700 py-12">
+        <div className="mx-auto max-w-7xl px-4">
+          <h1 className="text-4xl font-bold text-white mb-4">
+            音楽制作の案件を探す
+          </h1>
+          <p className="text-green-100 text-lg">
+            あなたのスキルを活かせる案件が見つかります
+          </p>
         </div>
-      )}
+      </div>
+
+      {/* メインコンテンツ */}
+      <div className="mx-auto max-w-7xl px-4 py-8">
+        <div className="mb-6 flex items-center justify-between">
+          <p className="text-gray-600">
+            {jobs.length > 0 ? `${jobs.length}件の案件` : '案件はありません'}
+          </p>
+        </div>
+
+        {jobs.length === 0 ? (
+          <div className="rounded-lg bg-white p-12 text-center shadow-sm">
+            <p className="text-gray-500">現在公開中の案件はありません。</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {jobs.map((job) => (
+              <Link
+                key={job.uuid}
+                href={`/jobs/${job.uuid}`}
+                className="group block"
+              >
+                <div className="rounded-lg border border-gray-200 bg-white p-6 transition-all hover:border-green-500 hover:shadow-lg">
+                  <h2 className="mb-3 text-xl font-bold text-gray-900 group-hover:text-green-600">
+                    {job.title}
+                  </h2>
+
+                  <p className="mb-4 line-clamp-2 text-sm text-gray-600">
+                    {job.description}
+                  </p>
+
+                  <div className="mb-4 space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-500">予算</span>
+                      <span className="font-bold text-green-600">
+                        {formatBudget(job)}
+                      </span>
+                    </div>
+
+                    {job.is_remote && (
+                      <div className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+                        リモートOK
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center border-t pt-4">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-sm font-medium text-gray-600">
+                      {job.client.name.charAt(0)}
+                    </div>
+                    <span className="ml-2 text-sm text-gray-700">
+                      {job.client.name}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
