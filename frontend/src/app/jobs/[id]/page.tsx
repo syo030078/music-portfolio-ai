@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import ContactButton from '@/components/ContactButton';
 
 interface Job {
+  id: number;
   uuid: string;
   title: string;
   description: string;
@@ -122,9 +124,7 @@ export default async function JobDetailPage({
           </div>
 
           <div className="border-t pt-6">
-            <button className="w-full md:w-auto bg-green-600 text-white py-3 px-8 rounded-lg hover:bg-green-700 transition-colors font-semibold">
-              この案件に応募する
-            </button>
+            <ContactButton jobId={job.id} clientId={job.client.id} />
           </div>
         </div>
       </div>

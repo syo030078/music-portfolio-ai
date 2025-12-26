@@ -2,7 +2,7 @@ class Message < ApplicationRecord
   belongs_to :conversation
   belongs_to :sender, class_name: 'User'
 
-  validates :body, presence: true, length: { minimum: 1, maximum: 1000 }
+  validates :content, presence: true, length: { minimum: 1, maximum: 1000 }
 
   # UUID対応
   def to_param
