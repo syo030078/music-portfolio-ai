@@ -9,6 +9,9 @@ Rails.application.routes.draw do
       resource :user, only: [:show, :update]
       resources :tracks
       resources :jobs, only: [:index, :show]
+      resources :conversations, only: [:index, :show, :create] do
+        resources :messages, only: [:create]
+      end
     end
   end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

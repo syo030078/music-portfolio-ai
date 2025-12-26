@@ -20,11 +20,10 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/auth`, {
+      const res = await fetch(`${API_BASE_URL}/auth/sign_up`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Accept: "application/json",
         },
         body: JSON.stringify({
           user: {
@@ -37,7 +36,7 @@ export default function SignupPage() {
 
       if (res.ok) {
         const data = await res.json();
-        const token = res.headers.get("Authorization") || data.token;
+        const token = res.headers.get("Authorization");
 
         if (token) {
           localStorage.setItem("jwt", token);
@@ -52,7 +51,7 @@ export default function SignupPage() {
         }
       } else {
         const errorData = await res.json();
-        setError(errorData.message || errorData.errors?.[0] || "登録に失敗しました");
+        setError(errorData.error || "登録に失敗しました");
       }
     } catch (err) {
       setError("ネットワークエラーが発生しました");
