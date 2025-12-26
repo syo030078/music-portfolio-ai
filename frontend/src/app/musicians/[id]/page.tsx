@@ -37,71 +37,65 @@ const mockTracks = [
 
 export default function MusicianDetailPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* ヘッダー */}
-      <header className="bg-white border-b border-gray-200">
-        <nav className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold text-gray-900">
-            Music Portfolio
-          </Link>
+    <div className="min-h-screen bg-white">
+      {/* ヒーローセクション */}
+      <div className="bg-gradient-to-r from-purple-600 to-blue-600 py-16">
+        <div className="mx-auto max-w-7xl px-4">
           <Link
-            href="/upload"
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+            href="/"
+            className="mb-6 inline-flex items-center text-purple-100 hover:text-white"
           >
-            楽曲アップロード
+            ← 音楽家一覧に戻る
           </Link>
-        </nav>
-      </header>
-
-      {/* メインコンテンツ */}
-      <main className="max-w-7xl mx-auto px-4 py-12">
-        <Link
-          href="/"
-          className="inline-flex items-center text-blue-500 hover:text-blue-600 mb-6"
-        >
-          ← 音楽家一覧に戻る
-        </Link>
-
-        {/* プロフィールセクション */}
-        <div className="bg-white rounded-2xl p-8 mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+          <h1 className="mb-4 text-5xl font-bold text-white">
             {mockMusician.name}
           </h1>
-          <p className="text-gray-600 mb-4">{mockMusician.bio}</p>
-          <div className="flex gap-4 text-sm text-gray-500">
+          <p className="mb-4 text-xl text-purple-100">{mockMusician.bio}</p>
+          <div className="flex gap-4 text-purple-100">
             <span>得意ジャンル: {mockMusician.genre}</span>
           </div>
         </div>
+      </div>
 
+      {/* メインコンテンツ */}
+      <main className="mx-auto max-w-7xl px-4 py-12">
         {/* 楽曲一覧セクション */}
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">登録楽曲</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <h2 className="mb-8 text-3xl font-bold text-gray-900">登録楽曲</h2>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {mockTracks.map((track) => (
               <div
                 key={track.id}
-                className="bg-white rounded-2xl p-6 hover:shadow-lg transition-shadow duration-200"
+                className="overflow-hidden rounded-lg border border-gray-200 bg-white transition-all hover:border-purple-500 hover:shadow-xl"
               >
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
-                  {track.title}
-                </h3>
-                <div className="space-y-2 text-sm text-gray-600 mb-4">
-                  <div className="flex justify-between">
-                    <span>BPM:</span>
-                    <span className="font-medium">{track.bpm}</span>
+                <div className="p-6">
+                  <h3 className="mb-4 text-xl font-bold text-gray-900">
+                    {track.title}
+                  </h3>
+                  <div className="mb-6 space-y-2 text-sm">
+                    <div className="flex justify-between border-b pb-2">
+                      <span className="text-gray-600">BPM</span>
+                      <span className="font-medium text-gray-900">
+                        {track.bpm}
+                      </span>
+                    </div>
+                    <div className="flex justify-between border-b pb-2">
+                      <span className="text-gray-600">キー</span>
+                      <span className="font-medium text-gray-900">
+                        {track.key}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">ジャンル</span>
+                      <span className="font-medium text-gray-900">
+                        {track.genre}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span>キー:</span>
-                    <span className="font-medium">{track.key}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>ジャンル:</span>
-                    <span className="font-medium">{track.genre}</span>
-                  </div>
+                  <button className="w-full rounded-lg bg-purple-600 px-4 py-3 font-semibold text-white transition-colors hover:bg-purple-700">
+                    依頼する
+                  </button>
                 </div>
-                <button className="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200">
-                  依頼する
-                </button>
               </div>
             ))}
           </div>
