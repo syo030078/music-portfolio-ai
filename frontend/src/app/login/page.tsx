@@ -23,6 +23,7 @@ export default function LoginPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Accept: "application/json",
         },
         body: JSON.stringify({
           user: {
@@ -34,7 +35,7 @@ export default function LoginPage() {
 
       if (res.ok) {
         const data = await res.json();
-        const token = res.headers.get("Authorization");
+        const token = res.headers.get("Authorization") || data.token;
 
         if (token) {
           // JWT トークンを localStorage に保存
