@@ -1,7 +1,8 @@
 Rails.application.routes.draw do
   devise_for :users, path: 'auth', controllers: {
-  sessions: 'auth/sessions'
-}
+    sessions: 'auth/sessions',
+    registrations: 'auth/registrations'
+  }
 
   namespace :api do
     namespace :v1 do

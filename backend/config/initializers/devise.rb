@@ -19,7 +19,7 @@ Devise.setup do |config|
 
   config.warden do |manager|
     manager.intercept_401 = false
-    manager.failure_app = Auth::FailureApp
+    manager.failure_app = DeviseFailureApp
   end
   # ==> Controller configuration
   # Configure the parent class to the devise controllers.
@@ -317,7 +317,10 @@ Devise.setup do |config|
   # config.sign_in_after_change_password = true
   config.jwt do |jwt|
     jwt.secret = Rails.application.secret_key_base
-    jwt.dispatch_requests   = [['POST', %r{^/auth/sign_in$}]]
+    jwt.dispatch_requests   = [
+      ['POST', %r{^/auth/sign_in$}],
+      ['POST', %r{^/auth$}]
+    ]
     jwt.revocation_requests = [['DELETE', %r{^/auth/sign_out$}]]
     jwt.expiration_time = 1.day.to_i
     jwt.request_formats = { user: [:json] }
