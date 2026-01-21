@@ -730,7 +730,7 @@ class MigrateMessagesToThreads < ActiveRecord::Migration[7.0]
       end
     end
 
-    # 将来的には job_id を削除予定（Phase 6 以降）
+    # 将来的には job_id を削除予定
     # change_column_null :messages, :thread_id, false
   end
 end
@@ -770,171 +770,6 @@ class Message < ApplicationRecord
   belongs_to :job, optional: true
 
   validates :body, presence: true, length: { maximum: 5000 }
-end
-```
-
----
-
-### Phase 6: レビュー・決済システム（優先度：中〜低）
-
-**目的**: 契約完了後のレビュー機能と決済・エスクロー管理
-
-#### Task 6-1: reviews テーブル作成
-
-**目的**: 契約完了後に相互レビュー
-
-```ruby
-create_table :reviews do |t|
-  t.references :contract, null: false, foreign_key: true, type: :bigint, index: { unique: true }
-  t.references :reviewer, null: false, foreign_key: { to_table: :users }, type: :bigint
-  t.references :reviewee, null: false, foreign_key: { to_table: :users }, type: :bigint
-  t.integer :rating, null: false
-  t.text :comment
-  t.timestamps
-end
-
-add_index :reviews, [:reviewer_id, :reviewee_id]
-add_check_constraint :reviews, 'rating >= 1 AND rating <= 5', name: 'reviews_rating_range'
-```
-
-**モデル設計**:
-```ruby
-class Review < ApplicationRecord
-  belongs_to :contract
-  belongs_to :reviewer, class_name: 'User'
-  belongs_to :reviewee, class_name: 'User'
-
-  validates :rating, presence: true, inclusion: { in: 1..5 }
-  validates :comment, length: { maximum: 1000 }
-  validate :contract_must_be_completed
-  validate :reviewer_must_be_contract_party
-
-  after_create :update_reviewee_rating
-
-  private
-
-  def contract_must_be_completed
-    return unless contract
-    errors.add(:contract, 'must be completed') unless contract.completed?
-  end
-
-  def reviewer_must_be_contract_party
-    return unless contract && reviewer
-    unless [contract.client_id, contract.musician_id].include?(reviewer_id)
-      errors.add(:reviewer, 'must be part of contract')
-    end
-  end
-
-  def update_reviewee_rating
-    # MusicianProfile の avg_rating と rating_count を更新
-    profile = reviewee.musician_profile
-    return unless profile
-
-    profile.rating_count += 1
-    total = (profile.avg_rating * (profile.rating_count - 1)) + rating
-    profile.avg_rating = (total / profile.rating_count.to_f).round(1)
-    profile.save!
-  end
-end
-```
-
-#### Task 6-2: transactions テーブル作成
-
-**目的**: 決済・エスクロー管理（Stripe など外部決済サービスとの連携）
-
-```ruby
-create_table :transactions do |t|
-  t.references :contract, null: false, foreign_key: true, type: :bigint
-  t.references :milestone, foreign_key: { to_table: :contract_milestones }, type: :bigint
-  t.string :kind, null: false
-  t.string :status, null: false
-  t.integer :amount_jpy, null: false
-  t.string :provider
-  t.string :provider_ref
-  t.timestamps
-end
-
-add_index :transactions, :kind
-add_index :transactions, :status
-add_index :transactions, [:contract_id, :kind]
-```
-
-**モデル設計**:
-```ruby
-class Transaction < ApplicationRecord
-  belongs_to :contract
-  belongs_to :milestone, class_name: 'ContractMilestone', optional: true
-
-  enum kind: {
-    escrow_deposit: 'escrow_deposit',     # エスクロー預託
-    milestone_payout: 'milestone_payout', # マイルストーン支払い
-    refund: 'refund',                     # 返金
-    platform_fee: 'platform_fee'          # プラットフォーム手数料
-  }
-
-  enum status: {
-    authorized: 'authorized', # 承認済み
-    captured: 'captured',     # 確定
-    paid_out: 'paid_out',     # 支払済み
-    failed: 'failed',         # 失敗
-    refunded: 'refunded'      # 返金済み
-  }
-
-  validates :amount_jpy, presence: true, numericality: { greater_than: 0 }
-  validates :kind, presence: true
-  validates :status, presence: true
-  validates :provider_ref, presence: true, if: -> { provider.present? }
-
-  scope :for_contract, ->(contract_id) { where(contract_id: contract_id) }
-  scope :successful, -> { where(status: ['captured', 'paid_out']) }
-end
-```
-
-**Stripe 連携例**:
-```ruby
-class TransactionService
-  def self.create_escrow_deposit(contract, payment_method)
-    # Stripe で PaymentIntent を作成
-    intent = Stripe::PaymentIntent.create({
-      amount: contract.escrow_total_jpy,
-      currency: 'jpy',
-      payment_method: payment_method,
-      confirm: true,
-      capture_method: 'manual' # エスクロー用に手動キャプチャ
-    })
-
-    # Transaction レコードを作成
-    Transaction.create!(
-      contract: contract,
-      kind: 'escrow_deposit',
-      status: 'authorized',
-      amount_jpy: contract.escrow_total_jpy,
-      provider: 'stripe',
-      provider_ref: intent.id
-    )
-  end
-
-  def self.payout_milestone(milestone)
-    # マイルストーン承認後、音楽家に支払い
-    contract = milestone.contract
-
-    # Stripe Transfer で音楽家の Stripe Connect アカウントに送金
-    transfer = Stripe::Transfer.create({
-      amount: milestone.amount_jpy,
-      currency: 'jpy',
-      destination: contract.musician.stripe_account_id
-    })
-
-    Transaction.create!(
-      contract: contract,
-      milestone: milestone,
-      kind: 'milestone_payout',
-      status: 'paid_out',
-      amount_jpy: milestone.amount_jpy,
-      provider: 'stripe',
-      provider_ref: transfer.id
-    )
-  end
 end
 ```
 
@@ -996,7 +831,6 @@ end
 2. **Phase 7**: API エンドポイント実装（Phase 4 と並行可能）
 3. **Phase 4.5**: UUID 主キー移行（Phase 4 完了後）
 4. **Phase 5**: メッセージング拡張
-5. **Phase 6**: レビュー・決済システム
 
 ### 開発方針
 
@@ -1321,16 +1155,4 @@ mysqldump -u root music_portfolio_ai_development > dump.sql
 
 ---
 
-### 🚧 Phase 6: レビュー・決済システム（着手）
-
-- **ブランチ**: `feature/phase6-reviews-transactions`
-- **実施日**: 2025-11-27（着手）
-- **内容**:
-  - reviews: contract 単位で 1 件、reviewer/reviewee の FK、rating (1-5) CHECK、uuid 付与
-  - transactions: contract 必須・milestone 任意、kind/status は enum 文字列、amount_jpy > 0 の CHECK、uuid 付与
-  - モデル: Review/Transaction を追加し、Contract に has_one :review / has_many :transactions、User に given/received_reviews を関連付け
-- **テスト**: review_spec, transaction_spec を追加し、schema_end_to_end_spec にレビュー・決済フローを組み込み
-
----
-
-最終更新: 2025-11-27
+最終更新: 2026-01-21
