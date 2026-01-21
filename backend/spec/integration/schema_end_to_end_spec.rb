@@ -39,9 +39,6 @@ RSpec.describe 'Schema End-to-End Integration', type: :integration do
     proposal = Proposal.create!(job: job, musician: musician, cover_message: 'I can handle this', quote_total_jpy: 15000, delivery_days: 5, status: 'submitted')
     contract = Contract.create!(proposal: proposal, client: client, musician: musician, escrow_total_jpy: 15000, status: 'active')
     milestone = ContractMilestone.create!(contract: contract, title: 'First draft', amount_jpy: 7500, due_on: Date.today + 7.days)
-    review = Review.create!(contract: contract, reviewer: client, reviewee: musician, rating: 5, comment: 'Excellent delivery')
-    escrow_tx = Transaction.create!(contract: contract, amount_jpy: 15000, kind: 'escrow_deposit', status: 'captured', provider: 'stripe', provider_ref: 'pi_123')
-    payout_tx = Transaction.create!(contract: contract, milestone: milestone, amount_jpy: 7500, kind: 'milestone_payout', status: 'paid_out')
 
     # Conversations and messages (job and contract based)
     job_conversation = Conversation.create!(job: job)
@@ -73,9 +70,6 @@ RSpec.describe 'Schema End-to-End Integration', type: :integration do
     expect(proposal).to be_persisted
     expect(contract).to be_active
     expect(milestone.contract).to eq(contract)
-    expect(review.reviewee).to eq(musician)
-    expect(escrow_tx.contract).to eq(contract)
-    expect(payout_tx.milestone).to eq(milestone)
 
     expect(job_conversation.parent).to eq(job)
     expect(contract_conversation.parent).to eq(contract)

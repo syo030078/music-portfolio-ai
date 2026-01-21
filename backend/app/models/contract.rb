@@ -4,8 +4,6 @@ class Contract < ApplicationRecord
   belongs_to :musician, class_name: 'User', foreign_key: 'musician_id'
   has_many :contract_milestones, dependent: :destroy
   has_many :conversations, dependent: :destroy
-  has_one :review, dependent: :destroy
-  has_many :transactions, dependent: :destroy
 
   enum status: {
     active: 'active',
