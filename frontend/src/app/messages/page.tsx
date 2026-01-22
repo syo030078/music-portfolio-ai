@@ -1,19 +1,19 @@
 import Link from 'next/link';
 
 interface Conversation {
-  id: number;
-  job_id: number | null;
-  contract_id: number | null;
+  uuid: string;
+  job_uuid: string | null;
+  contract_uuid: string | null;
   created_at: string;
   updated_at: string;
   participants: Array<{
-    id: number;
+    uuid: string;
     name: string;
   }>;
   last_message: {
-    id: number;
+    uuid: string;
     content: string;
-    sender_id: number;
+    sender_uuid: string;
     created_at: string;
   } | null;
   unread_count: number;
@@ -81,8 +81,8 @@ export default async function MessagesPage() {
 
             return (
               <Link
-                key={conversation.id}
-                href={`/messages/${conversation.id}`}
+                key={conversation.uuid}
+                href={`/messages/${conversation.uuid}`}
                 className="block bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow"
               >
                 <div className="flex justify-between items-start mb-2">
@@ -97,7 +97,7 @@ export default async function MessagesPage() {
                         </span>
                       )}
                     </div>
-                    {conversation.job_id && (
+                    {conversation.job_uuid && (
                       <p className="text-sm text-gray-500">案件に関する会話</p>
                     )}
                   </div>

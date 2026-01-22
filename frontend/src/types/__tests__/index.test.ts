@@ -10,13 +10,13 @@ describe("TypeScript Type Definitions", () => {
   describe("User type", () => {
     it("should accept valid user object", () => {
       const user: User = {
-        id: 1,
+        uuid: "123e4567-e89b-12d3-a456-426614174000",
         email: "test@example.com",
         name: "Test User",
         bio: "Test bio",
       };
 
-      expect(user.id).toBe(1);
+      expect(user.uuid).toBe("123e4567-e89b-12d3-a456-426614174000");
       expect(user.email).toBe("test@example.com");
       expect(user.name).toBe("Test User");
       expect(user.bio).toBe("Test bio");
@@ -24,7 +24,7 @@ describe("TypeScript Type Definitions", () => {
 
     it("should accept user without optional bio", () => {
       const user: User = {
-        id: 1,
+        uuid: "123e4567-e89b-12d3-a456-426614174000",
         email: "test@example.com",
         name: "Test User",
       };
@@ -36,7 +36,7 @@ describe("TypeScript Type Definitions", () => {
   describe("Track type", () => {
     it("should accept valid track object", () => {
       const track: Track = {
-        id: 1,
+        uuid: "223e4567-e89b-12d3-a456-426614174001",
         title: "Test Track",
         description: "Test description",
         yt_url: "https://www.youtube.com/watch?v=test123",
@@ -47,25 +47,25 @@ describe("TypeScript Type Definitions", () => {
         created_at: "2025-01-01T00:00:00Z",
         updated_at: "2025-01-02T00:00:00Z",
         user: {
-          id: 1,
+          uuid: "123e4567-e89b-12d3-a456-426614174000",
           email: "test@example.com",
           name: "Test User",
         },
       };
 
-      expect(track.id).toBe(1);
+      expect(track.uuid).toBe("223e4567-e89b-12d3-a456-426614174001");
       expect(track.title).toBe("Test Track");
       expect(track.user.name).toBe("Test User");
     });
 
     it("should accept track with minimal required fields", () => {
       const track: Track = {
-        id: 1,
+        uuid: "223e4567-e89b-12d3-a456-426614174001",
         title: "Test Track",
         yt_url: "https://www.youtube.com/watch?v=test123",
         created_at: "2025-01-01T00:00:00Z",
         user: {
-          id: 1,
+          uuid: "123e4567-e89b-12d3-a456-426614174000",
           email: "test@example.com",
           name: "Test User",
         },
@@ -83,12 +83,12 @@ describe("TypeScript Type Definitions", () => {
       const response: TracksListResponse = {
         tracks: [
           {
-            id: 1,
+            uuid: "223e4567-e89b-12d3-a456-426614174001",
             title: "Track 1",
             yt_url: "https://www.youtube.com/watch?v=test1",
             created_at: "2025-01-01T00:00:00Z",
             user: {
-              id: 1,
+              uuid: "123e4567-e89b-12d3-a456-426614174000",
               email: "user1@example.com",
               name: "User 1",
             },
@@ -111,19 +111,19 @@ describe("TypeScript Type Definitions", () => {
     it("should accept valid track detail response", () => {
       const response: TrackDetailResponse = {
         track: {
-          id: 1,
+          uuid: "223e4567-e89b-12d3-a456-426614174001",
           title: "Test Track",
           yt_url: "https://www.youtube.com/watch?v=test123",
           created_at: "2025-01-01T00:00:00Z",
           user: {
-            id: 1,
+            uuid: "123e4567-e89b-12d3-a456-426614174000",
             email: "test@example.com",
             name: "Test User",
           },
         },
       };
 
-      expect(response.track.id).toBe(1);
+      expect(response.track.uuid).toBe("223e4567-e89b-12d3-a456-426614174001");
       expect(response.track.title).toBe("Test Track");
     });
   });

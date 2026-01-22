@@ -3,7 +3,7 @@ class Api::V1::MessagesController < ApplicationController
   before_action :set_current_user
   before_action :set_conversation, only: [:create]
 
-  # POST /api/v1/conversations/:conversation_id/messages
+  # POST /api/v1/conversations/:conversation_uuid/messages
   def create
     # 権限チェック
     unless @conversation.participant?(@current_user)
@@ -21,8 +21,8 @@ class Api::V1::MessagesController < ApplicationController
 
       render json: {
         message: {
-          id: message.id,
-          sender_id: message.sender_id,
+          uuid: message.uuid,
+          sender_uuid: message.sender.uuid,
           sender_name: message.sender.name,
           content: message.content,
           created_at: message.created_at

@@ -151,19 +151,20 @@ RSpec.describe Api::V1::TracksController, type: :controller do
     end
 
     it "returns track detail with user information" do
-      get :show, params: { id: track.id }
+      track.reload # UUIDを取得するためにreload
+      get :show, params: { id: track.uuid }
       expect(response).to have_http_status(:ok)
 
       json = JSON.parse(response.body)
       expect(json["track"]).to be_present
-      expect(json["track"]["id"]).to eq(track.id)
+      expect(json["track"]["uuid"]).to eq(track.uuid)
       expect(json["track"]["title"]).to eq('Test Track')
       expect(json["track"]["user"]["name"]).to eq('Show User')
       expect(json["track"]["user"]["bio"]).to eq('Test musician')
     end
 
     it "returns 404 for non-existent track" do
-      get :show, params: { id: 99999 }
+      get :show, params: { id: 'non-existent-uuid' }
       expect(response).to have_http_status(:not_found)
 
       json = JSON.parse(response.body)

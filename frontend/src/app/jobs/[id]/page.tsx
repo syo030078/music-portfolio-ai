@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation';
 import ContactButton from '@/components/ContactButton';
 
 interface Job {
-  id: number;
   uuid: string;
   title: string;
   description: string;
@@ -15,7 +14,7 @@ interface Job {
   published_at: string;
   created_at: string;
   client: {
-    id: number;
+    uuid: string;
     name: string;
     bio: string | null;
   };
@@ -124,7 +123,7 @@ export default async function JobDetailPage({
           </div>
 
           <div className="border-t pt-6">
-            <ContactButton jobId={job.id} clientId={job.client.id} />
+            <ContactButton jobUuid={job.uuid} clientUuid={job.client.uuid} />
           </div>
         </div>
       </div>

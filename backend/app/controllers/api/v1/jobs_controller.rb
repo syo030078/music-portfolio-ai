@@ -17,7 +17,7 @@ class Api::V1::JobsController < ApplicationController
           is_remote: job.is_remote,
           published_at: job.published_at,
           client: {
-            id: job.client.id,
+            uuid: job.client.uuid,
             name: job.client.name
           }
         }
@@ -35,7 +35,6 @@ class Api::V1::JobsController < ApplicationController
 
     render json: {
       job: {
-        id: job.id,
         uuid: job.uuid,
         title: job.title,
         description: job.description,
@@ -47,7 +46,7 @@ class Api::V1::JobsController < ApplicationController
         published_at: job.published_at,
         created_at: job.created_at,
         client: {
-          id: job.client.id,
+          uuid: job.client.uuid,
           name: job.client.name,
           bio: job.client.bio
         }

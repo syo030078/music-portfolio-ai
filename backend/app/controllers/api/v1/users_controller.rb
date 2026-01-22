@@ -3,7 +3,7 @@ module Api
     class UsersController < ApplicationController
       def show
         render json: {
-          id: current_user.id,
+          uuid: current_user.uuid,
           email: current_user.email,
           name: current_user.name
         }
@@ -11,7 +11,11 @@ module Api
 
       def update
         if current_user.update(user_params)
-          render json: current_user
+          render json: {
+            uuid: current_user.uuid,
+            email: current_user.email,
+            name: current_user.name
+          }
         else
           render json: { errors: current_user.errors }, status: :unprocessable_entity
         end

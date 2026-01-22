@@ -10,7 +10,7 @@ interface Job {
   is_remote: boolean;
   published_at: string;
   client: {
-    id: number;
+    uuid: string;
     name: string;
   };
 }
