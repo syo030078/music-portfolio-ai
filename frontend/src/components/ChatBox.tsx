@@ -3,20 +3,20 @@
 import { useState, useRef, useEffect } from 'react';
 
 interface Message {
-  id: number;
-  sender_id: number;
+  uuid: string;
+  sender_uuid: string;
   sender_name: string;
   content: string;
   created_at: string;
 }
 
 interface ChatBoxProps {
-  conversationId: number;
+  conversationUuid: string;
   initialMessages: Message[];
 }
 
 export default function ChatBox({
-  conversationId,
+  conversationUuid,
   initialMessages,
 }: ChatBoxProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
@@ -45,7 +45,7 @@ export default function ChatBox({
       const apiUrl =
         process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
       const res = await fetch(
-        `${apiUrl}/api/v1/conversations/${conversationId}/messages`,
+        `${apiUrl}/api/v1/conversations/${conversationUuid}/messages`,
         {
           method: 'POST',
           headers: {
@@ -94,7 +94,7 @@ export default function ChatBox({
         ) : (
           <div className="space-y-4">
             {messages.map((message) => (
-              <div key={message.id} className="flex flex-col">
+              <div key={message.uuid} className="flex flex-col">
                 <div className="flex items-baseline gap-2 mb-1">
                   <span className="font-semibold text-sm">
                     {message.sender_name}
