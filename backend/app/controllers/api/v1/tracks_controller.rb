@@ -36,7 +36,7 @@ class Api::V1::TracksController < ApplicationController
     render json: {
       tracks: tracks.map do |track|
         {
-          id: track.id,
+          uuid: track.uuid,
           title: track.title,
           description: track.description,
           yt_url: track.yt_url,
@@ -46,7 +46,7 @@ class Api::V1::TracksController < ApplicationController
           ai_text: track.ai_text,
           created_at: track.created_at,
           user: {
-            id: track.user.id,
+            uuid: track.user.uuid,
             name: track.user.name,
             bio: track.user.bio
           }
@@ -62,7 +62,7 @@ class Api::V1::TracksController < ApplicationController
   end
 
   def show
-    track = Track.includes(:user).find_by(id: params[:id])
+    track = Track.includes(:user).find_by(uuid: params[:id])
 
     if track.nil?
       render json: { error: "楽曲が見つかりません" }, status: :not_found
@@ -71,7 +71,7 @@ class Api::V1::TracksController < ApplicationController
 
     render json: {
       track: {
-        id: track.id,
+        uuid: track.uuid,
         title: track.title,
         description: track.description,
         yt_url: track.yt_url,
@@ -82,7 +82,7 @@ class Api::V1::TracksController < ApplicationController
         created_at: track.created_at,
         updated_at: track.updated_at,
         user: {
-          id: track.user.id,
+          uuid: track.user.uuid,
           name: track.user.name,
           bio: track.user.bio,
           email: track.user.email

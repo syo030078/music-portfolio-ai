@@ -4,11 +4,11 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 interface ContactButtonProps {
-  jobId: number;
-  clientId: number;
+  jobUuid: string;
+  clientUuid: string;
 }
 
-export default function ContactButton({ jobId, clientId }: ContactButtonProps) {
+export default function ContactButton({ jobUuid, clientUuid }: ContactButtonProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,20 +31,20 @@ export default function ContactButton({ jobId, clientId }: ContactButtonProps) {
 
       const { conversations } = await conversationsRes.json();
 
-      // job_idが一致する会話を検索
-      const existing = conversations.find((c: any) => c.job_id === jobId);
+      // job_uuidが一致する会話を検索
+      const existing = conversations.find((c: any) => c.job_uuid === jobUuid);
 
       if (existing) {
         // 既存の会話に遷移
-        router.push(`/messages/${existing.id}`);
+        router.push(`/messages/${existing.uuid}`);
       } else {
-        // 新規会話を作成
+        // 新規会話を作成（バックエンドは内部でjob_idに変換）
         const createRes = await fetch(`${apiUrl}/api/v1/conversations`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            conversation: { job_id: jobId },
-            participant_ids: [clientId]
+            conversation: { job_uuid: jobUuid },
+            participant_uuids: [clientUuid]
           })
         });
 
@@ -54,7 +54,7 @@ export default function ContactButton({ jobId, clientId }: ContactButtonProps) {
         }
 
         const { conversation } = await createRes.json();
-        router.push(`/messages/${conversation.id}`);
+        router.push(`/messages/${conversation.uuid}`);
       }
     } catch (err) {
       console.error('ContactButton error:', err);
