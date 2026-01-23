@@ -11,7 +11,7 @@ class Conversation < ApplicationRecord
   validates :contract_id, presence: true, if: -> { job_id.blank? }
   validate :only_one_parent
 
-  # UUID対応
+  # UUID対応（主キーがUUID型）
   def to_param
     id.to_s
   end

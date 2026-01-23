@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import ContactButton from '@/components/ContactButton';
+import ProposalForm from '@/components/ProposalForm';
 
 interface Job {
   uuid: string;
@@ -124,6 +125,19 @@ export default async function JobDetailPage({
 
           <div className="border-t pt-6">
             <ContactButton jobUuid={job.uuid} clientUuid={job.client.uuid} />
+          </div>
+
+          <div className="border-t pt-6">
+            <ProposalForm jobUuid={job.uuid} />
+          </div>
+
+          <div className="border-t pt-6">
+            <Link
+              href={`/jobs/${job.uuid}/proposals`}
+              className="text-blue-600 hover:underline"
+            >
+              提案一覧を見る（クライアント向け）
+            </Link>
           </div>
         </div>
       </div>
