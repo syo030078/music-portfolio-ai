@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 interface Conversation {
   uuid: string;
@@ -19,30 +22,17 @@ interface Conversation {
   unread_count: number;
 }
 
-async function getConversations(): Promise<Conversation[]> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-  const res = await fetch(`${apiUrl}/api/v1/conversations`, {
-    cache: 'no-store',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error('Failed to fetch conversations');
-  }
-
-  const data = await res.json();
-  return data.conversations;
-}
-
 function formatDateTime(dateString: string): string {
   const date = new Date(dateString);
   const now = new Date();
-  const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+  const diffInHours = Math.floor(
+    (now.getTime() - date.getTime()) / (1000 * 60 * 60)
+  );
 
   if (diffInHours < 1) {
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    const diffInMinutes = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60)
+    );
     return `${diffInMinutes}分前`;
   }
   if (diffInHours < 24) {
@@ -54,8 +44,62 @@ function formatDateTime(dateString: string): string {
   return date.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' });
 }
 
-export default async function MessagesPage() {
-  const conversations = await getConversations();
+export default function MessagesPage() {
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchConversations = async () => {
+      setError(null);
+      const token = localStorage.getItem('jwt');
+      if (!token) {
+        setError('ログインしてください');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+        const res = await fetch(`${apiUrl}/api/v1/conversations`, {
+          cache: 'no-store',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token,
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error('会話一覧の取得に失敗しました');
+        }
+
+        const data = await res.json();
+        setConversations(data.conversations || []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : '不明なエラーが発生しました');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchConversations();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <p className="text-gray-500">読み込み中...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="rounded-lg bg-red-50 p-4 text-red-800">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -74,8 +118,7 @@ export default async function MessagesPage() {
       ) : (
         <div className="space-y-4">
           {conversations.map((conversation) => {
-            const otherParticipants = conversation.participants;
-            const participantNames = otherParticipants
+            const participantNames = conversation.participants
               .map((p) => p.name)
               .join(', ');
 

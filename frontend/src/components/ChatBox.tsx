@@ -42,6 +42,11 @@ export default function ChatBox({
     setIsSending(true);
 
     try {
+      const token = localStorage.getItem('jwt');
+      if (!token) {
+        throw new Error('ログインしてください');
+      }
+
       const apiUrl =
         process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
       const res = await fetch(
@@ -50,6 +55,7 @@ export default function ChatBox({
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            Authorization: token,
           },
           body: JSON.stringify({
             message: {
