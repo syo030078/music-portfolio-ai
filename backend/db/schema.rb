@@ -216,23 +216,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_24_061956) do
     t.index ["uuid"], name: "index_proposals_on_uuid", unique: true
   end
 
-  create_table "reviews", force: :cascade do |t|
-    t.bigint "contract_id", null: false
-    t.bigint "reviewer_id", null: false
-    t.bigint "reviewee_id", null: false
-    t.integer "rating", null: false
-    t.text "comment"
-    t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["contract_id"], name: "index_reviews_on_contract_id", unique: true
-    t.index ["rating"], name: "index_reviews_on_rating"
-    t.index ["reviewee_id"], name: "index_reviews_on_reviewee_id"
-    t.index ["reviewer_id"], name: "index_reviews_on_reviewer_id"
-    t.index ["uuid"], name: "index_reviews_on_uuid", unique: true
-    t.check_constraint "rating >= 1 AND rating <= 5", name: "reviews_rating_range"
-  end
-
   create_table "skills", force: :cascade do |t|
     t.string "name", null: false
     t.datetime "created_at", null: false
@@ -258,25 +241,6 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_24_061956) do
     t.index ["user_id", "yt_url"], name: "index_tracks_on_user_id_and_yt_url", unique: true
     t.index ["user_id"], name: "index_tracks_on_user_id"
     t.index ["uuid"], name: "index_tracks_on_uuid", unique: true
-  end
-
-  create_table "transactions", force: :cascade do |t|
-    t.bigint "contract_id", null: false
-    t.bigint "milestone_id"
-    t.integer "amount_jpy", null: false
-    t.string "kind", null: false
-    t.string "status", default: "authorized", null: false
-    t.string "provider"
-    t.string "provider_ref"
-    t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["contract_id"], name: "index_transactions_on_contract_id"
-    t.index ["kind"], name: "index_transactions_on_kind"
-    t.index ["milestone_id"], name: "index_transactions_on_milestone_id"
-    t.index ["status"], name: "index_transactions_on_status"
-    t.index ["uuid"], name: "index_transactions_on_uuid", unique: true
-    t.check_constraint "amount_jpy > 0", name: "transactions_amount_positive"
   end
 
   create_table "users", force: :cascade do |t|
@@ -326,10 +290,5 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_24_061956) do
   add_foreign_key "musician_skills", "users"
   add_foreign_key "proposals", "jobs"
   add_foreign_key "proposals", "users", column: "musician_id"
-  add_foreign_key "reviews", "contracts"
-  add_foreign_key "reviews", "users", column: "reviewee_id"
-  add_foreign_key "reviews", "users", column: "reviewer_id"
   add_foreign_key "tracks", "users"
-  add_foreign_key "transactions", "contract_milestones", column: "milestone_id", on_delete: :nullify
-  add_foreign_key "transactions", "contracts"
 end
