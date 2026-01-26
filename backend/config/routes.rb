@@ -8,7 +8,13 @@ Rails.application.routes.draw do
     namespace :v1 do
       resource :user, only: [:show, :update]
       resources :tracks
-      resources :jobs, only: [:index, :show]
+      resources :jobs, only: [:index, :show], param: :uuid do
+        resources :proposals, only: [:index, :create], param: :uuid
+      end
+      resources :proposals, only: [], param: :uuid do
+        post :accept, on: :member
+        post :reject, on: :member
+      end
       resources :conversations, only: [:index, :show, :create] do
         resources :messages, only: [:create]
       end
