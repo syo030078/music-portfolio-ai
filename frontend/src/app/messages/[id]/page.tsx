@@ -1,5 +1,7 @@
+'use client';
+
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import ChatBox from '@/components/ChatBox';
 
 interface Message {
@@ -23,37 +25,70 @@ interface Conversation {
   messages: Message[];
 }
 
-async function getConversation(id: string): Promise<Conversation | null> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-  const res = await fetch(`${apiUrl}/api/v1/conversations/${id}`, {
-    cache: 'no-store',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!res.ok) {
-    return null;
-  }
-
-  const data = await res.json();
-  return data.conversation;
-}
-
-export default async function ConversationPage({
+export default function ConversationPage({
   params,
 }: {
   params: { id: string };
 }) {
-  const conversation = await getConversation(params.id);
+  const [conversation, setConversation] = useState<Conversation | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!conversation) {
-    notFound();
+  useEffect(() => {
+    const fetchConversation = async () => {
+      setError(null);
+      const token = localStorage.getItem('jwt');
+      if (!token) {
+        setError('ログインしてください');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+        const res = await fetch(`${apiUrl}/api/v1/conversations/${params.id}`, {
+          cache: 'no-store',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token,
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error('会話の取得に失敗しました');
+        }
+
+        const data = await res.json();
+        setConversation(data.conversation || null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : '不明なエラーが発生しました');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchConversation();
+  }, [params.id]);
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <p className="text-gray-500">読み込み中...</p>
+      </div>
+    );
   }
 
-  const participantNames = conversation.participants
-    .map((p) => p.name)
-    .join(', ');
+  if (error || !conversation) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="rounded-lg bg-red-50 p-4 text-red-800">
+          {error || '会話が見つかりません'}
+        </div>
+      </div>
+    );
+  }
+
+  const participantNames = conversation.participants.map((p) => p.name).join(', ');
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">

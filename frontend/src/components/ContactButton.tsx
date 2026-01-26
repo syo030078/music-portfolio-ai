@@ -18,11 +18,20 @@ export default function ContactButton({ jobUuid, clientUuid }: ContactButtonProp
     setError(null);
 
     try {
+      const token = localStorage.getItem('jwt');
+      if (!token) {
+        throw new Error('ログインしてください');
+      }
+
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
       // 既存の会話を検索
       const conversationsRes = await fetch(`${apiUrl}/api/v1/conversations`, {
         cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token,
+        },
       });
 
       if (!conversationsRes.ok) {
@@ -41,7 +50,7 @@ export default function ContactButton({ jobUuid, clientUuid }: ContactButtonProp
         // 新規会話を作成（バックエンドは内部でjob_idに変換）
         const createRes = await fetch(`${apiUrl}/api/v1/conversations`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', Authorization: token },
           body: JSON.stringify({
             conversation: { job_uuid: jobUuid },
             participant_uuids: [clientUuid]
