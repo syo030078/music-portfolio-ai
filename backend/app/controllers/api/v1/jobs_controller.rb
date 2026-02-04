@@ -65,6 +65,38 @@ class Api::V1::JobsController < ApplicationController
     end
   end
 
+  def update
+    job = current_user.jobs.find_by(uuid: params[:uuid])
+
+    if job.nil?
+      render json: { error: '案件が見つかりません' }, status: :not_found
+      return
+    end
+
+    if job.update(job_params)
+      render json: { job: job_response(job) }, status: :ok
+    else
+      render json: { errors: job.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+
+  def publish
+    job = current_user.jobs.find_by(uuid: params[:uuid])
+
+    if job.nil?
+      render json: { error: '案件が見つかりません' }, status: :not_found
+      return
+    end
+
+    if job.status == 'published'
+      render json: { error: '案件は既に公開されています (already published)' }, status: :unprocessable_entity
+      return
+    end
+
+    job.update!(status: 'published', published_at: Time.current)
+    render json: { job: job_response(job) }, status: :ok
+  end
+
   private
 
   def job_params
