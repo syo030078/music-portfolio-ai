@@ -205,4 +205,124 @@ RSpec.describe 'Api::V1::Jobs', type: :request do
       end
     end
   end
+
+  describe 'PATCH /api/v1/jobs/:uuid' do
+    let(:headers) { { 'CONTENT_TYPE' => 'application/json', 'ACCEPT' => 'application/json' } }
+
+    def auth_headers_for(user)
+      post '/auth/sign_in', params: {
+        user: { email: user.email, password: 'password123' }
+      }.to_json, headers: headers
+
+      token = response.headers['Authorization']
+      headers.merge('Authorization' => token)
+    end
+
+    context 'when authenticated as owner' do
+      it 'updates the job' do
+        auth_headers = auth_headers_for(client)
+
+        patch "/api/v1/jobs/#{draft_job.uuid}", params: {
+          job: { title: 'Updated Title', description: 'Updated description' }
+        }.to_json, headers: auth_headers
+
+        expect(response).to have_http_status(:ok)
+        json = JSON.parse(response.body)
+        expect(json['job']['title']).to eq('Updated Title')
+        expect(json['job']['description']).to eq('Updated description')
+      end
+
+      it 'returns validation errors for invalid data' do
+        auth_headers = auth_headers_for(client)
+
+        patch "/api/v1/jobs/#{draft_job.uuid}", params: {
+          job: { title: '' }
+        }.to_json, headers: auth_headers
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        json = JSON.parse(response.body)
+        expect(json['errors']).to be_present
+      end
+    end
+
+    context 'when authenticated as non-owner' do
+      let(:other_user) { User.create!(email: 'other@example.com', password: 'password123', name: 'Other User', is_client: true) }
+
+      it 'returns 404 not found' do
+        auth_headers = auth_headers_for(other_user)
+
+        patch "/api/v1/jobs/#{draft_job.uuid}", params: {
+          job: { title: 'Hacked Title' }
+        }.to_json, headers: auth_headers
+
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+
+    context 'when not authenticated' do
+      it 'returns 401 unauthorized' do
+        patch "/api/v1/jobs/#{draft_job.uuid}", params: {
+          job: { title: 'Test' }
+        }.to_json, headers: headers
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
+
+  describe 'POST /api/v1/jobs/:uuid/publish' do
+    let(:headers) { { 'CONTENT_TYPE' => 'application/json', 'ACCEPT' => 'application/json' } }
+
+    def auth_headers_for(user)
+      post '/auth/sign_in', params: {
+        user: { email: user.email, password: 'password123' }
+      }.to_json, headers: headers
+
+      token = response.headers['Authorization']
+      headers.merge('Authorization' => token)
+    end
+
+    context 'when authenticated as owner' do
+      it 'publishes a draft job' do
+        auth_headers = auth_headers_for(client)
+
+        post "/api/v1/jobs/#{draft_job.uuid}/publish", headers: auth_headers
+
+        expect(response).to have_http_status(:ok)
+        json = JSON.parse(response.body)
+        expect(json['job']['status']).to eq('published')
+        expect(json['job']['published_at']).to be_present
+      end
+
+      it 'returns error for already published job' do
+        auth_headers = auth_headers_for(client)
+
+        post "/api/v1/jobs/#{published_job.uuid}/publish", headers: auth_headers
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        json = JSON.parse(response.body)
+        expect(json['error']).to include('published')
+      end
+    end
+
+    context 'when authenticated as non-owner' do
+      let(:other_user) { User.create!(email: 'other@example.com', password: 'password123', name: 'Other User', is_client: true) }
+
+      it 'returns 404 not found' do
+        auth_headers = auth_headers_for(other_user)
+
+        post "/api/v1/jobs/#{draft_job.uuid}/publish", headers: auth_headers
+
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+
+    context 'when not authenticated' do
+      it 'returns 401 unauthorized' do
+        post "/api/v1/jobs/#{draft_job.uuid}/publish", headers: headers
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
 end
