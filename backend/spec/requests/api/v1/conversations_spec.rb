@@ -5,6 +5,15 @@ require 'rails_helper'
 RSpec.describe 'Api::V1::Conversations', type: :request do
   let(:client) { User.create!(email: 'client1@example.com', password: 'password123', name: 'Client User', is_client: true).reload }
   let(:musician) { User.create!(email: 'musician@example.com', password: 'password123', name: 'Musician User', is_musician: true).reload }
+  let(:headers) { { 'CONTENT_TYPE' => 'application/json', 'ACCEPT' => 'application/json' } }
+
+  def auth_headers_for(user)
+    post '/auth/sign_in', params: {
+      user: { email: user.email, password: 'password123' }
+    }.to_json, headers: headers
+    token = response.headers['Authorization']
+    headers.merge('Authorization' => token)
+  end
 
   let!(:job) do
     Job.create!(
@@ -33,7 +42,7 @@ RSpec.describe 'Api::V1::Conversations', type: :request do
 
   describe 'GET /api/v1/conversations' do
     it 'returns conversations with uuid field' do
-      get '/api/v1/conversations'
+      get '/api/v1/conversations', headers: auth_headers_for(client)
 
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
@@ -45,7 +54,7 @@ RSpec.describe 'Api::V1::Conversations', type: :request do
     end
 
     it 'returns job_uuid instead of job_id' do
-      get '/api/v1/conversations'
+      get '/api/v1/conversations', headers: auth_headers_for(client)
 
       json = JSON.parse(response.body)
       conv_data = json['conversations'].first
@@ -56,7 +65,7 @@ RSpec.describe 'Api::V1::Conversations', type: :request do
     end
 
     it 'returns participants with uuid instead of id' do
-      get '/api/v1/conversations'
+      get '/api/v1/conversations', headers: auth_headers_for(client)
 
       json = JSON.parse(response.body)
       participants = json['conversations'].first['participants']
@@ -68,7 +77,7 @@ RSpec.describe 'Api::V1::Conversations', type: :request do
     end
 
     it 'returns last_message with uuid instead of id' do
-      get '/api/v1/conversations'
+      get '/api/v1/conversations', headers: auth_headers_for(client)
 
       json = JSON.parse(response.body)
       last_msg = json['conversations'].first['last_message']
@@ -82,7 +91,7 @@ RSpec.describe 'Api::V1::Conversations', type: :request do
 
   describe 'GET /api/v1/conversations/:uuid' do
     it 'returns conversation with uuid field' do
-      get "/api/v1/conversations/#{conversation.id}"
+      get "/api/v1/conversations/#{conversation.id}", headers: auth_headers_for(client)
 
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
@@ -94,7 +103,7 @@ RSpec.describe 'Api::V1::Conversations', type: :request do
     end
 
     it 'returns job_uuid instead of job_id' do
-      get "/api/v1/conversations/#{conversation.id}"
+      get "/api/v1/conversations/#{conversation.id}", headers: auth_headers_for(client)
 
       json = JSON.parse(response.body)
       conv_data = json['conversation']
@@ -105,7 +114,7 @@ RSpec.describe 'Api::V1::Conversations', type: :request do
     end
 
     it 'returns participants with uuid instead of id' do
-      get "/api/v1/conversations/#{conversation.id}"
+      get "/api/v1/conversations/#{conversation.id}", headers: auth_headers_for(client)
 
       json = JSON.parse(response.body)
       participants = json['conversation']['participants']
@@ -117,7 +126,7 @@ RSpec.describe 'Api::V1::Conversations', type: :request do
     end
 
     it 'returns messages with uuid instead of id' do
-      get "/api/v1/conversations/#{conversation.id}"
+      get "/api/v1/conversations/#{conversation.id}", headers: auth_headers_for(client)
 
       json = JSON.parse(response.body)
       messages = json['conversation']['messages']
@@ -144,7 +153,7 @@ RSpec.describe 'Api::V1::Conversations', type: :request do
       post '/api/v1/conversations', params: {
         conversation: { job_id: new_job.id },
         participant_ids: [musician.id]
-      }
+      }.to_json, headers: auth_headers_for(client)
 
       expect(response).to have_http_status(:created)
       json = JSON.parse(response.body)

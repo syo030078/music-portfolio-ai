@@ -53,4 +53,37 @@ class Api::V1::JobsController < ApplicationController
       }
     }
   end
+
+  def create
+    job = current_user.jobs.new(job_params)
+    job.status = 'draft'
+
+    if job.save
+      render json: { job: job_response(job) }, status: :created
+    else
+      render json: { errors: job.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+
+  private
+
+  def job_params
+    params.require(:job).permit(:title, :description, :budget_min_jpy, :budget_max_jpy, :budget_jpy, :delivery_due_on, :is_remote)
+  end
+
+  def job_response(job)
+    {
+      uuid: job.uuid,
+      title: job.title,
+      description: job.description,
+      budget_jpy: job.budget_jpy,
+      budget_min_jpy: job.budget_min_jpy,
+      budget_max_jpy: job.budget_max_jpy,
+      is_remote: job.is_remote,
+      delivery_due_on: job.delivery_due_on,
+      status: job.status,
+      published_at: job.published_at,
+      created_at: job.created_at
+    }
+  end
 end
