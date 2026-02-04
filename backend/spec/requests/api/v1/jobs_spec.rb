@@ -148,4 +148,61 @@ RSpec.describe 'Api::V1::Jobs', type: :request do
       end
     end
   end
+
+  describe 'POST /api/v1/jobs' do
+    let(:headers) { { 'CONTENT_TYPE' => 'application/json', 'ACCEPT' => 'application/json' } }
+
+    def auth_headers_for(user)
+      post '/auth/sign_in', params: {
+        user: { email: user.email, password: 'password123' }
+      }.to_json, headers: headers
+
+      token = response.headers['Authorization']
+      headers.merge('Authorization' => token)
+    end
+
+    context 'when authenticated' do
+      it 'creates a job in draft status' do
+        auth_headers = auth_headers_for(client)
+
+        post '/api/v1/jobs', params: {
+          job: {
+            title: 'New Job Title',
+            description: 'Job description here',
+            budget_min_jpy: 10_000,
+            budget_max_jpy: 50_000,
+            is_remote: true
+          }
+        }.to_json, headers: auth_headers
+
+        expect(response).to have_http_status(:created)
+        json = JSON.parse(response.body)
+        expect(json['job']).to have_key('uuid')
+        expect(json['job']['title']).to eq('New Job Title')
+        expect(json['job']['status']).to eq('draft')
+      end
+
+      it 'returns validation errors for invalid data' do
+        auth_headers = auth_headers_for(client)
+
+        post '/api/v1/jobs', params: {
+          job: { title: '', description: '' }
+        }.to_json, headers: auth_headers
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        json = JSON.parse(response.body)
+        expect(json['errors']).to be_present
+      end
+    end
+
+    context 'when not authenticated' do
+      it 'returns 401 unauthorized' do
+        post '/api/v1/jobs', params: {
+          job: { title: 'Test', description: 'Test' }
+        }.to_json, headers: headers
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
 end
