@@ -9,10 +9,16 @@ Rails.application.routes.draw do
       resource :user, only: [:show, :update]
       resources :tracks
       resources :jobs, only: [:index, :show, :create, :update], param: :uuid do
+        collection do
+          get :my_jobs
+        end
         post :publish, on: :member
         resources :proposals, only: [:index, :create], param: :uuid
       end
       resources :proposals, only: [], param: :uuid do
+        collection do
+          get :my_proposals
+        end
         post :accept, on: :member
         post :reject, on: :member
       end

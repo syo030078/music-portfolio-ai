@@ -54,6 +54,30 @@ class Api::V1::JobsController < ApplicationController
     }
   end
 
+  # GET /api/v1/jobs/my_jobs
+  def my_jobs
+    jobs = current_user.jobs.includes(:proposals).order(created_at: :desc)
+
+    render json: {
+      jobs: jobs.map do |job|
+        {
+          uuid: job.uuid,
+          title: job.title,
+          description: job.description,
+          budget_jpy: job.budget_jpy,
+          budget_min_jpy: job.budget_min_jpy,
+          budget_max_jpy: job.budget_max_jpy,
+          is_remote: job.is_remote,
+          delivery_due_on: job.delivery_due_on,
+          status: job.status,
+          published_at: job.published_at,
+          created_at: job.created_at,
+          proposals_count: job.proposals.count
+        }
+      end
+    }
+  end
+
   def create
     job = current_user.jobs.new(job_params)
     job.status = 'draft'

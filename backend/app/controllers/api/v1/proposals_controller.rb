@@ -2,6 +2,15 @@ class Api::V1::ProposalsController < ApplicationController
   before_action :set_job, only: [:index, :create]
   before_action :set_proposal, only: [:accept, :reject]
 
+  # GET /api/v1/proposals/my_proposals
+  def my_proposals
+    proposals = current_user.proposals.includes(job: :client).order(created_at: :desc)
+
+    render json: {
+      proposals: proposals.map { |proposal| my_proposal_payload(proposal) }
+    }
+  end
+
   # POST /api/v1/jobs/:uuid/proposals
   def create
     unless current_user.is_musician?
@@ -97,6 +106,26 @@ class Api::V1::ProposalsController < ApplicationController
       musician: {
         uuid: proposal.musician.uuid,
         name: proposal.musician.name
+      },
+      quote_total_jpy: proposal.quote_total_jpy,
+      delivery_days: proposal.delivery_days,
+      cover_message: proposal.cover_message,
+      status: proposal.status,
+      created_at: proposal.created_at
+    }
+  end
+
+  def my_proposal_payload(proposal)
+    {
+      uuid: proposal.uuid,
+      job: {
+        uuid: proposal.job.uuid,
+        title: proposal.job.title,
+        status: proposal.job.status,
+        client: {
+          uuid: proposal.job.client.uuid,
+          name: proposal.job.client.name
+        }
       },
       quote_total_jpy: proposal.quote_total_jpy,
       delivery_days: proposal.delivery_days,

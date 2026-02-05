@@ -270,6 +270,78 @@ RSpec.describe 'Api::V1::Jobs', type: :request do
     end
   end
 
+  describe 'GET /api/v1/jobs/my_jobs' do
+    let(:headers) { { 'CONTENT_TYPE' => 'application/json', 'ACCEPT' => 'application/json' } }
+
+    def auth_headers_for(user)
+      post '/auth/sign_in', params: {
+        user: { email: user.email, password: 'password123' }
+      }.to_json, headers: headers
+
+      token = response.headers['Authorization']
+      headers.merge('Authorization' => token)
+    end
+
+    context 'when authenticated' do
+      it 'returns all jobs for the current user' do
+        auth_headers = auth_headers_for(client)
+
+        get '/api/v1/jobs/my_jobs', headers: auth_headers
+
+        expect(response).to have_http_status(:ok)
+        json = JSON.parse(response.body)
+        expect(json['jobs'].length).to eq(2)
+        expect(json['jobs'].map { |j| j['uuid'] }).to include(published_job.uuid, draft_job.uuid)
+      end
+
+      it 'includes proposals_count' do
+        auth_headers = auth_headers_for(client)
+
+        get '/api/v1/jobs/my_jobs', headers: auth_headers
+
+        json = JSON.parse(response.body)
+        job = json['jobs'].first
+        expect(job).to have_key('proposals_count')
+      end
+
+      it 'includes status field' do
+        auth_headers = auth_headers_for(client)
+
+        get '/api/v1/jobs/my_jobs', headers: auth_headers
+
+        json = JSON.parse(response.body)
+        statuses = json['jobs'].map { |j| j['status'] }
+        expect(statuses).to include('published', 'draft')
+      end
+
+      it 'does not return jobs from other users' do
+        other_client = User.create!(email: 'other_client@example.com', password: 'password123', name: 'Other Client', is_client: true)
+        Job.create!(
+          client: other_client,
+          title: 'Other User Job',
+          description: 'Description',
+          status: 'draft'
+        )
+
+        auth_headers = auth_headers_for(client)
+
+        get '/api/v1/jobs/my_jobs', headers: auth_headers
+
+        json = JSON.parse(response.body)
+        expect(json['jobs'].length).to eq(2)
+        expect(json['jobs'].map { |j| j['title'] }).not_to include('Other User Job')
+      end
+    end
+
+    context 'when not authenticated' do
+      it 'returns 401 unauthorized' do
+        get '/api/v1/jobs/my_jobs', headers: headers
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
+
   describe 'POST /api/v1/jobs/:uuid/publish' do
     let(:headers) { { 'CONTENT_TYPE' => 'application/json', 'ACCEPT' => 'application/json' } }
 

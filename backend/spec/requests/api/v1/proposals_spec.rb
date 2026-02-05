@@ -115,6 +115,52 @@ RSpec.describe 'Api::V1::Proposals', type: :request do
     end
   end
 
+  describe 'GET /api/v1/proposals/my_proposals' do
+    it 'returns all proposals for the current musician' do
+      Proposal.create!(job: job, musician: musician, quote_total_jpy: 50_000, delivery_days: 7)
+      auth_headers = auth_headers_for(musician)
+
+      get '/api/v1/proposals/my_proposals', headers: auth_headers
+
+      expect(response).to have_http_status(:ok)
+      json = JSON.parse(response.body)
+      expect(json['proposals'].length).to eq(1)
+      expect(json['proposals'].first).to have_key('uuid')
+    end
+
+    it 'includes job information' do
+      Proposal.create!(job: job, musician: musician, quote_total_jpy: 50_000, delivery_days: 7)
+      auth_headers = auth_headers_for(musician)
+
+      get '/api/v1/proposals/my_proposals', headers: auth_headers
+
+      json = JSON.parse(response.body)
+      proposal = json['proposals'].first
+      expect(proposal['job']).to have_key('uuid')
+      expect(proposal['job']).to have_key('title')
+      expect(proposal['job']).to have_key('status')
+      expect(proposal['job']['client']).to have_key('uuid')
+      expect(proposal['job']['client']).to have_key('name')
+    end
+
+    it 'does not return proposals from other musicians' do
+      Proposal.create!(job: job, musician: musician, quote_total_jpy: 50_000, delivery_days: 7)
+      Proposal.create!(job: job, musician: other_musician, quote_total_jpy: 60_000, delivery_days: 10)
+      auth_headers = auth_headers_for(musician)
+
+      get '/api/v1/proposals/my_proposals', headers: auth_headers
+
+      json = JSON.parse(response.body)
+      expect(json['proposals'].length).to eq(1)
+    end
+
+    it 'returns 401 when not authenticated' do
+      get '/api/v1/proposals/my_proposals', headers: headers
+
+      expect(response).to have_http_status(:unauthorized)
+    end
+  end
+
   describe 'POST /api/v1/proposals/:uuid/reject' do
     it 'rejects proposal for job owner' do
       proposal = Proposal.create!(job: job, musician: musician, quote_total_jpy: 50_000, delivery_days: 7)
