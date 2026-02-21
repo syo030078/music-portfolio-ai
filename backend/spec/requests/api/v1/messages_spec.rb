@@ -3,6 +3,7 @@
 require 'rails_helper'
 
 RSpec.describe 'Api::V1::Messages', type: :request do
+  let(:headers) { { 'CONTENT_TYPE' => 'application/json', 'ACCEPT' => 'application/json' } }
   let(:client) { User.create!(email: 'client1@example.com', password: 'password123', name: 'Client User', is_client: true).reload }
   let(:musician) { User.create!(email: 'musician@example.com', password: 'password123', name: 'Musician User', is_musician: true).reload }
 
@@ -23,11 +24,21 @@ RSpec.describe 'Api::V1::Messages', type: :request do
     conv
   end
 
+  def auth_headers_for(user)
+    post '/auth/sign_in', params: {
+      user: { email: user.email, password: 'password123' }
+    }.to_json, headers: headers
+
+    token = response.headers['Authorization']
+    headers.merge('Authorization' => token)
+  end
+
   describe 'POST /api/v1/conversations/:conversation_uuid/messages' do
     it 'creates message and returns uuid instead of id' do
+      auth = auth_headers_for(client)
       post "/api/v1/conversations/#{conversation.id}/messages", params: {
         message: { content: 'New test message' }
-      }
+      }.to_json, headers: auth
 
       expect(response).to have_http_status(:created)
       json = JSON.parse(response.body)
