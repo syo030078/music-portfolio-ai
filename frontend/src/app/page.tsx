@@ -54,10 +54,10 @@ export default function HomePage() {
       {/* ヒーローセクション */}
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 py-16">
         <div className="mx-auto max-w-7xl px-4">
-          <h1 className="mb-4 text-5xl font-bold text-white">
+          <h1 className="mb-4 text-3xl font-bold text-white md:text-5xl">
             プロの音楽家を見つけよう
           </h1>
-          <p className="text-xl text-purple-100">
+          <p className="text-lg text-purple-100 md:text-xl">
             あなたのプロジェクトにぴったりの音楽家がここにいます
           </p>
         </div>

@@ -1,37 +1,12 @@
 "use client";
 
-import Link from "next/link";
-
 export default function MatchingPage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* ヘッダー */}
-      <header className="bg-white border-b border-gray-200">
-        <nav className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold text-gray-900">
-            Music Portfolio
-          </Link>
-          <div className="flex gap-4">
-            <Link
-              href="/"
-              className="text-gray-600 hover:text-gray-900 px-4 py-2"
-            >
-              音楽家向け
-            </Link>
-            <Link
-              href="/matching"
-              className="text-blue-600 font-semibold px-4 py-2"
-            >
-              企業向け
-            </Link>
-          </div>
-        </nav>
-      </header>
-
       {/* メインコンテンツ */}
-      <main className="max-w-7xl mx-auto px-4 py-12">
+      <main className="max-w-7xl mx-auto px-4 py-8 md:py-12">
         <div className="mb-12 text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4 md:text-4xl">
             音楽家マッチング支援
           </h1>
           <p className="text-xl text-gray-600">

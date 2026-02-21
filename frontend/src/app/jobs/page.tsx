@@ -47,10 +47,10 @@ export default async function JobsPage() {
       {/* ヒーローセクション */}
       <div className="bg-gradient-to-r from-green-600 to-green-700 py-12">
         <div className="mx-auto max-w-7xl px-4">
-          <h1 className="text-4xl font-bold text-white mb-4">
+          <h1 className="text-2xl font-bold text-white mb-4 md:text-4xl">
             音楽制作の案件を探す
           </h1>
-          <p className="text-green-100 text-lg">
+          <p className="text-green-100 text-base md:text-lg">
             あなたのスキルを活かせる案件が見つかります
           </p>
         </div>

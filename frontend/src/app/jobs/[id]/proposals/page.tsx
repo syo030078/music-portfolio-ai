@@ -34,7 +34,7 @@ export default function ProposalsPage({ params }: { params: { id: string } }) {
       }
 
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
         const res = await fetch(`${apiUrl}/api/v1/jobs/${params.id}/proposals`, {
           headers: {
             'Content-Type': 'application/json',
@@ -70,7 +70,7 @@ export default function ProposalsPage({ params }: { params: { id: string } }) {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="mx-auto max-w-7xl px-4 py-8">
         <p className="text-gray-500">読み込み中...</p>
       </div>
     );
@@ -78,15 +78,15 @@ export default function ProposalsPage({ params }: { params: { id: string } }) {
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="mx-auto max-w-7xl px-4 py-8">
         <div className="rounded-lg bg-red-50 p-4 text-red-800">{error}</div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">提案一覧</h1>
+    <div className="mx-auto max-w-7xl px-4 py-8">
+      <h1 className="text-2xl font-bold mb-8 md:text-3xl">提案一覧</h1>
 
       {proposals.length === 0 ? (
         <p className="text-gray-500">提案はまだありません</p>
