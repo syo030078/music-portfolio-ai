@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -8,18 +9,30 @@ interface ContactButtonProps {
   clientUuid: string;
 }
 
+async function parseJsonSafe(res: Response): Promise<Record<string, unknown>> {
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(text || `エラーが発生しました (${res.status})`);
+  }
+}
+
 export default function ContactButton({ jobUuid, clientUuid }: ContactButtonProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needsLogin, setNeedsLogin] = useState(false);
 
   const handleClick = async () => {
     setLoading(true);
     setError(null);
+    setNeedsLogin(false);
 
     try {
       const token = localStorage.getItem('jwt');
       if (!token) {
+        setNeedsLogin(true);
         throw new Error('ログインしてください');
       }
 
@@ -34,20 +47,24 @@ export default function ContactButton({ jobUuid, clientUuid }: ContactButtonProp
         },
       });
 
+      if (conversationsRes.status === 401) {
+        setNeedsLogin(true);
+        throw new Error('ログインセッションが切れました。再度ログインしてください');
+      }
+
       if (!conversationsRes.ok) {
         throw new Error('会話一覧の取得に失敗しました');
       }
 
-      const { conversations } = await conversationsRes.json();
+      const conversationsData = await parseJsonSafe(conversationsRes);
+      const conversations = conversationsData.conversations as Array<{ job_uuid: string; uuid: string }>;
 
       // job_uuidが一致する会話を検索
-      const existing = conversations.find((c: { job_uuid: string; uuid: string }) => c.job_uuid === jobUuid);
+      const existing = conversations.find((c) => c.job_uuid === jobUuid);
 
       if (existing) {
-        // 既存の会話に遷移
         router.push(`/messages/${existing.uuid}`);
       } else {
-        // 新規会話を作成（バックエンドは内部でjob_idに変換）
         const createRes = await fetch(`${apiUrl}/api/v1/conversations`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: token },
@@ -58,15 +75,15 @@ export default function ContactButton({ jobUuid, clientUuid }: ContactButtonProp
         });
 
         if (!createRes.ok) {
-          const errorData = await createRes.json();
-          throw new Error(errorData.error || '会話の作成に失敗しました');
+          const errorData = await parseJsonSafe(createRes);
+          throw new Error((errorData.error as string) || '会話の作成に失敗しました');
         }
 
-        const { conversation } = await createRes.json();
+        const createData = await parseJsonSafe(createRes);
+        const conversation = createData.conversation as { uuid: string };
         router.push(`/messages/${conversation.uuid}`);
       }
     } catch (err) {
-      console.error('ContactButton error:', err);
       setError(err instanceof Error ? err.message : '不明なエラーが発生しました');
     } finally {
       setLoading(false);
@@ -85,7 +102,12 @@ export default function ContactButton({ jobUuid, clientUuid }: ContactButtonProp
 
       {error && (
         <div className="rounded-lg bg-red-50 p-3 text-sm text-red-800">
-          {error}
+          <p>{error}</p>
+          {needsLogin && (
+            <Link href="/login" className="mt-1 inline-block text-red-600 underline hover:text-red-800">
+              ログインページへ
+            </Link>
+          )}
         </div>
       )}
     </div>
