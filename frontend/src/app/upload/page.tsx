@@ -8,7 +8,7 @@ type AnalysisResult = {
   error?: string;
 };
 
-const API = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 export default function UploadPage() {
   const [audioFile, setAudioFile] = useState<File | null>(null);

@@ -34,7 +34,7 @@ export default function ProposalsPage({ params }: { params: { id: string } }) {
       }
 
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
         const res = await fetch(`${apiUrl}/api/v1/jobs/${params.id}/proposals`, {
           headers: {
             'Content-Type': 'application/json',
