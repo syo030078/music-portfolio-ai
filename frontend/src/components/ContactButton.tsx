@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -23,7 +24,7 @@ export default function ContactButton({ jobUuid, clientUuid }: ContactButtonProp
         throw new Error('ログインしてください');
       }
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
       // 既存の会話を検索
       const conversationsRes = await fetch(`${apiUrl}/api/v1/conversations`, {
@@ -35,7 +36,11 @@ export default function ContactButton({ jobUuid, clientUuid }: ContactButtonProp
       });
 
       if (!conversationsRes.ok) {
-        throw new Error('会話一覧の取得に失敗しました');
+        if (conversationsRes.status === 401) {
+          throw new Error('ログインが必要です。ログインページへ移動してください。');
+        }
+        const errorData = await conversationsRes.json().catch(() => null);
+        throw new Error(errorData?.error || '会話一覧の取得に失敗しました');
       }
 
       const { conversations } = await conversationsRes.json();
@@ -85,7 +90,12 @@ export default function ContactButton({ jobUuid, clientUuid }: ContactButtonProp
 
       {error && (
         <div className="rounded-lg bg-red-50 p-3 text-sm text-red-800">
-          {error}
+          <p>{error}</p>
+          {error.includes('ログイン') && (
+            <Link href="/login" className="mt-1 inline-block text-red-600 underline hover:text-red-800">
+              ログインページへ
+            </Link>
+          )}
         </div>
       )}
     </div>

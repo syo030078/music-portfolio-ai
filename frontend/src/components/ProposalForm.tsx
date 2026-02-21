@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 
 interface ProposalFormProps {
@@ -27,7 +28,7 @@ export default function ProposalForm({ jobUuid }: ProposalFormProps) {
 
     setLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       const res = await fetch(`${apiUrl}/api/v1/jobs/${jobUuid}/proposals`, {
         method: 'POST',
         headers: {
@@ -44,8 +45,19 @@ export default function ProposalForm({ jobUuid }: ProposalFormProps) {
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || data.errors?.join(', ') || '応募に失敗しました');
+        if (res.status === 401) {
+          throw new Error('ログインが必要です。ログインしてから再度お試しください。');
+        }
+        const text = await res.text();
+        try {
+          const data = JSON.parse(text);
+          throw new Error(data.error || data.errors?.join(', ') || '応募に失敗しました');
+        } catch (parseErr) {
+          if (parseErr instanceof SyntaxError) {
+            throw new Error('応募に失敗しました。ログイン状態を確認してください。');
+          }
+          throw parseErr;
+        }
       }
 
       setSuccess('応募が完了しました');
@@ -118,7 +130,12 @@ export default function ProposalForm({ jobUuid }: ProposalFormProps) {
 
       {error && (
         <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">
-          {error}
+          <p>{error}</p>
+          {error.includes('ログイン') && (
+            <Link href="/login" className="mt-1 inline-block text-red-600 underline hover:text-red-800">
+              ログインページへ
+            </Link>
+          )}
         </div>
       )}
       {success && (
