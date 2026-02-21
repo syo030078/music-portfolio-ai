@@ -91,7 +91,7 @@ export default function ChatBox({
   };
 
   return (
-    <div className="flex flex-col h-[600px]">
+    <div className="flex flex-col h-[400px] md:h-[600px]">
       <div className="flex-1 overflow-y-auto border border-gray-200 rounded-lg p-4 mb-4 bg-gray-50">
         {messages.length === 0 ? (
           <p className="text-gray-500 text-center py-8">

@@ -47,10 +47,10 @@ export default function MusicianDetailPage() {
           >
             ← 音楽家一覧に戻る
           </Link>
-          <h1 className="mb-4 text-5xl font-bold text-white">
+          <h1 className="mb-4 text-3xl font-bold text-white md:text-5xl">
             {mockMusician.name}
           </h1>
-          <p className="mb-4 text-xl text-purple-100">{mockMusician.bio}</p>
+          <p className="mb-4 text-lg text-purple-100 md:text-xl">{mockMusician.bio}</p>
           <div className="flex gap-4 text-purple-100">
             <span>得意ジャンル: {mockMusician.genre}</span>
           </div>

@@ -87,7 +87,7 @@ export default function MessagesPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="mx-auto max-w-7xl px-4 py-8">
         <p className="text-gray-500">読み込み中...</p>
       </div>
     );
@@ -95,15 +95,15 @@ export default function MessagesPage() {
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="mx-auto max-w-7xl px-4 py-8">
         <div className="rounded-lg bg-red-50 p-4 text-red-800">{error}</div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">メッセージ</h1>
+    <div className="mx-auto max-w-7xl px-4 py-8">
+      <h1 className="text-2xl font-bold mb-8 md:text-3xl">メッセージ</h1>
 
       {conversations.length === 0 ? (
         <div className="text-center py-12">
