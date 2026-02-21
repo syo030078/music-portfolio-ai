@@ -37,7 +37,7 @@ export default function ProposalCard({ proposal, onAccepted, onRejected }: Propo
     }
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       const res = await fetch(`${apiUrl}/api/v1/proposals/${proposal.uuid}/${action}`, {
         method: 'POST',
         headers: {

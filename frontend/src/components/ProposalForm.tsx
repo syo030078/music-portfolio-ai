@@ -27,7 +27,7 @@ export default function ProposalForm({ jobUuid }: ProposalFormProps) {
 
     setLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       const res = await fetch(`${apiUrl}/api/v1/jobs/${jobUuid}/proposals`, {
         method: 'POST',
         headers: {
