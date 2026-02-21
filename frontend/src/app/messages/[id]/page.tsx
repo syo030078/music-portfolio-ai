@@ -45,7 +45,7 @@ export default function ConversationPage({
       }
 
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
         const res = await fetch(`${apiUrl}/api/v1/conversations/${params.id}`, {
           cache: 'no-store',
           headers: {

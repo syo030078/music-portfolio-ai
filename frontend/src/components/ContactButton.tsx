@@ -23,7 +23,7 @@ export default function ContactButton({ jobUuid, clientUuid }: ContactButtonProp
         throw new Error('ログインしてください');
       }
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
       // 既存の会話を検索
       const conversationsRes = await fetch(`${apiUrl}/api/v1/conversations`, {
