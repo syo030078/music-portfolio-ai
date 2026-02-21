@@ -72,7 +72,7 @@ export default function ConversationPage({
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="mx-auto max-w-4xl px-4 py-8">
         <p className="text-gray-500">読み込み中...</p>
       </div>
     );
@@ -80,7 +80,7 @@ export default function ConversationPage({
 
   if (error || !conversation) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="mx-auto max-w-4xl px-4 py-8">
         <div className="rounded-lg bg-red-50 p-4 text-red-800">
           {error || '会話が見つかりません'}
         </div>
@@ -91,7 +91,7 @@ export default function ConversationPage({
   const participantNames = conversation.participants.map((p) => p.name).join(', ');
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="mx-auto max-w-4xl px-4 py-8">
       <div className="mb-6">
         <Link href="/messages" className="text-blue-600 hover:underline">
           ← メッセージ一覧に戻る

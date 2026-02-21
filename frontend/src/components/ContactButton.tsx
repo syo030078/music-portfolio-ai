@@ -41,7 +41,7 @@ export default function ContactButton({ jobUuid, clientUuid }: ContactButtonProp
       const { conversations } = await conversationsRes.json();
 
       // job_uuidが一致する会話を検索
-      const existing = conversations.find((c: any) => c.job_uuid === jobUuid);
+      const existing = conversations.find((c: { job_uuid: string; uuid: string }) => c.job_uuid === jobUuid);
 
       if (existing) {
         // 既存の会話に遷移
