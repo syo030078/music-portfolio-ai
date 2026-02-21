@@ -44,8 +44,16 @@ export default function ProposalForm({ jobUuid }: ProposalFormProps) {
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || data.errors?.join(', ') || '応募に失敗しました');
+        const text = await res.text();
+        try {
+          const data = JSON.parse(text);
+          throw new Error(data.error || data.errors?.join(', ') || '応募に失敗しました');
+        } catch (parseErr) {
+          if (parseErr instanceof SyntaxError) {
+            throw new Error(text || `応募に失敗しました (${res.status})`);
+          }
+          throw parseErr;
+        }
       }
 
       setSuccess('応募が完了しました');
