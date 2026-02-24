@@ -98,25 +98,18 @@ class Api::V1::TracksController < ApplicationController
 
     # YouTube URL登録の処理
     if yt_url.present?
-      # 仮ユーザーIDを使用（Phase 1: MVP実装）
-      user = User.first
-
-      if user.nil?
-        render json: { data: { error: "ユーザーが存在しません" } }, status: :internal_server_error
-        return
-      end
-
       track = Track.new(
-        user_id: user.id,
+        user_id: current_user.id,
         yt_url: yt_url,
         title: title || "Untitled"
       )
 
       if track.save
+        track.reload
         render json: {
           message: "YouTube動画を登録しました",
           data: {
-            id: track.id,
+            uuid: track.uuid,
             yt_url: track.yt_url,
             title: track.title
           }
