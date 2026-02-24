@@ -66,11 +66,15 @@ export default function UploadPage() {
     setUploadSuccess(false);
 
     try {
+      const token = localStorage.getItem("jwt");
       const formData = new FormData();
       formData.append("audio_file", audioFile);
 
       const res = await fetch(`${API}/api/v1/tracks`, {
         method: "POST",
+        headers: {
+          Authorization: token || "",
+        },
         body: formData,
       });
 
@@ -103,9 +107,13 @@ export default function UploadPage() {
     setUploadSuccess(false);
 
     try {
+      const token = localStorage.getItem("jwt");
       const res = await fetch(`${API}/api/v1/tracks`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token || "",
+        },
         body: JSON.stringify({ yt_url: ytUrl, title: "YouTube Video" }),
       });
 
