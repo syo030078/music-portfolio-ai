@@ -59,9 +59,10 @@ function formatDate(dateString: string | null): string {
 export default async function JobDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const job = await getJob(params.id);
+  const { id } = await params;
+  const job = await getJob(id);
 
   if (!job) {
     notFound();
