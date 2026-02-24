@@ -23,16 +23,21 @@ interface Job {
 
 async function getJob(id: string): Promise<Job | null> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-  const res = await fetch(`${apiUrl}/api/v1/jobs/${id}`, {
-    cache: 'no-store',
-  });
+  try {
+    const res = await fetch(`${apiUrl}/api/v1/jobs/${id}`, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(5000),
+    });
 
-  if (!res.ok) {
+    if (!res.ok) {
+      return null;
+    }
+
+    const data = await res.json();
+    return data.job;
+  } catch {
     return null;
   }
-
-  const data = await res.json();
-  return data.job;
 }
 
 function formatBudget(job: Job): string {
