@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_12_24_061956) do
+ActiveRecord::Schema[7.0].define(version: 2026_02_24_170002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
@@ -41,7 +41,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_24_061956) do
   end
 
   create_table "contracts", force: :cascade do |t|
-    t.bigint "proposal_id", null: false
+    t.bigint "proposal_id"
     t.bigint "client_id", null: false
     t.bigint "musician_id", null: false
     t.string "status", default: "active", null: false
@@ -49,11 +49,15 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_24_061956) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
+    t.bigint "production_request_id"
     t.index ["client_id"], name: "index_contracts_on_client_id"
     t.index ["musician_id"], name: "index_contracts_on_musician_id"
-    t.index ["proposal_id"], name: "index_contracts_on_proposal_id", unique: true
+    t.index ["production_request_id"], name: "index_contracts_on_production_request_id"
+    t.index ["production_request_id"], name: "index_contracts_on_production_request_id_unique", unique: true, where: "(production_request_id IS NOT NULL)"
+    t.index ["proposal_id"], name: "index_contracts_on_proposal_id_unique", unique: true, where: "(proposal_id IS NOT NULL)"
     t.index ["status"], name: "index_contracts_on_status"
     t.index ["uuid"], name: "index_contracts_on_uuid", unique: true
+    t.check_constraint "proposal_id IS NOT NULL AND production_request_id IS NULL OR proposal_id IS NULL AND production_request_id IS NOT NULL", name: "contracts_proposal_or_production_request"
   end
 
   create_table "conversation_participants", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -199,6 +203,24 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_24_061956) do
     t.index ["uuid"], name: "index_musician_skills_on_uuid", unique: true
   end
 
+  create_table "production_requests", force: :cascade do |t|
+    t.bigint "client_id", null: false
+    t.bigint "musician_id", null: false
+    t.string "title", null: false
+    t.text "description", null: false
+    t.integer "budget_jpy", null: false
+    t.integer "delivery_days", null: false
+    t.string "status", default: "pending", null: false
+    t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["client_id", "musician_id"], name: "index_production_requests_on_client_id_and_musician_id"
+    t.index ["client_id"], name: "index_production_requests_on_client_id"
+    t.index ["musician_id"], name: "index_production_requests_on_musician_id"
+    t.index ["status"], name: "index_production_requests_on_status"
+    t.index ["uuid"], name: "index_production_requests_on_uuid", unique: true
+  end
+
   create_table "proposals", force: :cascade do |t|
     t.bigint "job_id", null: false
     t.bigint "musician_id", null: false
@@ -305,6 +327,7 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_24_061956) do
 
   add_foreign_key "client_profiles", "users"
   add_foreign_key "contract_milestones", "contracts"
+  add_foreign_key "contracts", "production_requests"
   add_foreign_key "contracts", "proposals"
   add_foreign_key "contracts", "users", column: "client_id"
   add_foreign_key "contracts", "users", column: "musician_id"
@@ -324,6 +347,8 @@ ActiveRecord::Schema[7.0].define(version: 2025_12_24_061956) do
   add_foreign_key "musician_profiles", "users"
   add_foreign_key "musician_skills", "skills"
   add_foreign_key "musician_skills", "users"
+  add_foreign_key "production_requests", "users", column: "client_id"
+  add_foreign_key "production_requests", "users", column: "musician_id"
   add_foreign_key "proposals", "jobs"
   add_foreign_key "proposals", "users", column: "musician_id"
   add_foreign_key "reviews", "contracts"
