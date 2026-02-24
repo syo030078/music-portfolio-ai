@@ -17,16 +17,21 @@ interface Job {
 
 async function getJobs(): Promise<Job[]> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-  const res = await fetch(`${apiUrl}/api/v1/jobs`, {
-    cache: 'no-store',
-  });
+  try {
+    const res = await fetch(`${apiUrl}/api/v1/jobs`, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(5000),
+    });
 
-  if (!res.ok) {
-    throw new Error('Failed to fetch jobs');
+    if (!res.ok) {
+      return [];
+    }
+
+    const data = await res.json();
+    return data.jobs;
+  } catch {
+    return [];
   }
-
-  const data = await res.json();
-  return data.jobs;
 }
 
 function formatBudget(job: Job): string {
