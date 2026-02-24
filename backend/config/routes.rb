@@ -15,6 +15,13 @@ Rails.application.routes.draw do
         post :accept, on: :member
         post :reject, on: :member
       end
+      resources :production_requests, only: [:index, :show, :create], param: :uuid do
+        member do
+          post :accept
+          post :reject
+          post :withdraw
+        end
+      end
       resources :conversations, only: [:index, :show, :create] do
         resources :messages, only: [:create]
       end

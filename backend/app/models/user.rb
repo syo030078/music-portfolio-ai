@@ -12,6 +12,8 @@ class User < ApplicationRecord
   has_many :proposals, foreign_key: 'musician_id', dependent: :destroy
   has_many :client_contracts, class_name: 'Contract', foreign_key: 'client_id', dependent: :destroy
   has_many :musician_contracts, class_name: 'Contract', foreign_key: 'musician_id', dependent: :destroy
+  has_many :sent_production_requests, class_name: 'ProductionRequest', foreign_key: 'client_id', dependent: :destroy
+  has_many :received_production_requests, class_name: 'ProductionRequest', foreign_key: 'musician_id', dependent: :destroy
 
   # Conversation associations
   has_many :conversation_participants, dependent: :destroy
