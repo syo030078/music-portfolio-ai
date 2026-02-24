@@ -191,13 +191,7 @@ RSpec.describe Api::V1::TracksController, type: :controller do
     end
 
     context "when yt_url is provided" do
-      let(:test_user) { User.create!(email: 'test@example.com', password: 'password123', name: 'Test User') }
-
-      before do
-        test_user # ユーザーを作成
-      end
-
-      it "creates a track with YouTube URL" do
+      it "creates a track owned by the authenticated user" do
         post :create, params: { yt_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', title: 'Test Video' }
         expect(response).to have_http_status(:created)
 
@@ -205,6 +199,10 @@ RSpec.describe Api::V1::TracksController, type: :controller do
         expect(json["message"]).to eq("YouTube動画を登録しました")
         expect(json["data"]["yt_url"]).to eq('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
         expect(json["data"]["title"]).to eq('Test Video')
+        expect(json["data"]["uuid"]).to be_present
+
+        created_track = Track.last
+        expect(created_track.user_id).to eq(authenticated_user.id)
       end
 
       it "creates a track with default title when title is not provided" do
@@ -213,6 +211,15 @@ RSpec.describe Api::V1::TracksController, type: :controller do
 
         json = JSON.parse(response.body)
         expect(json["data"]["title"]).to eq('Untitled')
+      end
+
+      it "returns uuid instead of id in response" do
+        post :create, params: { yt_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', title: 'Test' }
+        expect(response).to have_http_status(:created)
+
+        json = JSON.parse(response.body)
+        expect(json["data"]).to have_key("uuid")
+        expect(json["data"]).not_to have_key("id")
       end
 
       it "returns error when yt_url is invalid" do
