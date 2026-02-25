@@ -5,7 +5,7 @@ class Auth::RegistrationsController < Devise::RegistrationsController
   private
 
   def sign_up_params
-    params.require(:user).permit(:email, :password, :name)
+    params.require(:user).permit(:email, :password, :name, :is_musician, :is_client)
   end
 
   def sign_up(resource_name, resource)
@@ -25,7 +25,9 @@ class Auth::RegistrationsController < Devise::RegistrationsController
           id: resource.id,
           uuid: resource.uuid,
           email: resource.email,
-          name: resource.name
+          name: resource.name,
+          is_musician: resource.is_musician,
+          is_client: resource.is_client
         }
       }, status: :ok
     else
