@@ -10,22 +10,22 @@ export async function createDirectRequest(
   token: string,
   payload: DirectRequestCreatePayload
 ): Promise<DirectRequest> {
-  const data = await apiPost<{ direct_request: DirectRequest }>(
-    '/api/v1/direct_requests',
+  const data = await apiPost<{ production_request: DirectRequest }>(
+    '/api/v1/production_requests',
     token,
-    { direct_request: payload }
+    { production_request: payload }
   );
-  return data.direct_request;
+  return data.production_request;
 }
 
 export async function fetchDirectRequests(
   token: string
 ): Promise<DirectRequest[]> {
   const data = await apiGet<DirectRequestsListResponse>(
-    '/api/v1/direct_requests',
+    '/api/v1/production_requests',
     token
   );
-  return data.direct_requests;
+  return data.production_requests;
 }
 
 export async function acceptDirectRequest(
@@ -33,7 +33,7 @@ export async function acceptDirectRequest(
   uuid: string
 ): Promise<DirectRequestDetailResponse> {
   return apiPost<DirectRequestDetailResponse>(
-    `/api/v1/direct_requests/${uuid}/accept`,
+    `/api/v1/production_requests/${uuid}/accept`,
     token
   );
 }
@@ -42,9 +42,9 @@ export async function rejectDirectRequest(
   token: string,
   uuid: string
 ): Promise<DirectRequest> {
-  const data = await apiPost<{ direct_request: DirectRequest }>(
-    `/api/v1/direct_requests/${uuid}/reject`,
+  const data = await apiPost<{ production_request: DirectRequest }>(
+    `/api/v1/production_requests/${uuid}/reject`,
     token
   );
-  return data.direct_request;
+  return data.production_request;
 }
