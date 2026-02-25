@@ -130,6 +130,65 @@ export type ConversationDetailResponse = {
 };
 
 /**
+ * 音楽家サマリー型（Tracks APIから導出）
+ */
+export type MusicianSummary = {
+  uuid: string;
+  name: string;
+  bio: string | null;
+  trackCount: number;
+  genres: string[];
+  tracks: Track[];
+};
+
+/**
+ * 制作依頼型
+ */
+export type DirectRequest = {
+  uuid: string;
+  title: string;
+  description: string;
+  budget_jpy: number;
+  delivery_days: number;
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: string;
+  musician: {
+    uuid: string;
+    name: string;
+  };
+  client: {
+    uuid: string;
+    name: string;
+  };
+};
+
+/**
+ * 制作依頼作成ペイロード型
+ */
+export type DirectRequestCreatePayload = {
+  musician_uuid: string;
+  title: string;
+  description: string;
+  budget_jpy: number;
+  delivery_days: number;
+};
+
+/**
+ * DirectRequests一覧取得APIのレスポンス型
+ */
+export type DirectRequestsListResponse = {
+  direct_requests: DirectRequest[];
+};
+
+/**
+ * DirectRequest詳細APIのレスポンス型
+ */
+export type DirectRequestDetailResponse = {
+  direct_request: DirectRequest;
+  conversation_uuid?: string;
+};
+
+/**
  * APIエラーレスポンス型
  */
 export type ApiErrorResponse = {

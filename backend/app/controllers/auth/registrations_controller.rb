@@ -14,6 +14,7 @@ class Auth::RegistrationsController < Devise::RegistrationsController
 
   def respond_with(resource, _opts = {})
     if resource.persisted?
+      resource.reload
       token = jwt_token_for(resource)
       response.set_header('Authorization', "Bearer #{token}") if token
 
@@ -22,6 +23,7 @@ class Auth::RegistrationsController < Devise::RegistrationsController
         token: token ? "Bearer #{token}" : nil,
         user: {
           id: resource.id,
+          uuid: resource.uuid,
           email: resource.email,
           name: resource.name
         }
