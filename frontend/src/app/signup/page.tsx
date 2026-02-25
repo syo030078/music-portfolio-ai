@@ -20,10 +20,11 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/sign_up`, {
+      const res = await fetch(`${API_BASE_URL}/auth`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Accept: "application/json",
         },
         body: JSON.stringify({
           user: {
@@ -34,9 +35,16 @@ export default function SignupPage() {
         }),
       });
 
+      const contentType = res.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        setError("サーバーエラーが発生しました。しばらく経ってからお試しください");
+        return;
+      }
+
+      const data = await res.json();
+
       if (res.ok) {
-        const data = await res.json();
-        const token = res.headers.get("Authorization");
+        const token = res.headers.get("Authorization") || data.token;
 
         if (token) {
           localStorage.setItem("jwt", token);
@@ -50,12 +58,11 @@ export default function SignupPage() {
           setError("認証トークンの取得に失敗しました");
         }
       } else {
-        const errorData = await res.json();
-        setError(errorData.error || "登録に失敗しました");
+        const messages = data.errors?.join(", ") || data.error || "登録に失敗しました";
+        setError(messages);
       }
-    } catch (err) {
+    } catch {
       setError("ネットワークエラーが発生しました");
-      console.error("Signup error:", err);
     } finally {
       setLoading(false);
     }
