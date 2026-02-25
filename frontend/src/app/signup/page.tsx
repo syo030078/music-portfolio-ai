@@ -10,12 +10,19 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [isMusician, setIsMusician] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isMusician && !isClient) {
+      setError("ロールを最低1つ選択してください");
+      return;
+    }
+
     setError("");
     setLoading(true);
 
@@ -31,6 +38,8 @@ export default function SignupPage() {
             email,
             password,
             name,
+            is_musician: isMusician,
+            is_client: isClient,
           },
         }),
       });
@@ -53,7 +62,7 @@ export default function SignupPage() {
             localStorage.setItem("user", JSON.stringify(data.user));
           }
 
-          router.push("/upload");
+          router.push(isMusician ? "/upload" : "/jobs");
         } else {
           setError("認証トークンの取得に失敗しました");
         }
@@ -130,6 +139,34 @@ export default function SignupPage() {
                 disabled={loading}
               />
             </div>
+
+            <fieldset className="border border-gray-300 rounded-md p-4">
+              <legend className="text-sm font-medium text-gray-700 px-1">
+                ロール（最低1つ選択）
+              </legend>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isMusician}
+                    onChange={(e) => setIsMusician(e.target.checked)}
+                    disabled={loading}
+                    className="h-4 w-4 text-blue-500 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">ミュージシャン</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isClient}
+                    onChange={(e) => setIsClient(e.target.checked)}
+                    disabled={loading}
+                    className="h-4 w-4 text-blue-500 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">クライアント</span>
+                </label>
+              </div>
+            </fieldset>
 
             <button
               type="submit"
