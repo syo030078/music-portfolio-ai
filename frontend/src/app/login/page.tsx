@@ -1,17 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,16 +40,18 @@ export default function LoginPage() {
         const token = res.headers.get("Authorization") || data.token;
 
         if (token) {
-          // JWT トークンを localStorage に保存
           localStorage.setItem("jwt", token);
 
-          // ユーザー情報も保存（オプション）
           if (data.user) {
             localStorage.setItem("user", JSON.stringify(data.user));
           }
 
-          // アップロードページへリダイレクト
-          router.push("/upload");
+          if (redirectTo) {
+            router.push(redirectTo);
+          } else {
+            const user = data.user;
+            router.push(user?.is_musician ? "/upload" : "/jobs");
+          }
         } else {
           setError("認証トークンの取得に失敗しました");
         }
@@ -55,9 +59,8 @@ export default function LoginPage() {
         const errorData = await res.json();
         setError(errorData.error || "ログインに失敗しました");
       }
-    } catch (err) {
+    } catch {
       setError("ネットワークエラーが発生しました");
-      console.error("Login error:", err);
     } finally {
       setLoading(false);
     }
@@ -136,5 +139,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }
