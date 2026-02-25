@@ -67,6 +67,17 @@ export default function ProposalForm({ jobUuid }: ProposalFormProps) {
     }
   };
 
+  if (success) {
+    return (
+      <div className="bg-white border border-gray-200 rounded-lg p-6">
+        <div className="rounded-lg bg-green-50 p-4 text-green-800">
+          <p className="font-medium">応募が完了しました</p>
+          <p className="text-sm mt-1">クライアントからの返答をお待ちください</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6">
       <h2 className="text-lg font-semibold mb-4">応募する</h2>
@@ -127,11 +138,6 @@ export default function ProposalForm({ jobUuid }: ProposalFormProps) {
       {error && (
         <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">
           {error}
-        </div>
-      )}
-      {success && (
-        <div className="mt-4 rounded-lg bg-green-50 p-3 text-sm text-green-800">
-          {success}
         </div>
       )}
     </div>
