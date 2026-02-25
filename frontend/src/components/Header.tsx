@@ -15,20 +15,20 @@ export default function Header() {
   const navLinks = [
     { href: "/jobs", label: "案件を探す" },
     { href: "/", label: "音楽家を探す" },
+    { href: "/messages", label: "メッセージ" },
+    { href: "/requests", label: "依頼管理" },
   ];
 
   return (
     <header className="border-b border-gray-200 bg-white">
       <div className="mx-auto max-w-7xl px-4">
         <div className="flex h-16 items-center justify-between">
-          {/* ロゴ */}
           <Link href="/" className="flex items-center space-x-2">
             <div className="text-2xl font-bold text-gray-900">
               Music<span className="text-green-600">Work</span>
             </div>
           </Link>
 
-          {/* デスクトップナビゲーション */}
           <nav className="hidden md:flex items-center space-x-8">
             {navLinks.map((link) => (
               <Link
@@ -43,7 +43,6 @@ export default function Header() {
             ))}
           </nav>
 
-          {/* アクションボタン + ハンバーガー */}
           <div className="flex items-center space-x-4">
             <Link
               href="/upload"
