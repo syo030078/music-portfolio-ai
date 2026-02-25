@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import ChatBox from '@/components/ChatBox';
+import AuthGuard from '@/components/AuthGuard';
 
 interface Message {
   uuid: string;
@@ -28,8 +29,9 @@ interface Conversation {
 export default function ConversationPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = use(params);
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,15 +40,11 @@ export default function ConversationPage({
     const fetchConversation = async () => {
       setError(null);
       const token = localStorage.getItem('jwt');
-      if (!token) {
-        setError('ログインしてください');
-        setLoading(false);
-        return;
-      }
+      if (!token) return;
 
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-        const res = await fetch(`${apiUrl}/api/v1/conversations/${params.id}`, {
+        const res = await fetch(`${apiUrl}/api/v1/conversations/${id}`, {
           cache: 'no-store',
           headers: {
             'Content-Type': 'application/json',
@@ -68,7 +66,7 @@ export default function ConversationPage({
     };
 
     fetchConversation();
-  }, [params.id]);
+  }, [id]);
 
   if (loading) {
     return (
@@ -91,6 +89,7 @@ export default function ConversationPage({
   const participantNames = conversation.participants.map((p) => p.name).join(', ');
 
   return (
+    <AuthGuard>
     <div className="mx-auto max-w-4xl px-4 py-8">
       <div className="mb-6">
         <Link href="/messages" className="text-blue-600 hover:underline">
@@ -130,5 +129,6 @@ export default function ConversationPage({
         </div>
       </div>
     </div>
+    </AuthGuard>
   );
 }
