@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import AuthGuard from '@/components/AuthGuard';
 import ProposalCard from '@/components/ProposalCard';
 
 interface Proposal {
@@ -17,7 +18,8 @@ interface Proposal {
   };
 }
 
-export default function ProposalsPage({ params }: { params: { id: string } }) {
+export default function ProposalsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,15 +29,11 @@ export default function ProposalsPage({ params }: { params: { id: string } }) {
     const fetchProposals = async () => {
       setError(null);
       const token = localStorage.getItem('jwt');
-      if (!token) {
-        setError('ログインしてください');
-        setLoading(false);
-        return;
-      }
+      if (!token) return;
 
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-        const res = await fetch(`${apiUrl}/api/v1/jobs/${params.id}/proposals`, {
+        const res = await fetch(`${apiUrl}/api/v1/jobs/${id}/proposals`, {
           headers: {
             'Content-Type': 'application/json',
             Authorization: token,
@@ -58,7 +56,7 @@ export default function ProposalsPage({ params }: { params: { id: string } }) {
     };
 
     fetchProposals();
-  }, [params.id]);
+  }, [id]);
 
   const handleAccepted = (conversationUuid: string) => {
     router.push(`/messages/${conversationUuid}`);
@@ -85,6 +83,7 @@ export default function ProposalsPage({ params }: { params: { id: string } }) {
   }
 
   return (
+    <AuthGuard>
     <div className="mx-auto max-w-7xl px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">提案一覧</h1>
 
@@ -103,5 +102,6 @@ export default function ProposalsPage({ params }: { params: { id: string } }) {
         </div>
       )}
     </div>
+    </AuthGuard>
   );
 }

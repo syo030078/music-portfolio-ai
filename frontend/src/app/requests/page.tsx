@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import AuthGuard from '@/components/AuthGuard';
 import DirectRequestCard from '@/components/DirectRequestCard';
 import type { DirectRequest } from '@/types';
 import { fetchDirectRequests } from '@/lib/api/directRequests';
@@ -17,12 +18,7 @@ export default function RequestsPage() {
   useEffect(() => {
     const token = localStorage.getItem('jwt');
     const userStr = localStorage.getItem('user');
-
-    if (!token || !userStr) {
-      setError('ログインしてください');
-      setLoading(false);
-      return;
-    }
+    if (!token || !userStr) return;
 
     try {
       const user = JSON.parse(userStr);
@@ -82,16 +78,12 @@ export default function RequestsPage() {
     return (
       <div className="mx-auto max-w-7xl px-4 py-8">
         <div className="rounded-lg bg-red-50 p-4 text-red-800">{error}</div>
-        {error.includes('ログイン') && (
-          <Link href="/login" className="mt-2 inline-block text-purple-600 underline hover:text-purple-800">
-            ログインページへ
-          </Link>
-        )}
       </div>
     );
   }
 
   return (
+    <AuthGuard>
     <div className="min-h-screen bg-gray-50">
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 py-8 md:py-12">
         <div className="mx-auto max-w-7xl px-4">
@@ -156,5 +148,6 @@ export default function RequestsPage() {
         </section>
       </main>
     </div>
+    </AuthGuard>
   );
 }
