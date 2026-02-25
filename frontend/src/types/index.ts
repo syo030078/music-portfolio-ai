@@ -177,14 +177,14 @@ export type DirectRequestCreatePayload = {
  * DirectRequests一覧取得APIのレスポンス型
  */
 export type DirectRequestsListResponse = {
-  direct_requests: DirectRequest[];
+  production_requests: DirectRequest[];
 };
 
 /**
  * DirectRequest詳細APIのレスポンス型
  */
 export type DirectRequestDetailResponse = {
-  direct_request: DirectRequest;
+  production_request: DirectRequest;
   conversation_uuid?: string;
 };
 
