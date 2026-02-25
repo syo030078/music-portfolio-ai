@@ -1,39 +1,39 @@
 import Link from "next/link";
 
 type MusicianCardProps = {
-  id: number;
+  uuid: string;
   name: string;
-  bio: string;
-  genre: string;
+  bio: string | null;
+  genres: string[];
   trackCount: number;
 };
 
 export default function MusicianCard({
-  id,
+  uuid,
   name,
   bio,
-  genre,
+  genres,
   trackCount,
 }: MusicianCardProps) {
   return (
-    <Link href={`/musicians/${id}`} className="group block">
+    <Link href={`/musicians/${uuid}`} className="group block">
       <div className="overflow-hidden rounded-lg border border-gray-200 bg-white transition-all hover:border-purple-500 hover:shadow-xl">
-        {/* プロフィール画像エリア */}
         <div className="flex h-48 items-center justify-center bg-gradient-to-br from-purple-500 to-blue-500">
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white text-3xl font-bold text-purple-600">
             {name.charAt(0)}
           </div>
         </div>
 
-        {/* 情報エリア */}
         <div className="p-5">
           <h3 className="mb-2 text-xl font-bold text-gray-900 group-hover:text-purple-600">
             {name}
           </h3>
-          <p className="mb-4 line-clamp-2 text-sm text-gray-600">{bio}</p>
+          {bio && (
+            <p className="mb-4 line-clamp-2 text-sm text-gray-600">{bio}</p>
+          )}
 
           <div className="mb-4 flex flex-wrap gap-2">
-            {genre.split(', ').map((g) => (
+            {genres.map((g) => (
               <span
                 key={g}
                 className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700"
