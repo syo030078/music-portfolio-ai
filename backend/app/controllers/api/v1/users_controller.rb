@@ -5,7 +5,9 @@ module Api
         render json: {
           uuid: current_user.uuid,
           email: current_user.email,
-          name: current_user.name
+          name: current_user.name,
+          is_musician: current_user.is_musician,
+          is_client: current_user.is_client
         }
       end
 
@@ -14,7 +16,9 @@ module Api
           render json: {
             uuid: current_user.uuid,
             email: current_user.email,
-            name: current_user.name
+            name: current_user.name,
+            is_musician: current_user.is_musician,
+            is_client: current_user.is_client
           }
         else
           render json: { errors: current_user.errors }, status: :unprocessable_entity
