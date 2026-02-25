@@ -22,6 +22,7 @@ export default function ChatBox({
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -40,6 +41,7 @@ export default function ChatBox({
     }
 
     setIsSending(true);
+    setSendError(null);
 
     try {
       const token = localStorage.getItem('jwt');
@@ -72,9 +74,8 @@ export default function ChatBox({
       const data = await res.json();
       setMessages([...messages, data.message]);
       setNewMessage('');
-    } catch (error) {
-      console.error('Error sending message:', error);
-      alert('メッセージの送信に失敗しました');
+    } catch {
+      setSendError('メッセージの送信に失敗しました');
     } finally {
       setIsSending(false);
     }
@@ -120,6 +121,12 @@ export default function ChatBox({
           </div>
         )}
       </div>
+
+      {sendError && (
+        <div className="rounded-lg bg-red-50 p-2 text-sm text-red-800 mb-2">
+          {sendError}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="flex gap-2">
         <input

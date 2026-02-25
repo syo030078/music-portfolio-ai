@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import AuthGuard from '@/components/AuthGuard';
 
 interface Conversation {
   uuid: string;
@@ -53,11 +54,7 @@ export default function MessagesPage() {
     const fetchConversations = async () => {
       setError(null);
       const token = localStorage.getItem('jwt');
-      if (!token) {
-        setError('ログインしてください');
-        setLoading(false);
-        return;
-      }
+      if (!token) return;
 
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -102,6 +99,7 @@ export default function MessagesPage() {
   }
 
   return (
+    <AuthGuard>
     <div className="mx-auto max-w-7xl px-4 py-8">
       <h1 className="text-2xl font-bold mb-8 md:text-3xl">メッセージ</h1>
 
@@ -162,5 +160,6 @@ export default function MessagesPage() {
         </div>
       )}
     </div>
+    </AuthGuard>
   );
 }
