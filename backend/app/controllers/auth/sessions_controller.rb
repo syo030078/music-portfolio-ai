@@ -9,7 +9,7 @@ class Auth::SessionsController < Devise::SessionsController
     render json: {
       message: 'signed_in',
       token: token ? "Bearer #{token}" : nil,
-      user: { id: resource.id, email: resource.email, name: resource.name }
+      user: { id: resource.id, uuid: resource.uuid, email: resource.email, name: resource.name }
     }, status: :ok
   end
 
