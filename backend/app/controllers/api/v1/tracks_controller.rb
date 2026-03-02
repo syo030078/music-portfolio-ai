@@ -10,6 +10,11 @@ class Api::V1::TracksController < ApplicationController
     # 基本クエリ（ユーザー情報を含む）
     tracks = Track.includes(:user)
 
+    # フィルタリング: ユーザー（UUID）
+    if params[:user_uuid].present?
+      tracks = tracks.joins(:user).where(users: { uuid: params[:user_uuid] })
+    end
+
     # フィルタリング: ジャンル
     tracks = tracks.where(genre: params[:genre]) if params[:genre].present?
 

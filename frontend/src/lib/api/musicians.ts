@@ -41,6 +41,7 @@ export async function fetchMusicians(): Promise<MusicianSummary[]> {
 }
 
 export async function fetchMusicianByUuid(uuid: string): Promise<MusicianSummary | null> {
-  const musicians = await fetchMusicians();
+  const data = await apiGet<TracksListResponse>(`/api/v1/tracks?user_uuid=${encodeURIComponent(uuid)}&per_page=50`);
+  const musicians = groupTracksByMusician(data.tracks);
   return musicians.find((m) => m.uuid === uuid) ?? null;
 }
