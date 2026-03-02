@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 
 interface Proposal {
@@ -32,15 +33,18 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 export default function ProposalCard({ proposal, onAccepted, onRejected }: ProposalCardProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needsLogin, setNeedsLogin] = useState(false);
   const isPending = proposal.status === 'submitted' || proposal.status === 'shortlisted';
   const statusInfo = STATUS_LABELS[proposal.status] ?? { label: proposal.status, color: 'bg-gray-100 text-gray-800' };
 
   const handleAction = async (action: 'accept' | 'reject') => {
     setLoading(true);
     setError(null);
+    setNeedsLogin(false);
 
     const token = localStorage.getItem('jwt');
     if (!token) {
+      setNeedsLogin(true);
       setError('ログインしてください');
       setLoading(false);
       return;
@@ -58,7 +62,12 @@ export default function ProposalCard({ proposal, onAccepted, onRejected }: Propo
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || data.errors?.join(', ') || '操作に失敗しました');
+        const message = data.error || data.errors?.join(', ') || '操作に失敗しました';
+        if (res.status === 401 || message.toLowerCase().includes('signature has expired')) {
+          setNeedsLogin(true);
+          throw new Error('ログインセッションが切れました。再度ログインしてください');
+        }
+        throw new Error(message);
       }
 
       const data = await res.json();
@@ -126,7 +135,12 @@ export default function ProposalCard({ proposal, onAccepted, onRejected }: Propo
 
       {error && (
         <div className="rounded-lg bg-red-50 p-3 text-sm text-red-800">
-          {error}
+          <p>{error}</p>
+          {needsLogin && (
+            <Link href="/login" className="mt-1 inline-block text-red-600 underline hover:text-red-800">
+              ログインページへ
+            </Link>
+          )}
         </div>
       )}
     </div>
