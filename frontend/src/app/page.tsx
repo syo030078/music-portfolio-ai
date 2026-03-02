@@ -26,12 +26,12 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-gradient-to-r from-purple-600 to-blue-600 py-16">
+      <div className="bg-gradient-to-r from-green-600 to-green-700 py-16">
         <div className="mx-auto max-w-7xl px-4">
           <h1 className="mb-4 text-3xl font-bold text-white md:text-5xl">
             プロの音楽家を見つけよう
           </h1>
-          <p className="text-lg text-purple-100 md:text-xl">
+          <p className="text-lg text-green-100 md:text-xl">
             あなたのプロジェクトにぴったりの音楽家がここにいます
           </p>
         </div>

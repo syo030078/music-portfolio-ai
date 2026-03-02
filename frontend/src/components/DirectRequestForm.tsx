@@ -107,7 +107,7 @@ export default function DirectRequestForm({ musicianUuid, musicianName }: Direct
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="例: CM用BGM制作"
-            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
             required
           />
         </div>
@@ -122,7 +122,7 @@ export default function DirectRequestForm({ musicianUuid, musicianName }: Direct
             onChange={(e) => setDescription(e.target.value)}
             placeholder="依頼の詳細を記入してください（10文字以上）"
             rows={4}
-            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
             required
           />
         </div>
@@ -139,7 +139,7 @@ export default function DirectRequestForm({ musicianUuid, musicianName }: Direct
               onChange={(e) => setBudgetJpy(e.target.value)}
               placeholder="例: 50000"
               min="1000"
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
               required
             />
           </div>
@@ -156,7 +156,7 @@ export default function DirectRequestForm({ musicianUuid, musicianName }: Direct
               placeholder="例: 14"
               min="1"
               max="365"
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
               required
             />
           </div>
@@ -165,7 +165,7 @@ export default function DirectRequestForm({ musicianUuid, musicianName }: Direct
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-lg bg-purple-600 px-8 py-3 font-semibold text-white transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full rounded-lg bg-green-600 px-8 py-3 font-semibold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? '送信中...' : '制作を依頼する'}
         </button>
