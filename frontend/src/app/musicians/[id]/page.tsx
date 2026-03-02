@@ -43,9 +43,9 @@ export default function MusicianDetailPage({
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="bg-gradient-to-r from-purple-600 to-blue-600 py-16">
+        <div className="bg-gradient-to-r from-green-600 to-green-700 py-16">
           <div className="mx-auto max-w-7xl px-4">
-            <div className="h-10 w-48 animate-pulse rounded bg-purple-400" />
+            <div className="h-10 w-48 animate-pulse rounded bg-green-400" />
           </div>
         </div>
         <div className="mx-auto max-w-7xl px-4 py-12">
@@ -62,7 +62,7 @@ export default function MusicianDetailPage({
           <div className="rounded-lg bg-red-50 p-4 text-red-800">
             {error || '音楽家が見つかりません'}
           </div>
-          <Link href="/" className="mt-4 inline-block text-purple-600 hover:underline">
+          <Link href="/" className="mt-4 inline-block text-green-600 hover:underline">
             ← 音楽家一覧に戻る
           </Link>
         </div>
@@ -72,11 +72,11 @@ export default function MusicianDetailPage({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-gradient-to-r from-purple-600 to-blue-600 py-16">
+      <div className="bg-gradient-to-r from-green-600 to-green-700 py-16">
         <div className="mx-auto max-w-7xl px-4">
           <Link
             href="/"
-            className="mb-6 inline-flex items-center text-purple-100 hover:text-white"
+            className="mb-6 inline-flex items-center text-green-100 hover:text-white"
           >
             ← 音楽家一覧に戻る
           </Link>
@@ -84,7 +84,7 @@ export default function MusicianDetailPage({
             {musician.name}
           </h1>
           {musician.bio && (
-            <p className="mb-4 text-lg text-purple-100 md:text-xl">{musician.bio}</p>
+            <p className="mb-4 text-lg text-green-100 md:text-xl">{musician.bio}</p>
           )}
           {musician.genres.length > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -115,7 +115,7 @@ export default function MusicianDetailPage({
                   {musician.tracks.map((track) => (
                     <div
                       key={track.uuid}
-                      className="overflow-hidden rounded-lg border border-gray-200 bg-white transition-all hover:border-purple-500 hover:shadow-lg"
+                      className="overflow-hidden rounded-lg border border-gray-200 bg-white transition-all hover:border-green-500 hover:shadow-lg"
                     >
                       <div className="p-6">
                         <h3 className="mb-4 text-xl font-bold text-gray-900">
@@ -146,7 +146,7 @@ export default function MusicianDetailPage({
                             href={track.yt_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="mt-4 inline-block text-sm text-purple-600 hover:underline"
+                            className="mt-4 inline-block text-sm text-green-600 hover:underline"
                           >
                             YouTube で聴く →
                           </a>

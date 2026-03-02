@@ -66,88 +66,82 @@ export default function RequestsPage() {
     (r) => r.musician.uuid === currentUserUuid
   );
 
-  if (loading) {
-    return (
-      <div className="mx-auto max-w-7xl px-4 py-8">
-        <p className="text-gray-500">読み込み中...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="mx-auto max-w-7xl px-4 py-8">
-        <div className="rounded-lg bg-red-50 p-4 text-red-800">{error}</div>
-      </div>
-    );
-  }
-
   return (
     <AuthGuard>
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-gradient-to-r from-purple-600 to-blue-600 py-8 md:py-12">
-        <div className="mx-auto max-w-7xl px-4">
-          <h1 className="text-2xl font-bold text-white md:text-4xl">
-            依頼管理
-          </h1>
-          <p className="mt-2 text-purple-100">
-            送信した依頼と受け取った依頼を管理します
-          </p>
+      {loading ? (
+        <div className="mx-auto max-w-7xl px-4 py-8">
+          <p className="text-gray-500">読み込み中...</p>
         </div>
-      </div>
+      ) : error ? (
+        <div className="mx-auto max-w-7xl px-4 py-8">
+          <div className="rounded-lg bg-red-50 p-4 text-red-800">{error}</div>
+        </div>
+      ) : (
+        <div className="min-h-screen bg-gray-50">
+          <div className="bg-gradient-to-r from-green-600 to-green-700 py-8 md:py-12">
+            <div className="mx-auto max-w-7xl px-4">
+              <h1 className="text-2xl font-bold text-white md:text-4xl">
+                依頼管理
+              </h1>
+              <p className="mt-2 text-green-100">
+                送信した依頼と受け取った依頼を管理します
+              </p>
+            </div>
+          </div>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 space-y-10">
-        <section>
-          <h2 className="text-xl font-bold text-gray-900 mb-4">
-            受け取った依頼（{receivedRequests.length}件）
-          </h2>
-          {receivedRequests.length === 0 ? (
-            <p className="text-gray-500 py-4">受け取った依頼はまだありません</p>
-          ) : (
-            <div className="space-y-4">
-              {receivedRequests.map((req) => (
-                <DirectRequestCard
-                  key={req.uuid}
-                  request={req}
-                  isReceived={true}
-                  onAccepted={handleAccepted}
-                  onRejected={handleRejected}
-                />
-              ))}
-            </div>
-          )}
-        </section>
+          <main className="mx-auto max-w-7xl px-4 py-8 space-y-10">
+            <section>
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                受け取った依頼（{receivedRequests.length}件）
+              </h2>
+              {receivedRequests.length === 0 ? (
+                <p className="text-gray-500 py-4">受け取った依頼はまだありません</p>
+              ) : (
+                <div className="space-y-4">
+                  {receivedRequests.map((req) => (
+                    <DirectRequestCard
+                      key={req.uuid}
+                      request={req}
+                      isReceived={true}
+                      onAccepted={handleAccepted}
+                      onRejected={handleRejected}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
 
-        <section>
-          <h2 className="text-xl font-bold text-gray-900 mb-4">
-            送信した依頼（{sentRequests.length}件）
-          </h2>
-          {sentRequests.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-500 mb-4">送信した依頼はまだありません</p>
-              <Link
-                href="/"
-                className="inline-block rounded-lg bg-purple-600 px-6 py-2 text-white hover:bg-purple-700 transition-colors"
-              >
-                音楽家を探す
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {sentRequests.map((req) => (
-                <DirectRequestCard
-                  key={req.uuid}
-                  request={req}
-                  isReceived={false}
-                  onAccepted={handleAccepted}
-                  onRejected={handleRejected}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-      </main>
-    </div>
+            <section>
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                送信した依頼（{sentRequests.length}件）
+              </h2>
+              {sentRequests.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 mb-4">送信した依頼はまだありません</p>
+                  <Link
+                    href="/"
+                    className="inline-block rounded-lg bg-green-600 px-6 py-2 text-white hover:bg-green-700 transition-colors"
+                  >
+                    音楽家を探す
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {sentRequests.map((req) => (
+                    <DirectRequestCard
+                      key={req.uuid}
+                      request={req}
+                      isReceived={false}
+                      onAccepted={handleAccepted}
+                      onRejected={handleRejected}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+          </main>
+        </div>
+      )}
     </AuthGuard>
   );
 }
