@@ -1,9 +1,14 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 
 interface ProposalFormProps {
   jobUuid: string;
+}
+
+function isAuthError(status: number, message: string): boolean {
+  return status === 401 || message.toLowerCase().includes('signature has expired');
 }
 
 export default function ProposalForm({ jobUuid }: ProposalFormProps) {
@@ -12,15 +17,18 @@ export default function ProposalForm({ jobUuid }: ProposalFormProps) {
   const [coverMessage, setCoverMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needsLogin, setNeedsLogin] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
+    setNeedsLogin(false);
 
     const token = localStorage.getItem('jwt');
     if (!token) {
+      setNeedsLogin(true);
       setError('ログインしてください');
       return;
     }
@@ -45,15 +53,19 @@ export default function ProposalForm({ jobUuid }: ProposalFormProps) {
 
       if (!res.ok) {
         const text = await res.text();
+        let message = `応募に失敗しました (${res.status})`;
         try {
           const data = JSON.parse(text);
-          throw new Error(data.error || data.errors?.join(', ') || '応募に失敗しました');
-        } catch (parseErr) {
-          if (parseErr instanceof SyntaxError) {
-            throw new Error(text || `応募に失敗しました (${res.status})`);
-          }
-          throw parseErr;
+          message = data.error || data.errors?.join(', ') || message;
+        } catch {
+          if (text) message = text;
         }
+
+        if (isAuthError(res.status, message)) {
+          setNeedsLogin(true);
+          throw new Error('ログインセッションが切れました。再度ログインしてください');
+        }
+        throw new Error(message);
       }
 
       setSuccess('応募が完了しました');
@@ -93,7 +105,7 @@ export default function ProposalForm({ jobUuid }: ProposalFormProps) {
             required
             value={quoteTotalJpy}
             onChange={(e) => setQuoteTotalJpy(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
             disabled={loading}
           />
         </div>
@@ -108,7 +120,7 @@ export default function ProposalForm({ jobUuid }: ProposalFormProps) {
             required
             value={deliveryDays}
             onChange={(e) => setDeliveryDays(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
             disabled={loading}
           />
         </div>
@@ -120,7 +132,7 @@ export default function ProposalForm({ jobUuid }: ProposalFormProps) {
           <textarea
             value={coverMessage}
             onChange={(e) => setCoverMessage(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
             rows={4}
             disabled={loading}
           />
@@ -129,7 +141,7 @@ export default function ProposalForm({ jobUuid }: ProposalFormProps) {
         <button
           type="submit"
           disabled={loading}
-          className="rounded-lg bg-blue-600 px-6 py-2 font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-lg bg-green-600 px-6 py-2 font-semibold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? '送信中...' : '応募を送信'}
         </button>
@@ -137,7 +149,12 @@ export default function ProposalForm({ jobUuid }: ProposalFormProps) {
 
       {error && (
         <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">
-          {error}
+          <p>{error}</p>
+          {needsLogin && (
+            <Link href="/login" className="mt-1 inline-block text-red-600 underline hover:text-red-800">
+              ログインページへ
+            </Link>
+          )}
         </div>
       )}
     </div>
