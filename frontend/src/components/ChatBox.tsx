@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 
 interface Message {
@@ -23,6 +24,7 @@ export default function ChatBox({
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [needsLogin, setNeedsLogin] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -42,10 +44,12 @@ export default function ChatBox({
 
     setIsSending(true);
     setSendError(null);
+    setNeedsLogin(false);
 
     try {
       const token = localStorage.getItem('jwt');
       if (!token) {
+        setNeedsLogin(true);
         throw new Error('ログインしてください');
       }
 
@@ -68,14 +72,18 @@ export default function ChatBox({
       );
 
       if (!res.ok) {
-        throw new Error('Failed to send message');
+        if (res.status === 401) {
+          setNeedsLogin(true);
+          throw new Error('ログインセッションが切れました。再度ログインしてください');
+        }
+        throw new Error('メッセージの送信に失敗しました');
       }
 
       const data = await res.json();
       setMessages([...messages, data.message]);
       setNewMessage('');
-    } catch {
-      setSendError('メッセージの送信に失敗しました');
+    } catch (err) {
+      setSendError(err instanceof Error ? err.message : 'メッセージの送信に失敗しました');
     } finally {
       setIsSending(false);
     }
@@ -124,7 +132,12 @@ export default function ChatBox({
 
       {sendError && (
         <div className="rounded-lg bg-red-50 p-2 text-sm text-red-800 mb-2">
-          {sendError}
+          <p>{sendError}</p>
+          {needsLogin && (
+            <Link href="/login" className="mt-1 inline-block text-red-600 underline hover:text-red-800">
+              ログインページへ
+            </Link>
+          )}
         </div>
       )}
 
@@ -134,13 +147,13 @@ export default function ChatBox({
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           placeholder="メッセージを入力..."
-          className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
           disabled={isSending}
         />
         <button
           type="submit"
           disabled={isSending || !newMessage.trim()}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           {isSending ? '送信中...' : '送信'}
         </button>
