@@ -4,7 +4,7 @@ on:
   workflow_run:
     workflows: [Test]
     types: [completed]
-    branches: [main, feature/ec2-deploy]
+    branches: [main]
 
 jobs:
   deploy:
@@ -19,11 +19,10 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
-          script_stop: true
           command_timeout: 10m
           script: |
             cd ~/music-portfolio-ai
-            git pull origin ${{ github.event.workflow_run.head_branch }}
+            git pull origin main
             docker compose -f docker-compose.production.yml build
             docker compose -f docker-compose.production.yml up -d db
             sleep 5
