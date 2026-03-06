@@ -6,6 +6,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
+RUN rm -f .env .env.local .env.production .env.production.local
 
 RUN mkdir -p public && npm run build
 
