@@ -22,7 +22,7 @@ interface Job {
 }
 
 async function getJob(id: string): Promise<Job | null> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
   try {
     const res = await fetch(`${apiUrl}/api/v1/jobs/${id}`, {
       cache: 'no-store',

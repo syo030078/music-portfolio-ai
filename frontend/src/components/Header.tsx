@@ -33,7 +33,7 @@ export default function Header() {
 
   const handleLogout = async () => {
     const token = localStorage.getItem("jwt");
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
     try {
       await fetch(`${API_BASE_URL}/auth/sign_in`, {

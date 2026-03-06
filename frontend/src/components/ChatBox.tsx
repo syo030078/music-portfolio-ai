@@ -54,7 +54,7 @@ export default function ChatBox({
       }
 
       const apiUrl =
-        process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+        process.env.NEXT_PUBLIC_API_URL || '';
       const res = await fetch(
         `${apiUrl}/api/v1/conversations/${conversationUuid}/messages`,
         {
