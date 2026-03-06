@@ -1,0 +1,9 @@
+.git
+.gitignore
+log/*
+tmp/*
+storage/*
+spec/
+.rspec
+.rubocop.yml
+README.md
