@@ -29,6 +29,7 @@ jobs:
             sleep 5
             docker compose -f docker-compose.production.yml run --rm backend \
               bundle exec rails db:migrate
+            docker compose -f docker-compose.production.yml up -d --force-recreate nginx
             docker compose -f docker-compose.production.yml up -d
             sleep 15
             curl -f http://localhost/api/v1/health
