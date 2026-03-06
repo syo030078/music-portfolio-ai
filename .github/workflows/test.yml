@@ -3,7 +3,7 @@ name: Test
 on:
   pull_request:
   push:
-    branches: [main, feature/ec2-deploy]
+    branches: [main]
 
 jobs:
   backend:
