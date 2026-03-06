@@ -1,0 +1,45 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [Test]
+    types: [completed]
+    branches: [main, feature/ec2-deploy]
+
+jobs:
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script_stop: true
+          command_timeout: 10m
+          script: |
+            cd ~/music-portfolio-ai
+            git pull origin ${{ github.event.workflow_run.head_branch }}
+            docker compose -f docker-compose.production.yml build
+            docker compose -f docker-compose.production.yml up -d db
+            sleep 5
+            docker compose -f docker-compose.production.yml run --rm backend \
+              bundle exec rails db:migrate
+            docker compose -f docker-compose.production.yml up -d
+            sleep 15
+            curl -f http://localhost/api/v1/health
+
+      - name: Health check
+        run: |
+          echo "::add-mask::${{ secrets.EC2_HOST }}"
+          sleep 10
+          STATUS=$(curl -sf "http://${{ secrets.EC2_HOST }}/api/v1/health" 2>/dev/null | jq -r '.status' 2>/dev/null || echo "failed")
+          if [ "$STATUS" = "ok" ]; then
+            echo "Health check passed!"
+          else
+            echo "WARNING: Health check did not return ok (status: $STATUS)"
+          fi
