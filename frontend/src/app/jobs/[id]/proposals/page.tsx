@@ -39,7 +39,7 @@ export default function ProposalsPage({ params }: { params: Promise<{ id: string
       if (!token) return;
 
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
 
         const [proposalsRes, jobRes] = await Promise.all([
           fetch(`${apiUrl}/api/v1/jobs/${id}/proposals`, {
