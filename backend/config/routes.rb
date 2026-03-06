@@ -6,6 +6,7 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
+      get "health", to: "health#show"
       resource :user, only: [:show, :update]
       resources :tracks
       resources :jobs, only: [:index, :show], param: :uuid do
