@@ -1,56 +1,43 @@
 import Link from 'next/link';
+import EmptyState from '@/components/EmptyState';
+import { fetchJobs } from '@/lib/api/jobs';
+import { formatBudget } from '@/lib/format';
 
-interface Job {
-  uuid: string;
-  title: string;
-  description: string;
-  budget_jpy: number | null;
-  budget_min_jpy: number | null;
-  budget_max_jpy: number | null;
-  is_remote: boolean;
-  published_at: string;
-  client: {
-    uuid: string;
-    name: string;
-  };
-}
-
-async function getJobs(): Promise<Job[]> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-  try {
-    const res = await fetch(`${apiUrl}/api/v1/jobs`, {
-      cache: 'no-store',
-      signal: AbortSignal.timeout(5000),
-    });
-
-    if (!res.ok) {
-      return [];
-    }
-
-    const data = await res.json();
-    return data.jobs;
-  } catch {
-    return [];
-  }
-}
-
-function formatBudget(job: Job): string {
-  if (job.budget_jpy) {
-    return `¥${job.budget_jpy.toLocaleString()}`;
-  }
-  if (job.budget_min_jpy && job.budget_max_jpy) {
-    return `¥${job.budget_min_jpy.toLocaleString()} - ¥${job.budget_max_jpy.toLocaleString()}`;
-  }
-  return '要相談';
-}
+export const dynamic = 'force-dynamic';
 
 export default async function JobsPage() {
-  const jobs = await getJobs();
+  let jobs;
+  try {
+    jobs = await fetchJobs();
+  } catch {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-gradient-to-r from-green-700 via-green-600 to-green-500 py-12">
+          <div className="mx-auto max-w-7xl px-4">
+            <h1 className="text-2xl font-bold text-white mb-4 md:text-4xl">
+              音楽制作の案件を探す
+            </h1>
+          </div>
+        </div>
+        <div className="mx-auto max-w-7xl px-4 py-8">
+          <div className="rounded-lg bg-red-50 border border-red-200 p-6 text-center">
+            <p className="text-red-800 mb-4">案件の取得に失敗しました</p>
+            <Link
+              href="/jobs"
+              className="inline-block rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+            >
+              再試行
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* ヒーローセクション */}
-      <div className="bg-gradient-to-r from-green-600 to-green-700 py-12">
+      <div className="bg-gradient-to-r from-green-700 via-green-600 to-green-500 py-12">
         <div className="mx-auto max-w-7xl px-4">
           <h1 className="text-2xl font-bold text-white mb-4 md:text-4xl">
             音楽制作の案件を探す
@@ -70,23 +57,25 @@ export default async function JobsPage() {
         </div>
 
         {jobs.length === 0 ? (
-          <div className="rounded-lg bg-white p-12 text-center shadow-sm">
-            <p className="text-gray-500">現在公開中の案件はありません。</p>
-          </div>
+          <EmptyState
+            icon="📋"
+            title="現在公開中の案件はありません"
+            description="新しい案件が投稿されるまでお待ちください"
+          />
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {jobs.map((job) => (
               <Link
                 key={job.uuid}
                 href={`/jobs/${job.uuid}`}
-                className="group block"
+                className="group block h-full"
               >
-                <div className="rounded-lg border border-gray-200 bg-white p-6 transition-all hover:border-green-500 hover:shadow-lg">
-                  <h2 className="mb-3 text-xl font-bold text-gray-900 group-hover:text-green-600">
+                <div className="flex h-full flex-col rounded-lg border border-gray-200 bg-white p-6 transition-shadow hover:shadow-lg">
+                  <h2 className="mb-3 text-xl font-bold text-gray-900 group-hover:text-green-600 transition-colors line-clamp-2">
                     {job.title}
                   </h2>
 
-                  <p className="mb-4 line-clamp-2 text-sm text-gray-600">
+                  <p className="mb-4 line-clamp-2 text-sm text-gray-600 flex-grow">
                     {job.description}
                   </p>
 
@@ -98,14 +87,16 @@ export default async function JobsPage() {
                       </span>
                     </div>
 
-                    {job.is_remote && (
-                      <div className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
-                        リモートOK
-                      </div>
-                    )}
+                    <div className="h-6">
+                      {job.is_remote && (
+                        <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+                          リモートOK
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="flex items-center border-t pt-4">
+                  <div className="flex items-center border-t pt-4 mt-auto">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-sm font-medium text-gray-600">
                       {job.client.name.charAt(0)}
                     </div>

@@ -2,59 +2,10 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import ContactButton from '@/components/ContactButton';
 import ProposalForm from '@/components/ProposalForm';
+import { fetchJob } from '@/lib/api/jobs';
+import { formatBudget, formatDate } from '@/lib/format';
 
-interface Job {
-  uuid: string;
-  title: string;
-  description: string;
-  budget_jpy: number | null;
-  budget_min_jpy: number | null;
-  budget_max_jpy: number | null;
-  is_remote: boolean;
-  delivery_due_on: string | null;
-  published_at: string;
-  created_at: string;
-  client: {
-    uuid: string;
-    name: string;
-    bio: string | null;
-  };
-}
-
-async function getJob(id: string): Promise<Job | null> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-  try {
-    const res = await fetch(`${apiUrl}/api/v1/jobs/${id}`, {
-      cache: 'no-store',
-      signal: AbortSignal.timeout(5000),
-    });
-
-    if (!res.ok) {
-      return null;
-    }
-
-    const data = await res.json();
-    return data.job;
-  } catch {
-    return null;
-  }
-}
-
-function formatBudget(job: Job): string {
-  if (job.budget_jpy) {
-    return `¥${job.budget_jpy.toLocaleString()}`;
-  }
-  if (job.budget_min_jpy && job.budget_max_jpy) {
-    return `¥${job.budget_min_jpy.toLocaleString()} - ¥${job.budget_max_jpy.toLocaleString()}`;
-  }
-  return '要相談';
-}
-
-function formatDate(dateString: string | null): string {
-  if (!dateString) return '-';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('ja-JP');
-}
+export const dynamic = 'force-dynamic';
 
 export default async function JobDetailPage({
   params,
@@ -62,15 +13,17 @@ export default async function JobDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const job = await getJob(id);
 
-  if (!job) {
+  let job;
+  try {
+    job = await fetchJob(id);
+  } catch {
     notFound();
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-gradient-to-r from-green-600 to-green-700 py-8 md:py-12">
+      <div className="bg-gradient-to-r from-green-700 via-green-600 to-green-500 py-8 md:py-12">
         <div className="mx-auto max-w-7xl px-4">
           <Link
             href="/jobs"
