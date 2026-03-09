@@ -104,8 +104,26 @@ export default function Header() {
                     楽曲アップロード
                   </Link>
                 )}
-                <span className="hidden sm:inline-block text-sm text-gray-700">
+                {user.is_client && (
+                  <Link
+                    href="/jobs/new"
+                    className="hidden sm:inline-block rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                  >
+                    案件を投稿
+                  </Link>
+                )}
+                <span className="hidden sm:inline-flex items-center gap-1.5 text-sm text-gray-700">
                   {user.name}
+                  {user.is_musician && (
+                    <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
+                      音楽家
+                    </span>
+                  )}
+                  {user.is_client && (
+                    <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+                      クライアント
+                    </span>
+                  )}
                 </span>
                 <button
                   type="button"
@@ -178,8 +196,29 @@ export default function Header() {
                     楽曲アップロード
                   </Link>
                 )}
+                {user.is_client && (
+                  <Link
+                    href="/jobs/new"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block rounded-md bg-blue-600 px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                  >
+                    案件を投稿
+                  </Link>
+                )}
                 <div className="pt-2 border-t border-gray-200">
-                  <span className="block text-sm text-gray-700 mb-2">{user.name}</span>
+                  <div className="flex items-center gap-1.5 text-sm text-gray-700 mb-2">
+                    {user.name}
+                    {user.is_musician && (
+                      <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
+                        音楽家
+                      </span>
+                    )}
+                    {user.is_client && (
+                      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+                        クライアント
+                      </span>
+                    )}
+                  </div>
                   <button
                     type="button"
                     onClick={() => {
