@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 interface Proposal {
   uuid: string;
@@ -34,6 +35,7 @@ export default function ProposalCard({ proposal, onAccepted, onRejected }: Propo
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsLogin, setNeedsLogin] = useState(false);
+  const [showRejectConfirm, setShowRejectConfirm] = useState(false);
   const isPending = proposal.status === 'submitted' || proposal.status === 'shortlisted';
   const statusInfo = STATUS_LABELS[proposal.status] ?? { label: proposal.status, color: 'bg-gray-100 text-gray-800' };
 
@@ -115,22 +117,37 @@ export default function ProposalCard({ proposal, onAccepted, onRejected }: Propo
       )}
 
       {isPending && (
-        <div className="flex gap-3">
-          <button
-            onClick={() => handleAction('accept')}
-            disabled={loading}
-            className="rounded-md bg-green-600 px-4 py-2 text-white font-semibold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            承諾する
-          </button>
-          <button
-            onClick={() => handleAction('reject')}
-            disabled={loading}
-            className="rounded-md bg-gray-200 px-4 py-2 text-gray-800 font-semibold hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            拒否する
-          </button>
-        </div>
+        <>
+          <div className="flex gap-3">
+            <button
+              onClick={() => handleAction('accept')}
+              disabled={loading}
+              className="rounded-md bg-green-600 px-4 py-2 text-white font-semibold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              承諾する
+            </button>
+            <button
+              onClick={() => setShowRejectConfirm(true)}
+              disabled={loading}
+              className="rounded-md bg-gray-200 px-4 py-2 text-gray-800 font-semibold hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              拒否する
+            </button>
+          </div>
+          <ConfirmDialog
+            isOpen={showRejectConfirm}
+            title="提案を拒否しますか？"
+            message={`${proposal.musician.name} さんの提案を拒否します。この操作は取り消せません。`}
+            confirmLabel="拒否する"
+            variant="danger"
+            isLoading={loading}
+            onConfirm={() => {
+              setShowRejectConfirm(false);
+              handleAction('reject');
+            }}
+            onCancel={() => setShowRejectConfirm(false)}
+          />
+        </>
       )}
 
       {error && (

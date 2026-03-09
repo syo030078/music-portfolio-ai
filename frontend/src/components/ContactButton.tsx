@@ -3,19 +3,19 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { apiGet, apiPost } from '@/lib/api/client';
 
 interface ContactButtonProps {
   jobUuid: string;
   clientUuid: string;
 }
 
-async function parseJsonSafe(res: Response): Promise<Record<string, unknown>> {
-  const text = await res.text();
-  try {
-    return JSON.parse(text);
-  } catch {
-    throw new Error(text || `エラーが発生しました (${res.status})`);
-  }
+interface ConversationListResponse {
+  conversations: Array<{ job_uuid: string; uuid: string }>;
+}
+
+interface ConversationCreateResponse {
+  conversation: { uuid: string };
 }
 
 export default function ContactButton({ jobUuid, clientUuid }: ContactButtonProps) {
@@ -36,55 +36,26 @@ export default function ContactButton({ jobUuid, clientUuid }: ContactButtonProp
         throw new Error('ログインしてください');
       }
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-
       // 既存の会話を検索
-      const conversationsRes = await fetch(`${apiUrl}/api/v1/conversations`, {
-        cache: 'no-store',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: token,
-        },
-      });
-
-      if (conversationsRes.status === 401) {
-        setNeedsLogin(true);
-        throw new Error('ログインセッションが切れました。再度ログインしてください');
-      }
-
-      if (!conversationsRes.ok) {
-        throw new Error('会話一覧の取得に失敗しました');
-      }
-
-      const conversationsData = await parseJsonSafe(conversationsRes);
-      const conversations = conversationsData.conversations as Array<{ job_uuid: string; uuid: string }>;
-
-      // job_uuidが一致する会話を検索
-      const existing = conversations.find((c) => c.job_uuid === jobUuid);
+      const data = await apiGet<ConversationListResponse>('/api/v1/conversations', token);
+      const existing = data.conversations.find((c) => c.job_uuid === jobUuid);
 
       if (existing) {
         router.push(`/messages/${existing.uuid}`);
       } else {
-        const createRes = await fetch(`${apiUrl}/api/v1/conversations`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: token },
-          body: JSON.stringify({
-            conversation: { job_uuid: jobUuid },
-            participant_uuids: [clientUuid]
-          })
-        });
-
-        if (!createRes.ok) {
-          const errorData = await parseJsonSafe(createRes);
-          throw new Error((errorData.error as string) || '会話の作成に失敗しました');
-        }
-
-        const createData = await parseJsonSafe(createRes);
-        const conversation = createData.conversation as { uuid: string };
-        router.push(`/messages/${conversation.uuid}`);
+        const createData = await apiPost<ConversationCreateResponse>(
+          '/api/v1/conversations',
+          token,
+          { conversation: { job_uuid: jobUuid }, participant_uuids: [clientUuid] }
+        );
+        router.push(`/messages/${createData.conversation.uuid}`);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '不明なエラーが発生しました');
+      const message = err instanceof Error ? err.message : '不明なエラーが発生しました';
+      if (message.includes('ログイン')) {
+        setNeedsLogin(true);
+      }
+      setError(message);
     } finally {
       setLoading(false);
     }
