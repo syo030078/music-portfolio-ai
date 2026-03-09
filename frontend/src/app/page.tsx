@@ -1,11 +1,14 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import MusicianCard from '@/components/MusicianCard';
 import type { MusicianSummary } from '@/types';
 import { fetchMusicians } from '@/lib/api/musicians';
+import { useUser } from '@/hooks/useUser';
 
 export default function HomePage() {
+  const { isLoggedIn, isMusician, isClient } = useUser();
   const [musicians, setMusicians] = useState<MusicianSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +37,56 @@ export default function HomePage() {
           <p className="text-lg text-green-100 md:text-xl">
             あなたのプロジェクトにぴったりの音楽家がここにいます
           </p>
+          <div className="mt-8 flex flex-wrap gap-4">
+            {!isLoggedIn && (
+              <>
+                <Link
+                  href="/signup"
+                  className="rounded-lg bg-white px-6 py-3 font-semibold text-green-700 transition-colors hover:bg-green-50"
+                >
+                  新規登録
+                </Link>
+                <Link
+                  href="/jobs"
+                  className="rounded-lg border-2 border-white px-6 py-3 font-semibold text-white transition-colors hover:bg-white/10"
+                >
+                  案件を探す
+                </Link>
+              </>
+            )}
+            {isMusician && (
+              <>
+                <Link
+                  href="/upload"
+                  className="rounded-lg bg-white px-6 py-3 font-semibold text-green-700 transition-colors hover:bg-green-50"
+                >
+                  楽曲をアップロード
+                </Link>
+                <Link
+                  href="/jobs"
+                  className="rounded-lg border-2 border-white px-6 py-3 font-semibold text-white transition-colors hover:bg-white/10"
+                >
+                  案件を探す
+                </Link>
+              </>
+            )}
+            {isClient && (
+              <>
+                <Link
+                  href="/jobs/new"
+                  className="rounded-lg bg-white px-6 py-3 font-semibold text-green-700 transition-colors hover:bg-green-50"
+                >
+                  案件を投稿
+                </Link>
+                <Link
+                  href="/"
+                  className="rounded-lg border-2 border-white px-6 py-3 font-semibold text-white transition-colors hover:bg-white/10"
+                >
+                  音楽家を探す
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </div>
 

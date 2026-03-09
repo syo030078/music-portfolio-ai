@@ -1,7 +1,7 @@
 export default function JobDetailLoading() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-gradient-to-r from-green-600 to-green-700 py-8 md:py-12">
+      <div className="bg-gradient-to-r from-green-700 via-green-600 to-green-500 py-8 md:py-12">
         <div className="mx-auto max-w-7xl px-4">
           <div className="mb-4 h-4 w-32 animate-pulse rounded bg-green-500/50" />
           <div className="h-8 w-96 animate-pulse rounded bg-green-500" />

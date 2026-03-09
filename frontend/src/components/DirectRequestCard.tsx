@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { DirectRequest } from '@/types';
 import { acceptDirectRequest, rejectDirectRequest } from '@/lib/api/directRequests';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 interface DirectRequestCardProps {
   request: DirectRequest;
@@ -25,6 +26,7 @@ export default function DirectRequestCard({
 }: DirectRequestCardProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showRejectConfirm, setShowRejectConfirm] = useState(false);
 
   const statusInfo = STATUS_LABELS[request.status];
 
@@ -122,12 +124,25 @@ export default function DirectRequestCard({
             {loading ? '処理中...' : '承諾する'}
           </button>
           <button
-            onClick={handleReject}
+            onClick={() => setShowRejectConfirm(true)}
             disabled={loading}
             className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
           >
             {loading ? '処理中...' : '辞退する'}
           </button>
+          <ConfirmDialog
+            isOpen={showRejectConfirm}
+            title="依頼を辞退しますか？"
+            message={`${request.client.name} さんからの依頼「${request.title}」を辞退します。この操作は取り消せません。`}
+            confirmLabel="辞退する"
+            variant="danger"
+            isLoading={loading}
+            onConfirm={() => {
+              setShowRejectConfirm(false);
+              handleReject();
+            }}
+            onCancel={() => setShowRejectConfirm(false)}
+          />
         </div>
       )}
     </div>

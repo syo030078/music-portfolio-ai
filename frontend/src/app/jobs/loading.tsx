@@ -1,7 +1,7 @@
 export default function JobsLoading() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-gradient-to-r from-green-600 to-green-700 py-12">
+      <div className="bg-gradient-to-r from-green-700 via-green-600 to-green-500 py-12">
         <div className="mx-auto max-w-7xl px-4">
           <div className="h-8 w-64 animate-pulse rounded bg-green-500" />
           <div className="mt-4 h-5 w-96 animate-pulse rounded bg-green-500/50" />

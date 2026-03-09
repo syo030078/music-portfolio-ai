@@ -92,8 +92,7 @@ export default function UploadPage() {
       } else {
         setAnalysisResult({ error: data.error || "解析に失敗しました" });
       }
-    } catch (error) {
-      console.error("解析エラー:", error);
+    } catch {
       setAnalysisResult({ error: "サーバーとの通信に失敗しました" });
     } finally {
       setLoading(false);
@@ -126,8 +125,7 @@ export default function UploadPage() {
       } else {
         setAnalysisResult({ error: data.error || "登録に失敗しました" });
       }
-    } catch (error) {
-      console.error("登録エラー:", error);
+    } catch {
       setAnalysisResult({ error: "サーバーとの通信に失敗しました" });
     } finally {
       setLoading(false);
