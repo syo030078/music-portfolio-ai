@@ -1,4 +1,9 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+// SSR (Server Component) では相対パスが使えないため、サーバー内部URLを使用
+// ブラウザ (Client Component) では空文字 → 相対パス → nginx/rewrites がプロキシ
+const API_URL =
+  typeof window === 'undefined'
+    ? (process.env.API_INTERNAL_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000')
+    : (process.env.NEXT_PUBLIC_API_URL || '');
 
 async function parseResponse<T>(res: Response): Promise<T> {
   const text = await res.text();
