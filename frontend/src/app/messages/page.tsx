@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import AuthGuard from '@/components/AuthGuard';
+import { useUser } from '@/hooks/useUser';
 
 interface Conversation {
   uuid: string;
@@ -46,6 +47,7 @@ function formatDateTime(dateString: string): string {
 }
 
 export default function MessagesPage() {
+  const { isMusician } = useUser();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -99,12 +101,21 @@ export default function MessagesPage() {
           {conversations.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500 mb-4">メッセージはまだありません</p>
-              <Link
-                href="/jobs"
-                className="inline-block bg-green-600 text-white py-2 px-6 rounded hover:bg-green-700 transition-colors"
-              >
-                案件を探す
-              </Link>
+              {isMusician ? (
+                <Link
+                  href="/jobs"
+                  className="inline-block bg-green-600 text-white py-2 px-6 rounded hover:bg-green-700 transition-colors"
+                >
+                  案件を探す
+                </Link>
+              ) : (
+                <Link
+                  href="/matching"
+                  className="inline-block bg-blue-600 text-white py-2 px-6 rounded hover:bg-blue-700 transition-colors"
+                >
+                  音楽家を探す
+                </Link>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
