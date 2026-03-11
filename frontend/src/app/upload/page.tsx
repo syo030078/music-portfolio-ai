@@ -1,5 +1,8 @@
 "use client";
+import Link from "next/link";
 import { useState } from "react";
+import AuthGuard from "@/components/AuthGuard";
+import { useUser } from "@/hooks/useUser";
 
 type AnalysisResult = {
   bpm?: number | null;
@@ -11,6 +14,7 @@ type AnalysisResult = {
 const API = process.env.NEXT_PUBLIC_API_URL || "";
 
 export default function UploadPage() {
+  const { user } = useUser();
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioUrl, setAudioUrl] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -133,6 +137,7 @@ export default function UploadPage() {
   };
 
   return (
+    <AuthGuard>
     <div className="min-h-screen bg-white">
       {/* ヒーローセクション */}
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 py-16">
@@ -240,10 +245,29 @@ export default function UploadPage() {
 
         {/* 成功メッセージ */}
         {uploadSuccess && !analysisResult?.error && (
-          <div className="mt-8 rounded-lg bg-green-50 p-4">
-            <p className="font-medium text-green-800">
-              ✓ 楽曲を登録しました
+          <div className="mt-8 rounded-lg bg-green-50 p-6">
+            <p className="font-medium text-green-800 mb-4">
+              楽曲を登録しました
             </p>
+            <div className="flex flex-wrap gap-3">
+              {user && (
+                <Link
+                  href={`/users/${user.uuid}`}
+                  className="inline-block rounded bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors"
+                >
+                  マイページを見る
+                </Link>
+              )}
+              <button
+                onClick={() => {
+                  setUploadSuccess(false);
+                  setAnalysisResult(null);
+                }}
+                className="inline-block rounded bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 transition-colors"
+              >
+                続けてアップロード
+              </button>
+            </div>
           </div>
         )}
 
@@ -284,5 +308,6 @@ export default function UploadPage() {
         )}
       </div>
     </div>
+    </AuthGuard>
   );
 }
