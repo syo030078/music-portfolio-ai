@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import ContactButton from '@/components/ContactButton';
-import ProposalForm from '@/components/ProposalForm';
+import RoleBasedJobActions from './RoleBasedJobActions';
 import { fetchJob } from '@/lib/api/jobs';
 import { formatBudget, formatDate } from '@/lib/format';
 
@@ -81,16 +81,7 @@ export default async function JobDetailPage({
               </div>
             </div>
 
-            <ProposalForm jobUuid={job.uuid} />
-
-            <div className="text-center">
-              <Link
-                href={`/jobs/${job.uuid}/proposals`}
-                className="text-sm text-green-600 hover:underline"
-              >
-                提案一覧を見る（クライアント向け）
-              </Link>
-            </div>
+            <RoleBasedJobActions jobUuid={job.uuid} />
           </div>
 
           <div className="space-y-6">
