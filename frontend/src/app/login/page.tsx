@@ -1,12 +1,14 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useUser } from "@/hooks/useUser";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 function LoginForm() {
+  const { isLoggedIn, isMusician } = useUser();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -14,6 +16,12 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect");
+
+  useEffect(() => {
+    if (isLoggedIn && !redirectTo) {
+      router.replace(isMusician ? "/upload" : "/jobs");
+    }
+  }, [isLoggedIn, isMusician, redirectTo, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
