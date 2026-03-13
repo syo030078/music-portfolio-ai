@@ -2,231 +2,284 @@
 
 **音楽家と制作依頼者を AI でつなぐマッチングプラットフォーム**
 
-音楽家が楽曲をアップロードすると、AI が自動で BPM・キー・ジャンルを解析。プロフェッショナルなポートフォリオを生成し、制作依頼者とのマッチングを実現します。
+[![CI](https://github.com/syo030078/music-portfolio-ai/actions/workflows/test.yml/badge.svg)](https://github.com/syo030078/music-portfolio-ai/actions/workflows/test.yml)
+[![Deploy](https://github.com/syo030078/music-portfolio-ai/actions/workflows/deploy.yml/badge.svg)](https://github.com/syo030078/music-portfolio-ai/actions/workflows/deploy.yml)
 
-## このプロジェクトが行うこと
+![Ruby](https://img.shields.io/badge/Ruby-3.1.3-CC342D?logo=ruby&logoColor=white)
+![Rails](https://img.shields.io/badge/Rails-7.0-D30001?logo=rubyonrails&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=next.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
+![Python](https://img.shields.io/badge/Python-librosa-3776AB?logo=python&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14-4169E1?logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
 
-- **楽曲の自動解析**: Python（librosa）で BPM/キー/ジャンルを AI 推定
-- **ポートフォリオ自動生成**: 解析データから魅力的な音楽家プロフィールを作成
-- **案件マッチング**: 制作依頼の投稿・提案・契約管理をワンストップで実現
-- **メッセージング**: 依頼者と音楽家のリアルタイムコミュニケーション
-- **レビューシステム**: 信頼性の高い取引をサポート
+---
 
-## このプロジェクトが有益な理由
+## デモ
 
-従来、音楽家が制作依頼を受けるには、ポートフォリオサイトの構築や営業活動に多くの時間を費やす必要がありました。このプラットフォームは：
+> 📸 スクリーンショットは後日追加予定
 
-- 楽曲をアップロードするだけで、AI が自動的にポートフォリオを生成
-- 依頼者は楽曲データ（BPM・キー・ジャンル）で適切な音楽家を検索可能
-- 案件投稿から契約、支払いまでをシステム内で完結
+<!-- 追加時のフォーマット例:
+![ダッシュボード](docs/screenshots/dashboard.png)
+![楽曲解析](docs/screenshots/track-analysis.png)
+-->
 
-音楽家はクリエイティブな活動に集中でき、依頼者は効率的に最適な音楽家を見つけられます。
+---
+
+## 主要機能
+
+| 機能 | 概要 | 技術要素 |
+|------|------|----------|
+| 🎵 楽曲の AI 解析 | アップロードした楽曲の BPM・キー・ジャンルを自動推定 | Python + librosa, Open3 プロセス分離 |
+| 📋 ポートフォリオ自動生成 | 解析データから音楽家プロフィールを構築 | Rails API + PostgreSQL |
+| 📝 案件管理 | 制作依頼の投稿・提案・契約をステータスマシンで管理 | `draft → published → contracted → completed` |
+| 👥 ロールベース UI | ミュージシャン / クライアントで異なる画面・操作を提供 | Next.js App Router + JWT ロール判定 |
+| 💬 メッセージング | 依頼者と音楽家のリアルタイムコミュニケーション | RESTful API |
+| ⭐ レビューシステム | CHECK 制約（1–5）付きの信頼性あるレーティング | PostgreSQL CHECK 制約 |
+| 🔐 認証・認可 | JWT + トークン無効化（denylist）によるセキュアな認証 | Devise JWT + ロールベースアクセス制御 |
+
+---
 
 ## 技術スタック
 
-| カテゴリ     | 技術                                                |
-| ------------ | --------------------------------------------------- |
-| **Frontend** | Next.js 15 (App Router), TypeScript, Tailwind CSS 4 |
-| **Backend**  | Rails 7 API mode, PostgreSQL 14+, Devise + JWT      |
-| **AI/ML**    | Python 3.10+, librosa, ffmpeg, OpenAI API           |
-| **Testing**  | RSpec, FactoryBot                                   |
-| **Tools**    | Docker (optional), Git, Bundler, npm                |
+| レイヤー | 技術 | 選定理由 |
+|----------|------|----------|
+| **Frontend** | Next.js 15 (App Router), React 19, TypeScript strict, Tailwind CSS 4 | RSC + Server Actions によるデータフェッチ最適化。Turbopack で高速開発 |
+| **Backend** | Rails 7 API mode, Ruby 3.1.3 | ActiveRecord のマイグレーション管理と充実したモデル層。API mode で軽量化 |
+| **Database** | PostgreSQL 14 | UUID ネイティブ対応、CHECK 制約、JSONB。ビジネスロジックの一部を DB 層で保証 |
+| **AI / 解析** | Python, librosa, soundfile, NumPy | 音響解析の事実上の標準。Ruby には同等ライブラリがないためサブプロセスとして分離 |
+| **認証** | Devise + JWT, bcrypt | SPA + API のステートレス通信に対応。`JwtDenylist` でトークン失効管理 |
+| **バリデーション** | Zod | TypeScript の型はコンパイル時のみ → API レスポンスやフォーム入力を実行時にも検証 |
+| **Testing** | RSpec (68 spec files), ESLint, TypeScript 型検査 (`tsc --noEmit`) | モデル・リクエスト・サービス・統合テストの多層カバレッジ |
+| **Infra** | Docker Compose, nginx, EC2, GitHub Actions | 開発〜本番で同一構成。CI/CD で自動テスト → 自動デプロイ |
 
-## このプロジェクトの使い始め方
+---
 
-### 前提条件
+## アーキテクチャ概要
 
-以下のツールがインストールされている必要があります：
+### システム全体構成
 
-- Ruby 3.1.3（[.ruby-version](.ruby-version)参照）
-- Node.js 20 以降
-- PostgreSQL 14 以降
-- Python 3.10 以降
-- ffmpeg（音源解析に必要）
+```mermaid
+graph LR
+    Browser[ブラウザ] --> Nginx
 
-### インストール手順
+    subgraph EC2["EC2 (Docker Compose)"]
+        Nginx["Nginx :80"]
+        Frontend["Next.js :3000"]
+        Backend["Rails API :3001"]
+        DB["PostgreSQL 14"]
+        Analyzer["Python Analyzer"]
 
-#### 1. リポジトリをクローン
-
-```bash
-git clone https://github.com/yourusername/music-portfolio-ai.git
-cd music-portfolio-ai
+        Nginx -- "/ → frontend" --> Frontend
+        Nginx -- "/api/, /auth/ → backend" --> Backend
+        Frontend -- "API_INTERNAL_URL" --> Backend
+        Backend --> DB
+        Backend -- "Open3.popen3" --> Analyzer
+    end
 ```
 
-#### 2. Backend のセットアップ
+### CI/CD パイプライン
+
+```mermaid
+graph LR
+    PR["PR / Push"] --> Test["test.yml"]
+
+    subgraph Test["test.yml (並列実行)"]
+        RSpec["Backend: RSpec"]
+        Lint["Frontend: Lint + tsc"]
+    end
+
+    Test -- "main branch<br/>workflow_run" --> Deploy["deploy.yml"]
+    Deploy -- "SSH" --> EC2["EC2"]
+    EC2 --> Build["docker compose build --no-cache"]
+    Build --> Migrate["rails db:migrate"]
+    Migrate --> Up["docker compose up -d"]
+    Up --> Health["curl /api/v1/health"]
+```
+
+### データフロー（楽曲アップロード）
+
+```mermaid
+sequenceDiagram
+    participant U as ユーザー
+    participant F as Next.js
+    participant B as Rails API
+    participant A as Python Analyzer
+    participant DB as PostgreSQL
+
+    U->>F: 楽曲ファイルをアップロード
+    F->>B: POST /api/v1/tracks
+    B->>A: AnalyzerRunner.call(file_path)
+    Note over B,A: Open3.popen3 / 60秒タイムアウト
+    A-->>B: {bpm, key, genre} (JSON)
+    B->>DB: Track.create(解析結果)
+    B-->>F: 201 Created + track data
+    F-->>U: ポートフォリオに楽曲表示
+```
+
+---
+
+## 技術的こだわり
+
+### 1. API 設計
+
+- RESTful エンドポイント + UUID 公開キーでリソースを識別
+- ステータスマシンによる案件ライフサイクル管理（`draft → published → contracted → completed`）
+- ページネーション：オフセットベース、最大 50 件/リクエスト
+
+### 2. 認証・認可
+
+- **Devise JWT** によるステートレス認証。セッション管理不要で SPA と相性が良い
+- **JwtDenylist テーブル** でログアウト時のトークン即時無効化を実現
+- **ロールベースアクセス制御**：ミュージシャン / クライアントで API 権限を分離
+
+### 3. 型安全性の多層防御
+
+```
+[TypeScript strict]  →  [Zod schema]  →  [AR validations]  →  [PG CHECK制約]
+  コンパイル時            ランタイム          サーバーサイド          DB層
+```
+
+- **TypeScript strict mode**: `any` 禁止、CI で `tsc --noEmit` を実行
+- **Zod スキーマ**: フォーム入力の実行時バリデーション
+- **Rails ActiveRecord validations**: サーバーサイドの制約
+- **PostgreSQL CHECK 制約**: DB 層の最終防御（`rating >= 1 AND rating <= 5` 等）
+
+### 4. テスト戦略
+
+- **RSpec 68 ファイル**：モデル（21）・リクエスト・サービス・統合テストの多層構成
+- **ESLint + TypeScript 型検査** でフロントエンドの品質を担保
+- **GitHub Actions** で全 PR に対して自動テスト実行（RSpec / Lint / tsc 並列）
+
+### 5. 本番構成
+
+- **マルチステージ Docker ビルド**：非 root ユーザー実行、ビルド時依存の除去で軽量イメージ
+- **nginx リバースプロキシ**：パスベースルーティング、gzip 圧縮、セキュリティヘッダー付与
+- **ヘルスチェック監視**：`curl /api/v1/health` による自動検知
+- **PostgreSQL チューニング**：`shared_buffers=64MB`, `effective_cache_size=256MB`, `max_connections=50`
+
+### 6. AI 統合：音響解析パイプライン
+
+- librosa による BPM・キー・ジャンル推定を `AnalyzerRunner` サービスに集約
+- `Open3.popen3` で Python プロセスを分離し、60 秒タイムアウト + `Process.kill` で暴走を防止
+- フォールバック設計：解析失敗時もデフォルト値（BPM=120, Key=C, Genre=Pop）で正常レスポンス
+- `tracks.ai_text` カラムで OpenAI 連携の拡張ポイントを確保済み
+
+---
+
+## 開発環境セットアップ
+
+### Docker Compose（推奨）
+
+```bash
+git clone https://github.com/syo030078/music-portfolio-ai.git
+cd music-portfolio-ai
+cp .env.example .env
+docker compose up
+```
+
+| サービス | URL |
+|----------|-----|
+| Frontend | http://localhost:3001 |
+| Backend API | http://localhost:3000 |
+
+<details>
+<summary>個別セットアップ（Docker を使わない場合）</summary>
+
+#### Backend
 
 ```bash
 cd backend
 bundle install
-bin/rails db:setup  # データベース作成・マイグレーション・シードデータ投入
-bin/rails server    # http://localhost:3000 で起動
+bin/rails db:setup    # DB作成 + マイグレーション + シードデータ
+bin/rails server      # http://localhost:3000
 ```
 
-**環境変数の設定**:
-
-- JWT 認証には`secret_key_base`を使用（自動生成）
-- データベース接続情報は`config/database.yml`で設定可能
-
-#### 3. Frontend のセットアップ
+#### Frontend
 
 ```bash
 cd frontend
-npm install         # または pnpm install
-npm run dev         # http://localhost:3001 で起動
+npm install
+npm run dev           # http://localhost:3001
 ```
 
-**環境変数の設定**:
+環境変数（`frontend/.env.local`）:
 
-- `frontend/.env.local`を作成し、API 接続先を指定（任意）:
-  ```
-  NEXT_PUBLIC_API_BASE=http://localhost:3000
-  ```
+```
+NEXT_PUBLIC_API_URL=http://localhost:3000
+```
 
-#### 4. 音源解析 CLI のセットアップ
+#### Analyzer
+
+前提: ffmpeg が必要（macOS: `brew install ffmpeg` / Ubuntu: `sudo apt install ffmpeg`）
 
 ```bash
 cd analyzer
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
+source .venv/bin/activate
 pip install -r requirements.txt
 python music_analyzer.py --file path/to/audio.mp3
 ```
 
-**ffmpeg のインストール**:
+</details>
 
-- macOS: `brew install ffmpeg`
-- Ubuntu: `sudo apt install ffmpeg`
-- Windows: [公式サイト](https://ffmpeg.org/download.html)からダウンロード
+---
 
-## API エンドポイント
-
-### 認証（Devise + JWT）
-
-```
-POST   /auth                 - ユーザー登録
-POST   /auth/sign_in         - ログイン
-DELETE /auth/sign_out        - ログアウト
-```
-
-### 案件管理
-
-```
-GET    /api/v1/jobs          - 案件一覧（ページネーション・フィルタリング対応）
-POST   /api/v1/jobs          - 案件作成
-GET    /api/v1/jobs/:uuid    - 案件詳細
-PATCH  /api/v1/jobs/:uuid    - 案件更新
-DELETE /api/v1/jobs/:uuid    - 案件削除
-POST   /api/v1/jobs/:uuid/publish - 案件公開
-```
-
-### 提案・契約（予定）
-
-Phase 7.2-7.6 で以下の API を実装予定です：
-
-- Proposals API（7 エンドポイント）
-- Contracts API（3 エンドポイント）
-- Milestones API（4 エンドポイント）
-- Conversations & Messages API（4 エンドポイント）
-- Reviews & Transactions API（4 エンドポイント）
-
-完全な API 仕様は[docs/PLAN.md](docs/PLAN.md)を参照してください。
-
-## テストの実行
+## テスト
 
 ```bash
-# Backend（RSpec）
-cd backend
-bundle exec rspec
+# Backend（RSpec: 68 specファイル）
+cd backend && bundle exec rspec
 
-# 特定のテストファイルのみ実行
-bundle exec rspec spec/requests/api/v1/jobs_spec.rb
-
-# Frontend（Lint）
-cd frontend
-npm run lint
+# Frontend（ESLint + TypeScript型検査）
+cd frontend && npm run lint && npx tsc --noEmit
 
 # Analyzer
-cd analyzer
-python test_music_analyzer.py
+cd analyzer && python test_music_analyzer.py
 ```
 
-## 開発状況
-
-| フェーズ      | 状態 | 説明                             |
-| ------------- | ---- | -------------------------------- |
-| Phase 1-6     | 完了 | 基盤システム（Models, DB 設計）  |
-| Phase 7.1     | 完了 | Jobs API（28 tests passing）     |
-| Phase 7.2-7.6 | 予定 | Proposals/Contracts/Messages API |
-| Frontend 統合 | 予定 | Next.js 画面実装                 |
-
-詳細な実装計画は[docs/PLAN.md](docs/PLAN.md)を参照してください。
+---
 
 ## リポジトリ構成
 
 ```
 music-portfolio-ai/
-├── frontend/          # Next.js 15 (App Router, TypeScript)
-├── backend/           # Rails 7 API (PostgreSQL, Devise + JWT, RSpec)
-├── analyzer/          # Python音源解析CLI（librosa, ffmpeg）
-├── docs/              # 設計資料
-│   ├── PLAN.md       # DB設計・実装計画
-│   └── CLAUDE.md     # 要件定義
-└── README.md          # このファイル
+├── frontend/                # Next.js 15 (App Router, TypeScript, Tailwind CSS 4)
+├── backend/                 # Rails 7 API (PostgreSQL, Devise + JWT, RSpec)
+├── analyzer/                # Python 音源解析 (librosa, soundfile)
+├── infrastructure/          # EC2 デプロイ設定 (nginx.conf, setup.sh)
+│   └── ec2/
+│       ├── nginx.conf       # リバースプロキシ設定
+│       ├── setup.sh         # EC2 初期構築スクリプト
+│       └── deploy.sh        # デプロイ実行スクリプト
+├── .github/workflows/       # CI/CD
+│   ├── test.yml             # RSpec + ESLint + tsc（PR / Push時）
+│   └── deploy.yml           # EC2 自動デプロイ（main merge時）
+├── docs/                    # 設計資料 (PLAN.md, er-diagram.puml)
+├── docker-compose.yml       # 開発環境
+└── docker-compose.production.yml  # 本番環境
 ```
 
-## このプロジェクトに関するヘルプをどこで得るか
+---
 
-### ドキュメント
+## 今後の開発予定
 
-- **要件定義**: [CLAUDE.md](CLAUDE.md) - プロジェクトの要件と MVP 仕様
-- **DB 設計**: [docs/PLAN.md](docs/PLAN.md) - データベース設計と実装計画
-- **ERD**: [docs/er-diagram.puml](docs/er-diagram.puml) - エンティティ関係図
+- ✅ 楽曲アップロード + AI 解析（BPM / キー / ジャンル）
+- ✅ JWT 認証 + ロールベースアクセス制御
+- ✅ 案件投稿・提案・契約管理
+- ✅ メッセージング機能
+- ✅ レビューシステム（CHECK 制約付き）
+- ✅ Docker Compose 本番構成 + EC2 デプロイ
+- ✅ CI/CD パイプライン（GitHub Actions）
+- ⬜ 楽曲の波形表示・プレビュー再生
+- ⬜ OpenAI 連携によるプロフィール文自動生成
+- ⬜ リアルタイム通知（WebSocket / Action Cable）
+- ⬜ 楽曲検索のフィルタリング強化（BPM 範囲・ジャンル）
 
-### よくある質問
-
-**Q: ポートが競合します**
-A: Frontend を別ポートで起動: `PORT=3001 npm run dev`
-
-**Q: PostgreSQL 接続エラーが出ます**
-A: `backend/config/database.yml`で接続情報を確認してください。環境変数でも設定可能です。
-
-**Q: ffmpeg が見つかりません**
-A: ffmpeg が PATH に含まれているか確認: `ffmpeg -version`
-
-**Q: テストが失敗します**
-A: データベースをリセット: `cd backend && bin/rails db:test:prepare`
-
-### コミットメッセージ規約
-
-```
-feat:     新機能追加
-fix:      バグ修正
-docs:     ドキュメント更新
-test:     テスト追加・修正
-refactor: リファクタリング
-style:    コードフォーマット
-chore:    雑務（依存関係更新など）
-```
-
-### 開発方針
-
-- **未知の作業を複数同時にやらない**: 各 Phase を順番に完了
-- **テスト駆動**: Model specs → Request specs の順で実装
-- **段階的リリース**: Phase 完了ごとに PR 作成・CI 実行・マージ
-
-詳細は[CLAUDE.md](CLAUDE.md)の開発フローを参照してください。
+---
 
 ## ライセンス
 
-このプロジェクトは現在ライセンス未設定です。商用利用を検討する場合は、適切なライセンスを追加予定です。
+MIT
 
-## 謝辞
-
-このプロジェクトは以下のオープンソースプロジェクトに支えられています：
-
-- [Rails](https://rubyonrails.org/) - Web アプリケーションフレームワーク
-- [Next.js](https://nextjs.org/) - React フレームワーク
-- [librosa](https://librosa.org/) - 音楽・音声解析ライブラリ
-- [Devise](https://github.com/heartcombo/devise) - 認証システム
-
----
+*Built with Ruby, JavaScript, Python, and PostgreSQL*
