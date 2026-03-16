@@ -1,0 +1,34 @@
+name: Seed Database
+
+on:
+  workflow_dispatch:
+
+jobs:
+  seed:
+    name: Run db:seed on EC2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Seed via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          command_timeout: 5m
+          script: |
+            cd ~/music-portfolio-ai
+            docker compose -f docker-compose.production.yml run --rm backend \
+              bundle exec rails db:seed
+
+      - name: Verify seed data
+        run: |
+          echo "::add-mask::${{ secrets.EC2_HOST }}"
+          sleep 5
+          JOBS=$(curl -sf "http://${{ secrets.EC2_HOST }}/api/v1/jobs" 2>/dev/null | jq '.data | length' 2>/dev/null || echo "0")
+          echo "Jobs count: $JOBS"
+          if [ "$JOBS" -gt 0 ]; then
+            echo "Seed data verified!"
+          else
+            echo "WARNING: No jobs found after seeding"
+          fi
