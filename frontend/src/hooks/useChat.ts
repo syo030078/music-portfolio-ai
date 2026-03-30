@@ -98,9 +98,11 @@ export function useChat(
 
         if (data.messages.length > 0) {
           setMessages((prev) => {
-            const existingUuids = new Set(prev.map((m) => m.uuid));
+            const existingUuids = new Set(
+              prev.map((m) => m.uuid).filter(Boolean)
+            );
             const newMessages = data.messages.filter(
-              (m) => !existingUuids.has(m.uuid)
+              (m) => m.uuid && !existingUuids.has(m.uuid)
             );
             if (newMessages.length === 0) return prev;
 
