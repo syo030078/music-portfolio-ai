@@ -49,6 +49,7 @@ class Api::V1::TracksController < ApplicationController
           key: track.key,
           genre: track.genre,
           ai_text: track.ai_text,
+          analysis_data: track.try(:analysis_data) || {},
           created_at: track.created_at,
           user: {
             uuid: track.user.uuid,
@@ -84,6 +85,7 @@ class Api::V1::TracksController < ApplicationController
         key: track.key,
         genre: track.genre,
         ai_text: track.ai_text,
+        analysis_data: track.try(:analysis_data) || {},
         created_at: track.created_at,
         updated_at: track.updated_at,
         user: {
@@ -142,7 +144,16 @@ class Api::V1::TracksController < ApplicationController
         if result[:error]
           render json: { data: result }, status: :unprocessable_entity
         else
-          render json: { message: "load_wav created", data: result }
+          analysis_data = result['analysis_data'] || result[:analysis_data] || {}
+
+          # AI分析テキスト生成（失敗してもアップロード自体は成功させる）
+          ai_text = AiTextGenerator.call(
+            bpm: result['bpm'] || result[:bpm],
+            key: result['key'] || result[:key],
+            genre: result['genre'] || result[:genre],
+            analysis_data: analysis_data
+          )
+          render json: { message: "load_wav created", data: result.merge(ai_text: ai_text, analysis_data: analysis_data) }
         end
       rescue => e
         Rails.logger.error("解析処理エラー: #{e.message}")
