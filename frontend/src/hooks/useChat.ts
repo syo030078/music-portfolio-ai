@@ -22,6 +22,32 @@ interface UseChatResult {
   readonly hasMore: boolean;
 }
 
+/**
+ * メッセージ配列を uuid で重複排除する。
+ * 同じ uuid が複数ある場合、後のもの（確定メッセージ）を優先する。
+ * uuid が null のメッセージはそのまま残す（indexで区別）。
+ */
+function dedup(msgs: readonly PendingMessage[]): readonly PendingMessage[] {
+  const seen = new Map<string, number>();
+  const result: PendingMessage[] = [];
+
+  for (const msg of msgs) {
+    if (!msg.uuid) {
+      result.push(msg);
+      continue;
+    }
+    const existing = seen.get(msg.uuid);
+    if (existing !== undefined) {
+      // 後のもの（確定版）で上書き。_pending でないほうを優先
+      result[existing] = msg._pending ? result[existing] : msg;
+    } else {
+      seen.set(msg.uuid, result.length);
+      result.push(msg);
+    }
+  }
+  return result;
+}
+
 export function useChat(
   conversationUuid: string,
   token: string | null,
@@ -98,17 +124,10 @@ export function useChat(
 
         if (data.messages.length > 0) {
           setMessages((prev) => {
-            const existingUuids = new Set(
-              prev.map((m) => m.uuid).filter(Boolean)
-            );
-            const newMessages = data.messages.filter(
-              (m) => m.uuid && !existingUuids.has(m.uuid)
-            );
-            if (newMessages.length === 0) return prev;
-
-            // 楽観的メッセージ（_pending）を確定メッセージで置き換え
+            // 楽観的メッセージを除去し、サーバーからの確定メッセージとマージ
             const withoutPending = prev.filter((m) => !m._pending);
-            return [...withoutPending, ...newMessages];
+            const merged = [...withoutPending, ...data.messages];
+            return dedup(merged);
           });
 
           const lastNew = data.messages[data.messages.length - 1];
@@ -156,7 +175,9 @@ export function useChat(
 
         // 楽観的メッセージを確定メッセージに差し替え
         setMessages((prev) =>
-          prev.map((m) => (m.uuid === optimisticUuid ? confirmed : m))
+          dedup(
+            prev.map((m) => (m.uuid === optimisticUuid ? confirmed : m))
+          )
         );
         lastMessageTimeRef.current = confirmed.created_at;
       } catch (err) {
@@ -182,7 +203,7 @@ export function useChat(
         limit: 50,
       });
 
-      setMessages((prev) => [...data.messages, ...prev]);
+      setMessages((prev) => dedup([...data.messages, ...prev]));
       setHasMore(data.meta.has_more);
     } catch {
       // 過去メッセージ取得エラーはサイレント
