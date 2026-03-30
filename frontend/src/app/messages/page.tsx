@@ -1,28 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 import AuthGuard from '@/components/AuthGuard';
 import { useUser } from '@/hooks/useUser';
-
-interface Conversation {
-  uuid: string;
-  job_uuid: string | null;
-  contract_uuid: string | null;
-  created_at: string;
-  updated_at: string;
-  participants: Array<{
-    uuid: string;
-    name: string;
-  }>;
-  last_message: {
-    uuid: string;
-    content: string;
-    sender_uuid: string;
-    created_at: string;
-  } | null;
-  unread_count: number;
-}
+import { useChatList } from '@/hooks/useChatList';
 
 function formatDateTime(dateString: string): string {
   const date = new Date(dateString);
@@ -48,41 +29,9 @@ function formatDateTime(dateString: string): string {
 
 export default function MessagesPage() {
   const { isMusician } = useUser();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchConversations = async () => {
-      setError(null);
-      const token = localStorage.getItem('jwt');
-      if (!token) return;
-
-      try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-        const res = await fetch(`${apiUrl}/api/v1/conversations`, {
-          cache: 'no-store',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: token,
-          },
-        });
-
-        if (!res.ok) {
-          throw new Error('会話一覧の取得に失敗しました');
-        }
-
-        const data = await res.json();
-        setConversations(data.conversations || []);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : '不明なエラーが発生しました');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchConversations();
-  }, []);
+  const token =
+    typeof window !== 'undefined' ? localStorage.getItem('jwt') : null;
+  const { conversations, loading, error, retry } = useChatList(token);
 
   return (
     <AuthGuard>
@@ -92,7 +41,16 @@ export default function MessagesPage() {
         </div>
       ) : error ? (
         <div className="mx-auto max-w-7xl px-4 py-8">
-          <div className="rounded-lg bg-red-50 p-4 text-red-800">{error}</div>
+          <div className="rounded-lg bg-red-50 p-4 text-red-800">
+            <p>{error}</p>
+            <button
+              type="button"
+              onClick={retry}
+              className="mt-2 text-sm text-red-600 underline hover:text-red-800"
+            >
+              再試行
+            </button>
+          </div>
         </div>
       ) : (
         <div className="mx-auto max-w-7xl px-4 py-8">
@@ -136,14 +94,16 @@ export default function MessagesPage() {
                           <h2 className="text-lg font-semibold">
                             {participantNames}
                           </h2>
-                          {conversation.unread_count > 0 && (
+                          {(conversation.unread_count ?? 0) > 0 && (
                             <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
                               {conversation.unread_count}
                             </span>
                           )}
                         </div>
                         {conversation.job_uuid && (
-                          <p className="text-sm text-gray-500">案件に関する会話</p>
+                          <p className="text-sm text-gray-500">
+                            案件に関する会話
+                          </p>
                         )}
                       </div>
                       {conversation.last_message && (
