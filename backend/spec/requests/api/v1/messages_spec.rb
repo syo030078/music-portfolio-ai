@@ -35,10 +35,14 @@ RSpec.describe 'Api::V1::Messages', type: :request do
 
   describe 'GET /api/v1/conversations/:conversation_id/messages' do
     let!(:old_message) do
-      conversation.messages.create!(sender: client, content: '古いメッセージ')
+      msg = conversation.messages.create!(sender: client, content: '古いメッセージ')
+      msg.reload
     end
     let!(:new_message) do
-      conversation.messages.create!(sender: musician, content: '新しいメッセージ')
+      # タイムスタンプが確実に異なるようにする（CI環境での高速実行対策）
+      sleep(0.01)
+      msg = conversation.messages.create!(sender: musician, content: '新しいメッセージ')
+      msg.reload
     end
 
     it 'returns messages for conversation' do
