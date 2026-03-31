@@ -41,7 +41,7 @@ export function useChat(
   useEffect(() => {
     const first = messages[0];
     oldestUuidRef.current =
-      first && !first.uuid.startsWith('pending-') ? first.uuid : null;
+      first?.uuid && !first.uuid.startsWith('pending-') ? first.uuid : null;
   }, [messages]);
 
   // 初回メッセージ読み込み
