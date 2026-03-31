@@ -9,7 +9,7 @@ Rails.application.routes.draw do
       get "health", to: "health#show"
       resource :user, only: [:show, :update]
       resources :tracks
-      resources :jobs, only: [:index, :show], param: :uuid do
+      resources :jobs, only: [:index, :show, :create], param: :uuid do
         resources :proposals, only: [:index, :create], param: :uuid
       end
       resources :proposals, only: [], param: :uuid do
@@ -24,7 +24,7 @@ Rails.application.routes.draw do
         end
       end
       resources :conversations, only: [:index, :show, :create] do
-        resources :messages, only: [:create]
+        resources :messages, only: [:index, :create]
       end
     end
   end

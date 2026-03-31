@@ -1,30 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { use, useEffect, useState } from 'react';
+import { use } from 'react';
 import ChatBox from '@/components/ChatBox';
 import AuthGuard from '@/components/AuthGuard';
-
-interface Message {
-  uuid: string;
-  sender_uuid: string;
-  sender_name: string;
-  content: string;
-  created_at: string;
-}
-
-interface Conversation {
-  uuid: string;
-  job_uuid: string | null;
-  contract_uuid: string | null;
-  created_at: string;
-  participants: Array<{
-    uuid: string;
-    name: string;
-    bio: string | null;
-  }>;
-  messages: Message[];
-}
+import { useAsyncData } from '@/hooks/useAsyncData';
+import { fetchConversation } from '@/lib/api/conversations';
+import type { Conversation } from '@/types/conversation';
 
 export default function ConversationPage({
   params,
@@ -32,41 +14,15 @@ export default function ConversationPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const [conversation, setConversation] = useState<Conversation | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchConversation = async () => {
-      setError(null);
+  const { data: conversation, loading, error } = useAsyncData<Conversation>(
+    () => {
       const token = localStorage.getItem('jwt');
-      if (!token) return;
-
-      try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-        const res = await fetch(`${apiUrl}/api/v1/conversations/${id}`, {
-          cache: 'no-store',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: token,
-          },
-        });
-
-        if (!res.ok) {
-          throw new Error('会話の取得に失敗しました');
-        }
-
-        const data = await res.json();
-        setConversation(data.conversation || null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : '不明なエラーが発生しました');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchConversation();
-  }, [id]);
+      if (!token) throw new Error('ログインが必要です');
+      return fetchConversation(token, id);
+    },
+    [id]
+  );
 
   if (loading) {
     return (
@@ -86,49 +42,51 @@ export default function ConversationPage({
     );
   }
 
-  const participantNames = conversation.participants.map((p) => p.name).join(', ');
+  const participantNames = conversation.participants
+    .map((p) => p.name)
+    .join(', ');
 
   return (
     <AuthGuard>
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <div className="mb-6">
-        <Link href="/messages" className="text-blue-600 hover:underline">
-          ← メッセージ一覧に戻る
-        </Link>
-      </div>
-
-      <div className="bg-white border border-gray-200 rounded-lg">
-        <div className="border-b border-gray-200 p-6">
-          <h1 className="text-2xl font-bold mb-2">{participantNames}</h1>
-          {conversation.job_uuid && (
-            <p className="text-sm text-gray-500">案件に関する会話</p>
-          )}
+      <div className="mx-auto max-w-4xl px-4 py-8">
+        <div className="mb-6">
+          <Link href="/messages" className="text-blue-600 hover:underline">
+            ← メッセージ一覧に戻る
+          </Link>
         </div>
 
-        <div className="p-6">
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold mb-3">参加者</h2>
-            <div className="space-y-3">
-              {conversation.participants.map((participant) => (
-                <div key={participant.uuid} className="bg-gray-50 rounded-lg p-4">
-                  <p className="font-medium">{participant.name}</p>
-                  {participant.bio && (
-                    <p className="text-sm text-gray-600 mt-1">
-                      {participant.bio}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
+        <div className="bg-white border border-gray-200 rounded-lg">
+          <div className="border-b border-gray-200 p-6">
+            <h1 className="text-2xl font-bold mb-2">{participantNames}</h1>
+            {conversation.job_uuid && (
+              <p className="text-sm text-gray-500">案件に関する会話</p>
+            )}
           </div>
 
-          <ChatBox
-            conversationUuid={conversation.uuid}
-            initialMessages={conversation.messages}
-          />
+          <div className="p-6">
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold mb-3">参加者</h2>
+              <div className="space-y-3">
+                {conversation.participants.map((participant) => (
+                  <div
+                    key={participant.uuid}
+                    className="bg-gray-50 rounded-lg p-4"
+                  >
+                    <p className="font-medium">{participant.name}</p>
+                    {participant.bio && (
+                      <p className="text-sm text-gray-600 mt-1">
+                        {participant.bio}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <ChatBox conversationUuid={conversation.uuid} />
+          </div>
         </div>
       </div>
-    </div>
     </AuthGuard>
   );
 }

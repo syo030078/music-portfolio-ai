@@ -2,106 +2,104 @@
 
 import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
-
-interface Message {
-  uuid: string;
-  sender_uuid: string;
-  sender_name: string;
-  content: string;
-  created_at: string;
-}
+import { useChat } from '@/hooks/useChat';
+import { useUser } from '@/hooks/useUser';
 
 interface ChatBoxProps {
   conversationUuid: string;
-  initialMessages: Message[];
 }
 
-export default function ChatBox({
-  conversationUuid,
-  initialMessages,
-}: ChatBoxProps) {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+export default function ChatBox({ conversationUuid }: ChatBoxProps) {
+  const { user } = useUser();
+  const token =
+    typeof window !== 'undefined' ? localStorage.getItem('jwt') : null;
+
+  const {
+    messages,
+    loading,
+    error,
+    isSending,
+    sendError,
+    sendMessage,
+    loadOlderMessages,
+    hasMore,
+  } = useChat(conversationUuid, token, user?.uuid ?? null);
+
   const [newMessage, setNewMessage] = useState('');
-  const [isSending, setIsSending] = useState(false);
-  const [sendError, setSendError] = useState<string | null>(null);
-  const [needsLogin, setNeedsLogin] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isInitialLoadRef = useRef(true);
+  const isLoadingOlderRef = useRef(false);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
+  // 初回・新メッセージ時に自動スクロール
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (isInitialLoadRef.current && !loading && messages.length > 0) {
+      messagesEndRef.current?.scrollIntoView();
+      isInitialLoadRef.current = false;
+      return;
+    }
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, loading]);
+
+  // スクロール上端で過去メッセージ読み込み（デバウンス付き）
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !hasMore) return;
+
+    async function handleScroll() {
+      if (container!.scrollTop === 0 && !isLoadingOlderRef.current) {
+        isLoadingOlderRef.current = true;
+        await loadOlderMessages();
+        isLoadingOlderRef.current = false;
+      }
+    }
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [hasMore, loadOlderMessages]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!newMessage.trim() || isSending) return;
 
-    if (!newMessage.trim() || isSending) {
-      return;
-    }
-
-    setIsSending(true);
-    setSendError(null);
-    setNeedsLogin(false);
-
-    try {
-      const token = localStorage.getItem('jwt');
-      if (!token) {
-        setNeedsLogin(true);
-        throw new Error('ログインしてください');
-      }
-
-      const apiUrl =
-        process.env.NEXT_PUBLIC_API_URL || '';
-      const res = await fetch(
-        `${apiUrl}/api/v1/conversations/${conversationUuid}/messages`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: token,
-          },
-          body: JSON.stringify({
-            message: {
-              content: newMessage,
-            },
-          }),
-        }
-      );
-
-      if (!res.ok) {
-        if (res.status === 401) {
-          setNeedsLogin(true);
-          throw new Error('ログインセッションが切れました。再度ログインしてください');
-        }
-        throw new Error('メッセージの送信に失敗しました');
-      }
-
-      const data = await res.json();
-      setMessages([...messages, data.message]);
-      setNewMessage('');
-    } catch (err) {
-      setSendError(err instanceof Error ? err.message : 'メッセージの送信に失敗しました');
-    } finally {
-      setIsSending(false);
-    }
+    await sendMessage(newMessage);
+    setNewMessage('');
   };
 
-  const formatTime = (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleString('ja-JP', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
+  const needsLogin = sendError?.includes('ログイン');
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-[400px] md:h-[600px]">
+        <p className="text-gray-500">メッセージを読み込み中...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-[400px] md:h-[600px]">
+        <p className="text-red-600">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-[400px] md:h-[600px]">
-      <div className="flex-1 overflow-y-auto border border-gray-200 rounded-lg p-4 mb-4 bg-gray-50">
+      <div
+        ref={containerRef}
+        className="flex-1 overflow-y-auto border border-gray-200 rounded-lg p-4 mb-4 bg-gray-50"
+      >
+        {hasMore && (
+          <button
+            type="button"
+            onClick={loadOlderMessages}
+            className="w-full text-center text-sm text-gray-500 hover:text-gray-700 py-2 mb-2"
+          >
+            過去のメッセージを読み込む
+          </button>
+        )}
+
         {messages.length === 0 ? (
           <p className="text-gray-500 text-center py-8">
             メッセージはまだありません
@@ -109,10 +107,13 @@ export default function ChatBox({
         ) : (
           <div className="space-y-4">
             {messages.map((message) => (
-              <div key={message.uuid} className="flex flex-col">
+              <div
+                key={message.uuid}
+                className={`flex flex-col ${message._pending ? 'opacity-60' : ''}`}
+              >
                 <div className="flex items-baseline gap-2 mb-1">
                   <span className="font-semibold text-sm">
-                    {message.sender_name}
+                    {message.sender_name || 'あなた'}
                   </span>
                   <span className="text-xs text-gray-500">
                     {formatTime(message.created_at)}
@@ -134,7 +135,10 @@ export default function ChatBox({
         <div className="rounded-lg bg-red-50 p-2 text-sm text-red-800 mb-2">
           <p>{sendError}</p>
           {needsLogin && (
-            <Link href="/login" className="mt-1 inline-block text-red-600 underline hover:text-red-800">
+            <Link
+              href="/login"
+              className="mt-1 inline-block text-red-600 underline hover:text-red-800"
+            >
               ログインページへ
             </Link>
           )}
@@ -160,4 +164,14 @@ export default function ChatBox({
       </form>
     </div>
   );
+}
+
+function formatTime(dateString: string): string {
+  const date = new Date(dateString);
+  return date.toLocaleString('ja-JP', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
