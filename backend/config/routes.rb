@@ -8,7 +8,11 @@ Rails.application.routes.draw do
     namespace :v1 do
       get "health", to: "health#show"
       resource :user, only: [:show, :update]
-      resources :tracks
+      resources :tracks do
+        member do
+          post :generate_ai_text
+        end
+      end
       resources :jobs, only: [:index, :show, :create], param: :uuid do
         resources :proposals, only: [:index, :create], param: :uuid
       end
