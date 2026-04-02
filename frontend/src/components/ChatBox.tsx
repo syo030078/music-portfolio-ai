@@ -106,9 +106,9 @@ export default function ChatBox({ conversationUuid }: ChatBoxProps) {
           </p>
         ) : (
           <div className="space-y-4">
-            {messages.map((message, index) => (
+            {messages.map((message) => (
               <div
-                key={message.uuid ?? `msg-${index}`}
+                key={message.uuid}
                 className={`flex flex-col ${message._pending ? 'opacity-60' : ''}`}
               >
                 <div className="flex items-baseline gap-2 mb-1">
