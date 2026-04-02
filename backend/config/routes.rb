@@ -9,6 +9,7 @@ Rails.application.routes.draw do
       get "health", to: "health#show"
       resource :user, only: [:show, :update]
       resources :tracks
+      post 'matching', to: 'matching#create'
       resources :jobs, only: [:index, :show, :create], param: :uuid do
         resources :proposals, only: [:index, :create], param: :uuid
       end
