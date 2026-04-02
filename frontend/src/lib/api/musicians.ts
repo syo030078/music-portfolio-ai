@@ -1,5 +1,5 @@
 import type { Track, TracksListResponse, MusicianSummary } from '@/types';
-import { apiGet } from './client';
+import { apiGet, apiPost } from './client';
 
 function groupTracksByMusician(tracks: Track[]): MusicianSummary[] {
   const musicianMap = new Map<string, MusicianSummary>();
@@ -44,4 +44,12 @@ export async function fetchMusicianByUuid(uuid: string): Promise<MusicianSummary
   const data = await apiGet<TracksListResponse>(`/api/v1/tracks?user_uuid=${encodeURIComponent(uuid)}&per_page=50`);
   const musicians = groupTracksByMusician(data.tracks);
   return musicians.find((m) => m.uuid === uuid) ?? null;
+}
+
+export async function generateAiText(trackUuid: string, token: string): Promise<{ uuid: string; ai_text: string }> {
+  const data = await apiPost<{ track: { uuid: string; ai_text: string } }>(
+    `/api/v1/tracks/${encodeURIComponent(trackUuid)}/generate_ai_text`,
+    token
+  );
+  return data.track;
 }
