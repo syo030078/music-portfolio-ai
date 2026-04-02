@@ -22,12 +22,23 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           command_timeout: 10m
           script: |
+            set -e
             cd ~/music-portfolio-ai
+
+            # ディスク容量確保: 古いイメージ・ビルドキャッシュを自動削除
+            echo "=== Disk cleanup ==="
+            docker image prune -af --filter "until=24h"
+            docker builder prune -af --filter "until=24h"
+            df -h / | tail -1
+
             git config pull.rebase false
             git checkout main
             git reset --hard origin/main
             git pull origin main
+
+            # set -e によりビルド失敗時はここで中断される
             docker compose -f docker-compose.production.yml build --no-cache
+
             docker compose -f docker-compose.production.yml up -d db
             sleep 5
             docker compose -f docker-compose.production.yml run --rm backend \
