@@ -13,6 +13,7 @@ Rails.application.routes.draw do
           post :generate_ai_text
         end
       end
+      post 'matching', to: 'matching#create'
       resources :jobs, only: [:index, :show, :create], param: :uuid do
         resources :proposals, only: [:index, :create], param: :uuid
       end
