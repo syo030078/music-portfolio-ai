@@ -1,6 +1,41 @@
 class Api::V1::TracksController < ApplicationController
   skip_before_action :authenticate_user!, only: [:index, :show]
 
+  def generate_ai_text
+    track = current_user.tracks.find_by(uuid: params[:id])
+
+    if track.nil?
+      render json: { error: "楽曲が見つかりません" }, status: :not_found
+      return
+    end
+
+    unless track.bpm || track.key || track.genre
+      render json: { error: "解析データがないため AI 説明文を生成できません" }, status: :unprocessable_entity
+      return
+    end
+
+    ai_text = AiTextGenerator.call(
+      bpm: track.bpm,
+      key: track.key,
+      genre: track.genre,
+      analysis_data: track.analysis_data || {}
+    )
+
+    if ai_text.nil?
+      render json: { error: "AI 説明文の生成に失敗しました。しばらく経ってから再度お試しください" }, status: :service_unavailable
+      return
+    end
+
+    track.update_column(:ai_text, ai_text)
+
+    render json: {
+      track: {
+        uuid: track.uuid,
+        ai_text: track.ai_text
+      }
+    }
+  end
+
   def index
     # ページネーション設定
     page = params[:page]&.to_i || 1

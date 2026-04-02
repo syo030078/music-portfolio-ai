@@ -112,7 +112,10 @@ export default function Header() {
                     案件を投稿
                   </Link>
                 )}
-                <span className="hidden sm:inline-flex items-center gap-1.5 text-sm text-gray-700">
+                <Link
+                  href={`/musicians/${user.uuid}`}
+                  className="hidden sm:inline-flex items-center gap-1.5 text-sm text-gray-700 transition-colors hover:text-green-600"
+                >
                   {user.name}
                   {user.is_musician && (
                     <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
@@ -124,7 +127,7 @@ export default function Header() {
                       クライアント
                     </span>
                   )}
-                </span>
+                </Link>
                 <button
                   type="button"
                   onClick={handleLogout}
@@ -206,7 +209,11 @@ export default function Header() {
                   </Link>
                 )}
                 <div className="pt-2 border-t border-gray-200">
-                  <div className="flex items-center gap-1.5 text-sm text-gray-700 mb-2">
+                  <Link
+                    href={`/musicians/${user.uuid}`}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-1.5 text-sm text-gray-700 mb-2 transition-colors hover:text-green-600"
+                  >
                     {user.name}
                     {user.is_musician && (
                       <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
@@ -218,7 +225,7 @@ export default function Header() {
                         クライアント
                       </span>
                     )}
-                  </div>
+                  </Link>
                   <button
                     type="button"
                     onClick={() => {

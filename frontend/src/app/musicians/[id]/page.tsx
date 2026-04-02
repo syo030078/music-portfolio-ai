@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import DirectRequestForm from '@/components/DirectRequestForm';
 import type { MusicianSummary } from '@/types';
-import { fetchMusicianByUuid } from '@/lib/api/musicians';
+import { fetchMusicianByUuid, generateAiText } from '@/lib/api/musicians';
+import { useUser } from '@/hooks/useUser';
 
 export default function MusicianDetailPage({
   params,
@@ -15,6 +16,8 @@ export default function MusicianDetailPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [resolvedId, setResolvedId] = useState<string | null>(null);
+  const [generatingTrackUuid, setGeneratingTrackUuid] = useState<string | null>(null);
+  const { user } = useUser();
 
   useEffect(() => {
     const resolveParams = async () => {
@@ -39,6 +42,28 @@ export default function MusicianDetailPage({
     };
     load();
   }, [resolvedId]);
+
+  const isOwner = user?.uuid === musician?.uuid;
+
+  const handleGenerateAiText = async (trackUuid: string) => {
+    const token = localStorage.getItem('jwt');
+    if (!token || !musician) return;
+
+    setGeneratingTrackUuid(trackUuid);
+    try {
+      const result = await generateAiText(trackUuid, token);
+      setMusician({
+        ...musician,
+        tracks: musician.tracks.map((t) =>
+          t.uuid === trackUuid ? { ...t, ai_text: result.ai_text } : t
+        ),
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'AI説明文の生成に失敗しました');
+    } finally {
+      setGeneratingTrackUuid(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -141,7 +166,7 @@ export default function MusicianDetailPage({
                             </div>
                           )}
                         </div>
-                        {track.ai_text && (
+                        {track.ai_text ? (
                           <div className="mt-4 rounded-lg bg-gradient-to-r from-purple-50 to-blue-50 p-3">
                             <div className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-purple-700">
                               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -153,7 +178,18 @@ export default function MusicianDetailPage({
                               {track.ai_text}
                             </p>
                           </div>
-                        )}
+                        ) : isOwner && (track.bpm || track.key || track.genre) ? (
+                          <button
+                            onClick={() => handleGenerateAiText(track.uuid)}
+                            disabled={generatingTrackUuid === track.uuid}
+                            className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-purple-100 px-3 py-1.5 text-xs font-medium text-purple-700 transition-colors hover:bg-purple-200 disabled:opacity-50"
+                          >
+                            <svg className={`h-3.5 w-3.5 ${generatingTrackUuid === track.uuid ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456Z" />
+                            </svg>
+                            {generatingTrackUuid === track.uuid ? 'AI分析中...' : 'AI説明文を生成'}
+                          </button>
+                        ) : null}
                         {track.yt_url && (
                           <a
                             href={track.yt_url}
