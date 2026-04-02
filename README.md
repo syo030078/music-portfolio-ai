@@ -12,6 +12,7 @@
 ![Python](https://img.shields.io/badge/Python-librosa-3776AB?logo=python&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14-4169E1?logo=postgresql&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-412991?logo=openai&logoColor=white)
 
 ---
 
@@ -31,6 +32,8 @@
 | 機能 | 概要 | 技術要素 |
 |------|------|----------|
 | 🎵 楽曲の AI 解析 | アップロードした楽曲の BPM・キー・ジャンルを自動推定 | Python + librosa, Open3 プロセス分離 |
+| 🤖 AI 楽曲説明文生成 | 解析データから楽曲の特徴・雰囲気・用途を自動生成 | OpenAI GPT-4o-mini, AiTextGenerator サービス |
+| 🔍 AI マッチング | 自然言語で要望を入力 → 最適な楽曲をスコア付きで推薦 | OpenAI GPT-4o-mini, AiMatchingService |
 | 📋 ポートフォリオ自動生成 | 解析データから音楽家プロフィールを構築 | Rails API + PostgreSQL |
 | 📝 案件管理 | 制作依頼の投稿・提案・契約をステータスマシンで管理 | `draft → published → contracted → completed` |
 | 👥 ロールベース UI | ミュージシャン / クライアントで異なる画面・操作を提供 | Next.js App Router + JWT ロール判定 |
@@ -48,6 +51,7 @@
 | **Backend** | Rails 7 API mode, Ruby 3.1.3 | ActiveRecord のマイグレーション管理と充実したモデル層。API mode で軽量化 |
 | **Database** | PostgreSQL 14 | UUID ネイティブ対応、CHECK 制約、JSONB。ビジネスロジックの一部を DB 層で保証 |
 | **AI / 解析** | Python, librosa, soundfile, NumPy | 音響解析の事実上の標準。Ruby には同等ライブラリがないためサブプロセスとして分離 |
+| **LLM** | OpenAI GPT-4o-mini | 楽曲説明文の自動生成 + 自然言語マッチング。コスト効率重視で mini モデルを選定 |
 | **認証** | Devise + JWT, bcrypt | SPA + API のステートレス通信に対応。`JwtDenylist` でトークン失効管理 |
 | **バリデーション** | Zod | TypeScript の型はコンパイル時のみ → API レスポンスやフォーム入力を実行時にも検証 |
 | **Testing** | RSpec (68 spec files), ESLint, TypeScript 型検査 (`tsc --noEmit`) | モデル・リクエスト・サービス・統合テストの多層カバレッジ |
@@ -106,13 +110,17 @@ sequenceDiagram
     participant B as Rails API
     participant A as Python Analyzer
     participant DB as PostgreSQL
+    participant OpenAI as OpenAI API
 
     U->>F: 楽曲ファイルをアップロード
     F->>B: POST /api/v1/tracks
     B->>A: AnalyzerRunner.call(file_path)
     Note over B,A: Open3.popen3 / 60秒タイムアウト
     A-->>B: {bpm, key, genre} (JSON)
-    B->>DB: Track.create(解析結果)
+    B->>OpenAI: AiTextGenerator.call(bpm, key, genre)
+    Note over B,OpenAI: GPT-4o-mini / 10秒タイムアウト
+    OpenAI-->>B: ai_text（楽曲説明文）
+    B->>DB: Track.create(解析結果 + ai_text)
     B-->>F: 201 Created + track data
     F-->>U: ポートフォリオに楽曲表示
 ```
@@ -158,12 +166,14 @@ sequenceDiagram
 - **ヘルスチェック監視**：`curl /api/v1/health` による自動検知
 - **PostgreSQL チューニング**：`shared_buffers=64MB`, `effective_cache_size=256MB`, `max_connections=50`
 
-### 6. AI 統合：音響解析パイプライン
+### 6. AI 統合：音響解析 + LLM パイプライン
 
 - librosa による BPM・キー・ジャンル推定を `AnalyzerRunner` サービスに集約
 - `Open3.popen3` で Python プロセスを分離し、60 秒タイムアウト + `Process.kill` で暴走を防止
 - フォールバック設計：解析失敗時もデフォルト値（BPM=120, Key=C, Genre=Pop）で正常レスポンス
-- `tracks.ai_text` カラムで OpenAI 連携の拡張ポイントを確保済み
+- **`AiTextGenerator`**：OpenAI GPT-4o-mini で解析データから楽曲説明文を自動生成（日本語プロンプト、max_tokens=300）
+- **`AiMatchingService`**：クライアントの自然言語要望と全楽曲メタデータを LLM に渡し、マッチ度スコア付きで最大 5 件推薦
+- Graceful degradation：API キー未設定や LLM エラー時もアプリ全体は正常動作
 
 ---
 
@@ -271,8 +281,10 @@ music-portfolio-ai/
 - ✅ レビューシステム（CHECK 制約付き）
 - ✅ Docker Compose 本番構成 + EC2 デプロイ
 - ✅ CI/CD パイプライン（GitHub Actions）
+- ✅ OpenAI 連携による楽曲説明文の自動生成（GPT-4o-mini）
+- ✅ AI マッチング（自然言語 → 楽曲推薦）
+- ⬜ RAG 実装（pgvector + Embedding によるベクトル検索）
 - ⬜ 楽曲の波形表示・プレビュー再生
-- ⬜ OpenAI 連携によるプロフィール文自動生成
 - ⬜ リアルタイム通知（WebSocket / Action Cable）
 - ⬜ 楽曲検索のフィルタリング強化（BPM 範囲・ジャンル）
 
