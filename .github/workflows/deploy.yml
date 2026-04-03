@@ -33,10 +33,10 @@ jobs:
               && sed -i "s|^OPENAI_API_KEY=.*|OPENAI_API_KEY=${OPENAI_API_KEY}|" .env \
               || echo "OPENAI_API_KEY=${OPENAI_API_KEY}" >> .env
 
-            # ディスク容量確保: 古いイメージ・ビルドキャッシュを自動削除
+            # ディスク容量確保: 未使用イメージ・ビルドキャッシュを全削除
             echo "=== Disk cleanup ==="
-            docker image prune -af --filter "until=24h"
-            docker builder prune -af --filter "until=24h"
+            docker image prune -af
+            docker builder prune -af
             df -h / | tail -1
 
             git config pull.rebase false
