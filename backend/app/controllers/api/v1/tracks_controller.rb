@@ -162,28 +162,47 @@ class Api::V1::TracksController < ApplicationController
       return
     end
 
-    # 音声ファイル解析の処理（既存機能）
+    # 音声ファイル解析の処理
     if audio_file
-      # 一時ファイル保存
       temp_path = Rails.root.join('tmp', 'uploads', audio_file.original_filename)
       FileUtils.mkdir_p(File.dirname(temp_path))
       File.write(temp_path, audio_file.read, mode: 'wb')
 
       begin
-        # Python解析実行
         result = AnalyzerRunner.call(temp_path.to_s)
 
-        # エラーがある場合は適切なステータスコードで返す
         if result[:error]
           render json: { data: result }, status: :unprocessable_entity
         else
-          render json: { message: "load_wav created", data: result }
+          # 解析成功時にTrackをDBに保存
+          # AnalyzerRunnerはJSON.parse(文字列キー) + merge(シンボルキー)の混在を返す
+          track = Track.new(
+            user_id: current_user.id,
+            title: title || File.basename(audio_file.original_filename, '.*'),
+            bpm: result[:bpm] || result["bpm"],
+            key: result[:key] || result["key"],
+            genre: result[:genre] || result["genre"]
+          )
+
+          if track.save
+            track.reload
+            render json: {
+              message: "楽曲を登録しました",
+              data: {
+                uuid: track.uuid,
+                bpm: track.bpm,
+                key: track.key,
+                genre: track.genre
+              }
+            }, status: :created
+          else
+            render json: { data: { error: track.errors.full_messages.join(", ") } }, status: :unprocessable_entity
+          end
         end
       rescue => e
         Rails.logger.error("解析処理エラー: #{e.message}")
         render json: { data: { error: "解析エラーが発生しました" } }, status: :internal_server_error
       ensure
-        # 一時ファイル削除
         File.delete(temp_path) if File.exist?(temp_path)
       end
     else

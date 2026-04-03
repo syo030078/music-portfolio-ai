@@ -244,14 +244,17 @@ RSpec.describe Api::V1::TracksController, type: :controller do
         })
       end
 
-      it "returns analysis result" do
-        post :create, params: { audio_file: audio_file }
-        expect(response).to have_http_status(:ok)
+      it "returns analysis result and creates track" do
+        expect {
+          post :create, params: { audio_file: audio_file }
+        }.to change(Track, :count).by(1)
+        expect(response).to have_http_status(:created)
 
         json = JSON.parse(response.body)
-        expect(json["message"]).to eq("load_wav created")
+        expect(json["message"]).to eq("楽曲を登録しました")
         expect(json["data"]["bpm"]).to eq(120)
         expect(json["data"]["key"]).to eq("C")
+        expect(json["data"]["uuid"]).to be_present
       end
     end
 
