@@ -5,11 +5,14 @@ require 'open3'
 
 class AnalyzerRunner
   def self.call(audio_file_path)
-    # Python解析スクリプトのパス
-    analyzer_script = Rails.root.join('..', 'analyzer', 'music_analyzer.py')
+    # Docker環境: ENV変数を使用、ローカル: 従来の相対パス
+    analyzer_script = ENV.fetch('ANALYZER_SCRIPT_PATH') {
+      Rails.root.join('..', 'analyzer', 'music_analyzer.py').to_s
+    }
 
-    # 仮想環境のPython3パス（標準パス）
-    python_path = Rails.root.join('..', '.venv', 'bin', 'python3')
+    python_path = ENV.fetch('ANALYZER_PYTHON_PATH') {
+      Rails.root.join('..', '.venv', 'bin', 'python3').to_s
+    }
 
     # Pythonやスクリプトの存在確認
     unless File.exist?(python_path)
@@ -33,7 +36,7 @@ class AnalyzerRunner
       stderr_str = nil
       exit_status = nil
 
-      Open3.popen3(python_path.to_s, analyzer_script.to_s, "--file", audio_file_path, chdir: Rails.root.join('..').to_s) do |stdin, stdout, stderr, wait_thr|
+      Open3.popen3(python_path.to_s, analyzer_script.to_s, "--file", audio_file_path, chdir: File.dirname(analyzer_script)) do |stdin, stdout, stderr, wait_thr|
         stdin.close
 
         # タイムアウト付きで待機
