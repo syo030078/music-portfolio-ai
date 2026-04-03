@@ -31,7 +31,7 @@ RUN apt-get update -qq && \
     && rm -rf /var/lib/apt/lists/*
 
 COPY analyzer/requirements.txt /tmp/requirements.txt
-RUN pip3 install --no-cache-dir --prefix=/python-deps \
+RUN pip3 install --no-cache-dir --target=/python-packages \
     -r /tmp/requirements.txt
 
 # === ランタイムステージ ===
@@ -47,7 +47,7 @@ RUN apt-get update -qq && \
     && rm -rf /var/lib/apt/lists/*
 
 # Python依存パッケージをコピー
-COPY --from=python-build /python-deps /usr/local
+COPY --from=python-build /python-packages /python-packages
 
 # 解析スクリプトをコピー
 COPY analyzer/ /analyzer/
@@ -69,6 +69,7 @@ EXPOSE 3001
 ENV RAILS_ENV=production \
     RAILS_LOG_TO_STDOUT=true \
     BUNDLE_DEPLOYMENT=true \
+    PYTHONPATH=/python-packages \
     ANALYZER_PYTHON_PATH=/usr/bin/python3 \
     ANALYZER_SCRIPT_PATH=/analyzer/music_analyzer.py
 
