@@ -6,8 +6,9 @@ class Track < ApplicationRecord
 
   validates :title, presence: true, length: { maximum: 120 }
   validates :description, length: { maximum: 1000 }
-  validates :yt_url, presence: true,
-    format: { with: /\Ahttps?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)/i }
+  validates :yt_url,
+    format: { with: /\Ahttps?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)/i },
+    allow_blank: true
 
   private
   def normalize_yt_url
