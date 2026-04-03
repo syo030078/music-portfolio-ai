@@ -39,8 +39,8 @@ services:
 
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile.production
+      context: .
+      dockerfile: backend/Dockerfile.production
     restart: unless-stopped
     environment:
       RAILS_ENV: production
