@@ -31,7 +31,7 @@ RUN apt-get update -qq && \
     && rm -rf /var/lib/apt/lists/*
 
 COPY analyzer/requirements.txt /tmp/requirements.txt
-RUN pip3 install --no-cache-dir --break-system-packages --prefix=/python-deps \
+RUN pip3 install --no-cache-dir --prefix=/python-deps \
     -r /tmp/requirements.txt
 
 # === ランタイムステージ ===
