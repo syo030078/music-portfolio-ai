@@ -17,8 +17,7 @@ class Api::V1::TracksController < ApplicationController
     ai_text = AiTextGenerator.call(
       bpm: track.bpm,
       key: track.key,
-      genre: track.genre,
-      analysis_data: track.analysis_data || {}
+      genre: track.genre
     )
 
     if ai_text.nil?
