@@ -8,6 +8,7 @@ Rails.application.routes.draw do
     namespace :v1 do
       get "health", to: "health#show"
       resource :user, only: [:show, :update]
+      get 'users/:uuid', to: 'users#profile', as: :user_profile
       resources :tracks do
         member do
           post :generate_ai_text

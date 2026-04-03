@@ -40,10 +40,30 @@ export async function fetchMusicians(): Promise<MusicianSummary[]> {
   return groupTracksByMusician(data.tracks);
 }
 
+type UserProfile = {
+  uuid: string;
+  name: string;
+  bio?: string;
+  is_musician: boolean;
+  is_client: boolean;
+};
+
 export async function fetchMusicianByUuid(uuid: string): Promise<MusicianSummary | null> {
   const data = await apiGet<TracksListResponse>(`/api/v1/tracks?user_uuid=${encodeURIComponent(uuid)}&per_page=50`);
   const musicians = groupTracksByMusician(data.tracks);
-  return musicians.find((m) => m.uuid === uuid) ?? null;
+  const found = musicians.find((m) => m.uuid === uuid);
+  if (found) return found;
+
+  // 楽曲0件の場合はユーザープロフィールAPIから取得
+  const profile = await apiGet<UserProfile>(`/api/v1/users/${encodeURIComponent(uuid)}`);
+  return {
+    uuid: profile.uuid,
+    name: profile.name,
+    bio: profile.bio ?? null,
+    trackCount: 0,
+    genres: [],
+    tracks: [],
+  };
 }
 
 export async function generateAiText(trackUuid: string, token: string): Promise<{ uuid: string; ai_text: string }> {
