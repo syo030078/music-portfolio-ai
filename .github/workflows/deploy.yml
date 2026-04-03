@@ -16,14 +16,22 @@ jobs:
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           command_timeout: 10m
+          envs: OPENAI_API_KEY
           script: |
             set -e
             cd ~/music-portfolio-ai
+
+            # OPENAI_API_KEYを.envに反映（既存行を更新 or 追加）
+            grep -q '^OPENAI_API_KEY=' .env 2>/dev/null \
+              && sed -i "s|^OPENAI_API_KEY=.*|OPENAI_API_KEY=${OPENAI_API_KEY}|" .env \
+              || echo "OPENAI_API_KEY=${OPENAI_API_KEY}" >> .env
 
             # ディスク容量確保: 古いイメージ・ビルドキャッシュを自動削除
             echo "=== Disk cleanup ==="
