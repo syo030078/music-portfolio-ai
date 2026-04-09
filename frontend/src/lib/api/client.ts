@@ -5,6 +5,13 @@ const API_URL =
     ? (process.env.API_INTERNAL_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000')
     : (process.env.NEXT_PUBLIC_API_URL || '');
 
+function handleSessionExpired(): void {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('jwt');
+    window.location.href = '/login';
+  }
+}
+
 async function parseResponse<T>(res: Response): Promise<T> {
   const text = await res.text();
   try {
@@ -31,6 +38,7 @@ export async function apiGet<T>(path: string, token?: string): Promise<T> {
   });
 
   if (res.status === 401) {
+    handleSessionExpired();
     throw new Error('ログインセッションが切れました。再度ログインしてください');
   }
 
@@ -55,6 +63,7 @@ export async function apiPost<T>(path: string, token: string, body?: unknown): P
   });
 
   if (res.status === 401) {
+    handleSessionExpired();
     throw new Error('ログインセッションが切れました。再度ログインしてください');
   }
 
