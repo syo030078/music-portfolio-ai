@@ -82,6 +82,12 @@ export default function UploadPage() {
         body: formData,
       });
 
+      if (res.status === 401) {
+        localStorage.removeItem("jwt");
+        window.location.href = "/login";
+        return;
+      }
+
       const data = await res.json();
 
       if (res.ok) {
@@ -119,6 +125,12 @@ export default function UploadPage() {
         },
         body: JSON.stringify({ yt_url: ytUrl, title: "YouTube Video" }),
       });
+
+      if (res.status === 401) {
+        localStorage.removeItem("jwt");
+        window.location.href = "/login";
+        return;
+      }
 
       const data = await res.json();
 
