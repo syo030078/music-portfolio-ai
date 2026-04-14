@@ -129,6 +129,155 @@ sequenceDiagram
 
 ---
 
+## API エンドポイント設計
+
+RESTful 設計 + UUID 公開キー。内部 `id` を URL に露出させず、`uuid` パラメータでリソースを識別。
+
+| Method | Endpoint | 概要 | 認証 |
+|--------|----------|------|------|
+| `POST` | `/auth/sign_up` | ユーザー登録 | - |
+| `POST` | `/auth/sign_in` | ログイン（JWT 発行） | - |
+| `DELETE` | `/auth/sign_out` | ログアウト（トークン denylist 追加） | 🔑 |
+| `GET` | `/api/v1/user` | 自分のプロフィール取得 | 🔑 |
+| `PUT` | `/api/v1/user` | プロフィール更新 | 🔑 |
+| `GET` | `/api/v1/users/:uuid` | 他ユーザーのプロフィール | - |
+| `GET/POST` | `/api/v1/tracks` | 楽曲一覧 / 新規アップロード（AI 解析自動実行） | 🔑 |
+| `POST` | `/api/v1/tracks/:id/generate_ai_text` | 楽曲の AI 説明文を再生成 | 🔑 |
+| `POST` | `/api/v1/matching` | 自然言語 → AI マッチング（スコア付き推薦） | 🔑 |
+| `GET/POST` | `/api/v1/jobs` | 案件一覧 / 新規作成 | 🔑 |
+| `GET` | `/api/v1/jobs/:uuid` | 案件詳細 | - |
+| `GET/POST` | `/api/v1/jobs/:uuid/proposals` | 提案一覧 / 新規提案 | 🔑 |
+| `POST` | `/api/v1/proposals/:uuid/accept` | 提案を承認 → 契約自動生成 | 🔑 |
+| `POST` | `/api/v1/proposals/:uuid/reject` | 提案を却下 | 🔑 |
+| `GET/POST` | `/api/v1/production_requests` | 制作依頼の一覧 / 新規作成 | 🔑 |
+| `POST` | `/api/v1/production_requests/:uuid/accept\|reject\|withdraw` | 制作依頼のステータス操作 | 🔑 |
+| `GET/POST` | `/api/v1/conversations` | 会話一覧 / 新規作成 | 🔑 |
+| `GET/POST` | `/api/v1/conversations/:id/messages` | メッセージ一覧 / 送信 | 🔑 |
+| `GET` | `/api/v1/health` | ヘルスチェック | - |
+
+---
+
+## ER 図（16 テーブル）
+
+```mermaid
+erDiagram
+    users ||--|| musician_profiles : "has one"
+    users ||--|| client_profiles : "has one"
+    users ||--o{ tracks : "musician"
+    users ||--o{ jobs : "client"
+    users ||--o{ proposals : "musician"
+    users ||--o{ contracts : "client/musician"
+    users ||--o{ reviews : "reviewer/reviewee"
+
+    jobs ||--o{ job_requirements : "has many"
+    jobs ||--o{ proposals : "has many"
+    proposals ||--|| contracts : "creates"
+    contracts ||--o{ contract_milestones : "has many"
+    contracts ||--o{ transactions : "has many"
+    contracts ||--o{ reviews : "has one"
+
+    jobs ||--o{ conversations : "pre-contract"
+    contracts ||--o{ conversations : "post-contract"
+    conversations ||--o{ messages : "has many"
+    conversations ||--o{ conversation_participants : "has many"
+    users ||--o{ conversation_participants : "joins"
+
+    users ||--o{ musician_genres : "has many"
+    genres ||--o{ musician_genres : "has many"
+    users ||--o{ musician_instruments : "has many"
+    instruments ||--o{ musician_instruments : "has many"
+    users ||--o{ musician_skills : "has many"
+    skills ||--o{ musician_skills : "has many"
+
+    users {
+        uuid id PK
+        citext email "unique"
+        boolean is_musician
+        boolean is_client
+        timestamptz deleted_at "soft delete"
+    }
+    tracks {
+        bigserial id PK
+        bigint user_id FK
+        varchar title
+        float bpm "AI解析"
+        varchar key "AI解析"
+        varchar genre "AI解析"
+        text ai_text "LLM生成"
+    }
+    jobs {
+        bigserial id PK
+        uuid uuid "公開用ID"
+        bigint client_id FK
+        varchar title
+        text description
+        integer budget_jpy
+        enum status "draft→published→contracted→completed"
+    }
+    proposals {
+        uuid id PK
+        uuid job_id FK
+        uuid musician_id FK
+        integer quote_total_jpy
+        enum status "submitted→shortlisted→accepted→rejected"
+    }
+    contracts {
+        uuid id PK
+        uuid proposal_id FK "unique"
+        integer escrow_total_jpy
+        enum status "active→in_progress→delivered→completed"
+    }
+    conversations {
+        bigserial id PK
+        bigint job_id FK "nullable, XOR制約"
+        bigint contract_id FK "nullable, XOR制約"
+    }
+```
+
+> 設計ポイント: `conversations` は `job_id` と `contract_id` の XOR 制約で「契約前 / 契約後」の会話を分離。Job や Contract の削除時に CASCADE で会話も削除される。
+>
+> 詳細な ER 図（全カラム・制約付き）は [`docs/architecture/er-diagram.puml`](docs/architecture/er-diagram.puml) を参照。
+
+---
+
+## 設計判断とトレードオフ
+
+### なぜ Rails API + Next.js の分離構成か（モノリス vs マイクロサービス）
+
+| 選択肢 | メリット | デメリット |
+|---------|---------|-----------|
+| **Rails モノリス（ERB / Hotwire）** | 開発速度が速い、デプロイが単純 | SPA レベルの UX が困難、フロント技術のアピールが弱い |
+| **Next.js フルスタック** | 1 言語で完結 | ActiveRecord の ORM 力・マイグレーション管理を失う |
+| ✅ **Rails API + Next.js（採用）** | フロント/バックの責務分離、両方の技術力を証明できる | CORS 設定・認証トークン管理の複雑さが増す |
+
+**判断理由:** 音楽マッチングプラットフォームは「検索 → 試聴 → 提案 → 契約」の対話的な UX が重要。Server Components + App Router でデータフェッチを最適化しつつ、Rails の強力な ORM とマイグレーション管理を活用する構成が最適と判断した。
+
+### なぜ UUID を公開キーに使うか（連番 ID vs UUID）
+
+- 連番 ID を URL に露出すると、`/jobs/1`, `/jobs/2` で他ユーザーのリソースを推測可能（IDOR 脆弱性）
+- UUID を公開用、連番 ID を内部用に分離することで、**セキュリティとパフォーマンス（JOIN 効率）を両立**
+- PostgreSQL の `pgcrypto` 拡張で DB 層で UUID を生成
+
+### なぜ Python サブプロセスか（FFI vs マイクロサービス vs サブプロセス）
+
+| 選択肢 | メリット | デメリット |
+|---------|---------|-----------|
+| Ruby FFI で librosa 呼び出し | プロセス間通信なし | librosa は Python 専用。FFI バインディングが存在しない |
+| Python マイクロサービス（API） | スケーラブル | インフラコスト増、認証・ヘルスチェックの管理が必要 |
+| ✅ **Open3 サブプロセス（採用）** | 最小構成で Python の音響解析ライブラリを活用 | プロセス生成コスト、タイムアウト管理が必要 |
+
+**判断理由:** 音響解析は 1 リクエストあたり 1 回のみ実行。マイクロサービスの運用コストに見合うほどの呼び出し頻度がないため、`Open3.popen3` + 60 秒タイムアウト + `Process.kill` のシンプルな構成を選択。
+
+### なぜ 4 層バリデーションか
+
+```
+TypeScript strict → Zod → ActiveRecord validations → PostgreSQL CHECK 制約
+```
+
+**トレードオフ:** バリデーションの重複はコードの冗長性を生むが、**各層が独立して動作する**ことで「フロントのバグが DB を壊す」シナリオを構造的に防止。特に `rating` の CHECK 制約（1-5）は、API を直接叩かれても不正値が入らない最終防御ライン。
+
+---
+
 ## 技術的こだわり
 
 ### 1. API 設計
