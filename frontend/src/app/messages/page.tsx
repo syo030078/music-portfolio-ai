@@ -4,6 +4,7 @@ import Link from 'next/link';
 import AuthGuard from '@/components/AuthGuard';
 import { useUser } from '@/hooks/useUser';
 import { useChatList } from '@/hooks/useChatList';
+import { getToken } from '@/lib/auth';
 
 function formatDateTime(dateString: string): string {
   const date = new Date(dateString);
@@ -29,8 +30,7 @@ function formatDateTime(dateString: string): string {
 
 export default function MessagesPage() {
   const { isMusician } = useUser();
-  const token =
-    typeof window !== 'undefined' ? localStorage.getItem('jwt') : null;
+  const token = getToken();
   const { conversations, loading, error, retry } = useChatList(token);
 
   return (

@@ -5,6 +5,7 @@ import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AuthGuard from '@/components/AuthGuard';
 import ProposalCard from '@/components/ProposalCard';
+import { getToken } from '@/lib/auth';
 
 interface Proposal {
   uuid: string;
@@ -35,7 +36,7 @@ export default function ProposalsPage({ params }: { params: Promise<{ id: string
   useEffect(() => {
     const fetchData = async () => {
       setError(null);
-      const token = localStorage.getItem('jwt');
+      const token = getToken();
       if (!token) return;
 
       try {
