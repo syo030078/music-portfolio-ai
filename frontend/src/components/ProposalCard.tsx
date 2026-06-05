@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import { getToken } from '@/lib/auth';
 
 interface Proposal {
   uuid: string;
@@ -44,7 +45,7 @@ export default function ProposalCard({ proposal, onAccepted, onRejected }: Propo
     setError(null);
     setNeedsLogin(false);
 
-    const token = localStorage.getItem('jwt');
+    const token = getToken();
     if (!token) {
       setNeedsLogin(true);
       setError('ログインしてください');
