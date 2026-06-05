@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { z } from 'zod';
 import { createDirectRequest } from '@/lib/api/directRequests';
-import { getToken } from '@/lib/auth';
 
 const directRequestSchema = z.object({
   title: z.string().min(1, 'タイトルを入力してください').max(100, '100文字以内で入力してください'),
@@ -36,7 +35,7 @@ export default function DirectRequestForm({ musicianUuid, musicianName }: Direct
     setNeedsLogin(false);
 
     try {
-      const token = getToken();
+      const token = localStorage.getItem('jwt');
       if (!token) {
         setNeedsLogin(true);
         throw new Error('ログインしてください');

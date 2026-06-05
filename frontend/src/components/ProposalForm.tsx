@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { getToken } from '@/lib/auth';
 
 interface ProposalFormProps {
   jobUuid: string;
@@ -27,7 +26,7 @@ export default function ProposalForm({ jobUuid }: ProposalFormProps) {
     setSuccess(null);
     setNeedsLogin(false);
 
-    const token = getToken();
+    const token = localStorage.getItem('jwt');
     if (!token) {
       setNeedsLogin(true);
       setError('ログインしてください');

@@ -4,7 +4,6 @@ import { useState } from 'react';
 import type { DirectRequest } from '@/types';
 import { acceptDirectRequest, rejectDirectRequest } from '@/lib/api/directRequests';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
-import { getToken } from '@/lib/auth';
 
 interface DirectRequestCardProps {
   request: DirectRequest;
@@ -36,7 +35,7 @@ export default function DirectRequestCard({
     setError(null);
 
     try {
-      const token = getToken();
+      const token = localStorage.getItem('jwt');
       if (!token) {
         throw new Error('ログインしてください');
       }
@@ -58,7 +57,7 @@ export default function DirectRequestCard({
     setError(null);
 
     try {
-      const token = getToken();
+      const token = localStorage.getItem('jwt');
       if (!token) {
         throw new Error('ログインしてください');
       }

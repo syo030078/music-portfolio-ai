@@ -3,7 +3,6 @@ import Link from "next/link";
 import { useState } from "react";
 import AuthGuard from "@/components/AuthGuard";
 import { useUser } from "@/hooks/useUser";
-import { getToken, handleSessionExpired } from "@/lib/auth";
 
 type AnalysisResult = {
   bpm?: number | null;
@@ -71,7 +70,7 @@ export default function UploadPage() {
     setUploadSuccess(false);
 
     try {
-      const token = getToken();
+      const token = localStorage.getItem("jwt");
       const formData = new FormData();
       formData.append("audio_file", audioFile);
 
@@ -84,7 +83,8 @@ export default function UploadPage() {
       });
 
       if (res.status === 401) {
-        handleSessionExpired();
+        localStorage.removeItem("jwt");
+        window.location.href = "/login";
         return;
       }
 
@@ -116,7 +116,7 @@ export default function UploadPage() {
     setUploadSuccess(false);
 
     try {
-      const token = getToken();
+      const token = localStorage.getItem("jwt");
       const res = await fetch(`${API}/api/v1/tracks`, {
         method: "POST",
         headers: {
@@ -127,7 +127,8 @@ export default function UploadPage() {
       });
 
       if (res.status === 401) {
-        handleSessionExpired();
+        localStorage.removeItem("jwt");
+        window.location.href = "/login";
         return;
       }
 

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getToken, getStoredUser, removeToken } from "@/lib/auth";
 
 interface UserInfo {
   uuid: string;
@@ -19,16 +18,21 @@ export default function Header() {
   const [user, setUser] = useState<UserInfo | null>(null);
 
   useEffect(() => {
-    const token = getToken();
-    if (token) {
-      setUser(getStoredUser<UserInfo>());
+    const stored = localStorage.getItem("user");
+    const token = localStorage.getItem("jwt");
+    if (stored && token) {
+      try {
+        setUser(JSON.parse(stored));
+      } catch {
+        setUser(null);
+      }
     } else {
       setUser(null);
     }
   }, [pathname]);
 
   const handleLogout = async () => {
-    const token = getToken();
+    const token = localStorage.getItem("jwt");
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
     try {
@@ -43,7 +47,8 @@ export default function Header() {
       // ログアウトAPIが失敗してもローカルはクリアする
     }
 
-    removeToken();
+    localStorage.removeItem("jwt");
+    localStorage.removeItem("user");
     setUser(null);
     router.push("/");
   };

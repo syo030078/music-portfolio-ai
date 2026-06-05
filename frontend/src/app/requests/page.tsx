@@ -7,7 +7,6 @@ import AuthGuard from '@/components/AuthGuard';
 import DirectRequestCard from '@/components/DirectRequestCard';
 import type { DirectRequest } from '@/types';
 import { fetchDirectRequests } from '@/lib/api/directRequests';
-import { getToken, getStoredUser } from '@/lib/auth';
 
 export default function RequestsPage() {
   const router = useRouter();
@@ -17,16 +16,18 @@ export default function RequestsPage() {
   const [currentUserUuid, setCurrentUserUuid] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = getToken();
-    if (!token) return;
+    const token = localStorage.getItem('jwt');
+    const userStr = localStorage.getItem('user');
+    if (!token || !userStr) return;
 
-    const user = getStoredUser<{ uuid: string }>();
-    if (!user) {
+    try {
+      const user = JSON.parse(userStr);
+      setCurrentUserUuid(user.uuid);
+    } catch {
       setError('ユーザー情報の取得に失敗しました');
       setLoading(false);
       return;
     }
-    setCurrentUserUuid(user.uuid);
 
     const load = async () => {
       try {

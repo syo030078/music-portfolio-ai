@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { getToken } from "@/lib/auth";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -14,7 +13,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   const pathname = usePathname();
 
   useEffect(() => {
-    const token = getToken();
+    const token = localStorage.getItem("jwt");
     if (!token) {
       router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
     } else {

@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 import { useChat } from '@/hooks/useChat';
 import { useUser } from '@/hooks/useUser';
-import { getToken } from '@/lib/auth';
 
 interface ChatBoxProps {
   conversationUuid: string;
@@ -12,7 +11,8 @@ interface ChatBoxProps {
 
 export default function ChatBox({ conversationUuid }: ChatBoxProps) {
   const { user } = useUser();
-  const token = getToken();
+  const token =
+    typeof window !== 'undefined' ? localStorage.getItem('jwt') : null;
 
   const {
     messages,
