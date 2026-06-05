@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getToken, getStoredUser } from '@/lib/auth';
 
 interface UserInfo {
   readonly uuid: string;
@@ -18,15 +19,9 @@ export function useUser(): UseUserResult {
   const [user, setUser] = useState<UserInfo | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem('user');
-    const token = localStorage.getItem('jwt');
-    if (stored && token) {
-      try {
-        setUser(JSON.parse(stored));
-      } catch {
-        setUser(null);
-      }
-    }
+    const token = getToken();
+    if (!token) return;
+    setUser(getStoredUser<UserInfo>());
   }, []);
 
   return {

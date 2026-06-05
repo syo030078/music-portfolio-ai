@@ -7,6 +7,7 @@ import AuthGuard from '@/components/AuthGuard';
 import { useAsyncData } from '@/hooks/useAsyncData';
 import { fetchConversation } from '@/lib/api/conversations';
 import type { Conversation } from '@/types/conversation';
+import { getToken } from '@/lib/auth';
 
 export default function ConversationPage({
   params,
@@ -17,7 +18,7 @@ export default function ConversationPage({
 
   const { data: conversation, loading, error } = useAsyncData<Conversation>(
     () => {
-      const token = localStorage.getItem('jwt');
+      const token = getToken();
       if (!token) throw new Error('ログインが必要です');
       return fetchConversation(token, id);
     },

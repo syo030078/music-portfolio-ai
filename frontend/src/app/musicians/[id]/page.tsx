@@ -6,6 +6,7 @@ import DirectRequestForm from '@/components/DirectRequestForm';
 import type { MusicianSummary } from '@/types';
 import { fetchMusicianByUuid, generateAiText } from '@/lib/api/musicians';
 import { useUser } from '@/hooks/useUser';
+import { getToken } from '@/lib/auth';
 
 export default function MusicianDetailPage({
   params,
@@ -46,7 +47,7 @@ export default function MusicianDetailPage({
   const isOwner = user?.uuid === musician?.uuid;
 
   const handleGenerateAiText = async (trackUuid: string) => {
-    const token = localStorage.getItem('jwt');
+    const token = getToken();
     if (!token || !musician) return;
 
     setGeneratingTrackUuid(trackUuid);

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { apiGet, apiPost } from '@/lib/api/client';
+import { getToken } from '@/lib/auth';
 
 interface ContactButtonProps {
   jobUuid: string;
@@ -30,7 +31,7 @@ export default function ContactButton({ jobUuid, clientUuid }: ContactButtonProp
     setNeedsLogin(false);
 
     try {
-      const token = localStorage.getItem('jwt');
+      const token = getToken();
       if (!token) {
         setNeedsLogin(true);
         throw new Error('ログインしてください');
