@@ -4,6 +4,8 @@ class Message < ApplicationRecord
 
   validates :content, presence: true, length: { minimum: 1, maximum: 1000 }
 
+  before_create { self.uuid = SecureRandom.uuid }
+
   # UUID対応
   def to_param
     uuid

@@ -179,6 +179,7 @@ RSpec.describe 'Api::V1::Messages', type: :request do
       msg_data = json['message']
 
       expect(msg_data).to have_key('uuid')
+      expect(msg_data['uuid']).not_to be_nil
       expect(msg_data).not_to have_key('id')
       expect(msg_data).to have_key('sender_uuid')
       expect(msg_data).not_to have_key('sender_id')
