@@ -163,46 +163,12 @@ class Api::V1::TracksController < ApplicationController
 
     # 音声ファイル解析の処理
     if audio_file
-      temp_path = Rails.root.join('tmp', 'uploads', audio_file.original_filename)
-      FileUtils.mkdir_p(File.dirname(temp_path))
-      File.write(temp_path, audio_file.read, mode: 'wb')
+      result = TrackAudioAnalysisService.call(user: current_user, audio_file: audio_file, title: title)
 
-      begin
-        result = AnalyzerRunner.call(temp_path.to_s)
-
-        if result[:error]
-          render json: { data: result }, status: :unprocessable_entity
-        else
-          # 解析成功時にTrackをDBに保存
-          # AnalyzerRunnerはJSON.parse(文字列キー) + merge(シンボルキー)の混在を返す
-          track = Track.new(
-            user_id: current_user.id,
-            title: title || File.basename(audio_file.original_filename, '.*'),
-            bpm: result[:bpm] || result["bpm"],
-            key: result[:key] || result["key"],
-            genre: result[:genre] || result["genre"]
-          )
-
-          if track.save
-            track.reload
-            render json: {
-              message: "楽曲を登録しました",
-              data: {
-                uuid: track.uuid,
-                bpm: track.bpm,
-                key: track.key,
-                genre: track.genre
-              }
-            }, status: :created
-          else
-            render json: { data: { error: track.errors.full_messages.join(", ") } }, status: :unprocessable_entity
-          end
-        end
-      rescue => e
-        Rails.logger.error("解析処理エラー: #{e.message}")
-        render json: { data: { error: "解析エラーが発生しました" } }, status: :internal_server_error
-      ensure
-        File.delete(temp_path) if File.exist?(temp_path)
+      if result.success?
+        render json: { message: result.message, data: result.data }, status: :created
+      else
+        render json: { data: { error: result.error } }, status: result.status
       end
     else
       render json: { data: { error: "音声ファイルまたはYouTube URLを指定してください" } }, status: :bad_request
