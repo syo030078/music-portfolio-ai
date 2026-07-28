@@ -5,20 +5,10 @@ import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AuthGuard from '@/components/AuthGuard';
 import ProposalCard from '@/components/ProposalCard';
+import type { Proposal } from '@/types';
+import { fetchProposals } from '@/lib/api/proposals';
+import { fetchJob } from '@/lib/api/jobs';
 import { getToken } from '@/lib/auth';
-
-interface Proposal {
-  uuid: string;
-  quote_total_jpy: number;
-  delivery_days: number;
-  cover_message: string | null;
-  status: string;
-  created_at: string;
-  musician: {
-    uuid: string;
-    name: string;
-  };
-}
 
 interface JobSummary {
   uuid: string;
@@ -40,32 +30,18 @@ export default function ProposalsPage({ params }: { params: Promise<{ id: string
       if (!token) return;
 
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-
-        const [proposalsRes, jobRes] = await Promise.all([
-          fetch(`${apiUrl}/api/v1/jobs/${id}/proposals`, {
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: token,
-            },
-            cache: 'no-store',
-          }),
-          fetch(`${apiUrl}/api/v1/jobs/${id}`, {
-            cache: 'no-store',
-          }),
+        const [proposalsResult, jobResult] = await Promise.allSettled([
+          fetchProposals(token, id),
+          fetchJob(id),
         ]);
 
-        if (!proposalsRes.ok) {
-          const data = await proposalsRes.json();
-          throw new Error(data.error || '提案一覧の取得に失敗しました');
+        if (proposalsResult.status === 'rejected') {
+          throw proposalsResult.reason;
         }
+        setProposals(proposalsResult.value);
 
-        const proposalsData = await proposalsRes.json();
-        setProposals(proposalsData.proposals || []);
-
-        if (jobRes.ok) {
-          const jobData = await jobRes.json();
-          setJob({ uuid: jobData.job.uuid, title: jobData.job.title });
+        if (jobResult.status === 'fulfilled') {
+          setJob({ uuid: jobResult.value.uuid, title: jobResult.value.title });
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : '不明なエラーが発生しました');

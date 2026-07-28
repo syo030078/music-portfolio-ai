@@ -1,22 +1,10 @@
 'use client';
 
-import Link from 'next/link';
 import { useState } from 'react';
+import type { Proposal } from '@/types';
+import { acceptProposal, rejectProposal } from '@/lib/api/proposals';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { getToken } from '@/lib/auth';
-
-interface Proposal {
-  uuid: string;
-  quote_total_jpy: number;
-  delivery_days: number;
-  cover_message: string | null;
-  status: string;
-  musician: {
-    uuid: string;
-    name: string;
-  };
-  created_at: string;
-}
 
 interface ProposalCardProps {
   proposal: Proposal;
@@ -24,7 +12,7 @@ interface ProposalCardProps {
   onRejected: (proposalUuid: string) => void;
 }
 
-const STATUS_LABELS: Record<string, { label: string; color: string }> = {
+const STATUS_LABELS: Record<Proposal['status'], { label: string; color: string }> = {
   submitted: { label: '審査中', color: 'bg-yellow-100 text-yellow-800' },
   shortlisted: { label: '候補', color: 'bg-blue-100 text-blue-800' },
   accepted: { label: '承諾済み', color: 'bg-green-100 text-green-800' },
@@ -35,48 +23,25 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 export default function ProposalCard({ proposal, onAccepted, onRejected }: ProposalCardProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [needsLogin, setNeedsLogin] = useState(false);
   const [showRejectConfirm, setShowRejectConfirm] = useState(false);
   const isPending = proposal.status === 'submitted' || proposal.status === 'shortlisted';
-  const statusInfo = STATUS_LABELS[proposal.status] ?? { label: proposal.status, color: 'bg-gray-100 text-gray-800' };
+  const statusInfo = STATUS_LABELS[proposal.status];
 
   const handleAction = async (action: 'accept' | 'reject') => {
     setLoading(true);
     setError(null);
-    setNeedsLogin(false);
-
-    const token = getToken();
-    if (!token) {
-      setNeedsLogin(true);
-      setError('ログインしてください');
-      setLoading(false);
-      return;
-    }
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const res = await fetch(`${apiUrl}/api/v1/proposals/${proposal.uuid}/${action}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: token,
-        },
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        const message = data.error || data.errors?.join(', ') || '操作に失敗しました';
-        if (res.status === 401 || message.toLowerCase().includes('signature has expired')) {
-          setNeedsLogin(true);
-          throw new Error('ログインセッションが切れました。再度ログインしてください');
-        }
-        throw new Error(message);
+      const token = getToken();
+      if (!token) {
+        throw new Error('ログインしてください');
       }
 
-      const data = await res.json();
       if (action === 'accept') {
+        const data = await acceptProposal(token, proposal.uuid);
         onAccepted(data.conversation_uuid);
       } else {
+        await rejectProposal(token, proposal.uuid);
         onRejected(proposal.uuid);
       }
     } catch (err) {
@@ -152,14 +117,7 @@ export default function ProposalCard({ proposal, onAccepted, onRejected }: Propo
       )}
 
       {error && (
-        <div className="rounded-lg bg-red-50 p-3 text-sm text-red-800">
-          <p>{error}</p>
-          {needsLogin && (
-            <Link href="/login" className="mt-1 inline-block text-red-600 underline hover:text-red-800">
-              ログインページへ
-            </Link>
-          )}
-        </div>
+        <div className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</div>
       )}
     </div>
   );
