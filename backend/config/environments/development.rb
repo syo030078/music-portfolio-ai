@@ -64,4 +64,8 @@ Rails.application.configure do
 
   # Uncomment if you wish to allow Action Cable access from any origin.
   # config.action_cable.disable_request_forgery_protection = true
+
+  # Docker Compose のサービス名 (backend) 経由のリクエスト(フロントエンドの
+  # Server Component からの内部通信)を許可する
+  config.hosts << "backend"
 end

@@ -189,6 +189,48 @@ export type DirectRequestDetailResponse = {
 };
 
 /**
+ * 提案型
+ */
+export type Proposal = {
+  uuid: string;
+  job_uuid: string;
+  musician: {
+    uuid: string;
+    name: string;
+  };
+  quote_total_jpy: number;
+  delivery_days: number;
+  cover_message: string | null;
+  status: 'submitted' | 'shortlisted' | 'accepted' | 'rejected' | 'withdrawn';
+  created_at: string;
+};
+
+/**
+ * 提案作成ペイロード型
+ */
+export type ProposalCreatePayload = {
+  quote_total_jpy: number;
+  delivery_days: number;
+  cover_message: string;
+};
+
+/**
+ * Proposals一覧取得APIのレスポンス型
+ */
+export type ProposalsListResponse = {
+  proposals: Proposal[];
+};
+
+/**
+ * Proposal承諾APIのレスポンス型
+ */
+export type ProposalAcceptResponse = {
+  proposal: Proposal;
+  contract_uuid: string;
+  conversation_uuid: string;
+};
+
+/**
  * APIエラーレスポンス型
  */
 export type ApiErrorResponse = {

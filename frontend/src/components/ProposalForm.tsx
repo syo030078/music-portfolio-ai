@@ -2,14 +2,11 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { createProposal } from '@/lib/api/proposals';
 import { getToken } from '@/lib/auth';
 
 interface ProposalFormProps {
   jobUuid: string;
-}
-
-function isAuthError(status: number, message: string): boolean {
-  return status === 401 || message.toLowerCase().includes('signature has expired');
 }
 
 export default function ProposalForm({ jobUuid }: ProposalFormProps) {
@@ -36,38 +33,11 @@ export default function ProposalForm({ jobUuid }: ProposalFormProps) {
 
     setLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
-      const res = await fetch(`${apiUrl}/api/v1/jobs/${jobUuid}/proposals`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: token,
-        },
-        body: JSON.stringify({
-          proposal: {
-            quote_total_jpy: Number(quoteTotalJpy),
-            delivery_days: Number(deliveryDays),
-            cover_message: coverMessage,
-          },
-        }),
+      await createProposal(token, jobUuid, {
+        quote_total_jpy: Number(quoteTotalJpy),
+        delivery_days: Number(deliveryDays),
+        cover_message: coverMessage,
       });
-
-      if (!res.ok) {
-        const text = await res.text();
-        let message = `応募に失敗しました (${res.status})`;
-        try {
-          const data = JSON.parse(text);
-          message = data.error || data.errors?.join(', ') || message;
-        } catch {
-          if (text) message = text;
-        }
-
-        if (isAuthError(res.status, message)) {
-          setNeedsLogin(true);
-          throw new Error('ログインセッションが切れました。再度ログインしてください');
-        }
-        throw new Error(message);
-      }
 
       setSuccess('応募が完了しました');
       setQuoteTotalJpy('');
