@@ -40,7 +40,6 @@
 | 📝 案件管理 | 制作依頼の投稿・提案・契約をステータスマシンで管理 | `draft → published → contracted → completed` |
 | 👥 ロールベース UI | ミュージシャン / クライアントで異なる画面・操作を提供 | Next.js App Router + JWT ロール判定 |
 | 💬 メッセージング | 依頼者と音楽家のリアルタイムコミュニケーション | RESTful API |
-| ⭐ レビューシステム | CHECK 制約（1–5）付きの信頼性あるレーティング | PostgreSQL CHECK 制約 |
 | 🔐 認証・認可 | JWT + トークン無効化（denylist）によるセキュアな認証 | Devise JWT + ロールベースアクセス制御 |
 
 ---
@@ -157,7 +156,7 @@ RESTful 設計 + UUID 公開キー。内部 `id` を URL に露出させず、`u
 
 ---
 
-## ER 図（16 テーブル）
+## ER 図（20 テーブル）
 
 ```mermaid
 erDiagram
@@ -167,14 +166,11 @@ erDiagram
     users ||--o{ jobs : "client"
     users ||--o{ proposals : "musician"
     users ||--o{ contracts : "client/musician"
-    users ||--o{ reviews : "reviewer/reviewee"
 
     jobs ||--o{ job_requirements : "has many"
     jobs ||--o{ proposals : "has many"
     proposals ||--|| contracts : "creates"
     contracts ||--o{ contract_milestones : "has many"
-    contracts ||--o{ transactions : "has many"
-    contracts ||--o{ reviews : "has one"
 
     jobs ||--o{ conversations : "pre-contract"
     contracts ||--o{ conversations : "post-contract"
@@ -274,7 +270,7 @@ erDiagram
 TypeScript strict → Zod → ActiveRecord validations → PostgreSQL CHECK 制約
 ```
 
-**トレードオフ:** バリデーションの重複はコードの冗長性を生むが、**各層が独立して動作する**ことで「フロントのバグが DB を壊す」シナリオを構造的に防止。特に `rating` の CHECK 制約（1-5）は、API を直接叩かれても不正値が入らない最終防御ライン。
+**トレードオフ:** バリデーションの重複はコードの冗長性を生むが、**各層が独立して動作する**ことで「フロントのバグが DB を壊す」シナリオを構造的に防止。特に `contracts` テーブルの XOR 制約（`proposal_id` と `production_request_id` が排他）は、API を直接叩かれても不正な状態が入らない最終防御ライン。
 
 ---
 
@@ -302,7 +298,7 @@ TypeScript strict → Zod → ActiveRecord validations → PostgreSQL CHECK 制�
 - **TypeScript strict mode**: `any` 禁止、CI で `tsc --noEmit` を実行
 - **Zod スキーマ**: フォーム入力の実行時バリデーション
 - **Rails ActiveRecord validations**: サーバーサイドの制約
-- **PostgreSQL CHECK 制約**: DB 層の最終防御（`rating >= 1 AND rating <= 5` 等）
+- **PostgreSQL CHECK 制約**: DB 層の最終防御（`contracts` の proposal/production_request 排他制約 等）
 
 ### 4. テスト戦略
 
@@ -429,7 +425,6 @@ music-portfolio-ai/
 - ✅ JWT 認証 + ロールベースアクセス制御
 - ✅ 案件投稿・提案・契約管理
 - ✅ メッセージング機能
-- ✅ レビューシステム（CHECK 制約付き）
 - ✅ Docker Compose 本番構成 + EC2 デプロイ
 - ✅ CI/CD パイプライン（GitHub Actions）
 - ✅ OpenAI 連携による楽曲説明文の自動生成（GPT-4o-mini）
