@@ -40,7 +40,6 @@
 | 📝 案件管理 | 制作依頼の投稿・提案・契約をステータスマシンで管理 | `draft → published → contracted → completed` |
 | 👥 ロールベース UI | ミュージシャン / クライアントで異なる画面・操作を提供 | Next.js App Router + JWT ロール判定 |
 | 💬 メッセージング | 依頼者と音楽家のリアルタイムコミュニケーション | RESTful API |
-| ⭐ レビューシステム | CHECK 制約（1–5）付きの信頼性あるレーティング | PostgreSQL CHECK 制約 |
 | 🔐 認証・認可 | JWT + トークン無効化（denylist）によるセキュアな認証 | Devise JWT + ロールベースアクセス制御 |
 
 ---
@@ -56,7 +55,7 @@
 | **LLM** | OpenAI GPT-4o-mini | 楽曲説明文の自動生成 + 自然言語マッチング。コスト効率重視で mini モデルを選定 |
 | **認証** | Devise + JWT, bcrypt | SPA + API のステートレス通信に対応。`JwtDenylist` でトークン失効管理 |
 | **バリデーション** | Zod | TypeScript の型はコンパイル時のみ → API レスポンスやフォーム入力を実行時にも検証 |
-| **Testing** | RSpec (68 spec files), ESLint, TypeScript 型検査 (`tsc --noEmit`) | モデル・リクエスト・サービス・統合テストの多層カバレッジ |
+| **Testing** | RSpec (35 spec files), ESLint, TypeScript 型検査 (`tsc --noEmit`) | モデル・リクエスト・サービス・統合テストの多層カバレッジ |
 | **Infra** | Docker Compose, nginx, EC2, GitHub Actions | 開発〜本番で同一構成。CI/CD で自動テスト → 自動デプロイ |
 
 ---
@@ -157,7 +156,7 @@ RESTful 設計 + UUID 公開キー。内部 `id` を URL に露出させず、`u
 
 ---
 
-## ER 図（16 テーブル）
+## ER 図（20 テーブル）
 
 ```mermaid
 erDiagram
@@ -167,14 +166,11 @@ erDiagram
     users ||--o{ jobs : "client"
     users ||--o{ proposals : "musician"
     users ||--o{ contracts : "client/musician"
-    users ||--o{ reviews : "reviewer/reviewee"
 
     jobs ||--o{ job_requirements : "has many"
     jobs ||--o{ proposals : "has many"
     proposals ||--|| contracts : "creates"
     contracts ||--o{ contract_milestones : "has many"
-    contracts ||--o{ transactions : "has many"
-    contracts ||--o{ reviews : "has one"
 
     jobs ||--o{ conversations : "pre-contract"
     contracts ||--o{ conversations : "post-contract"
@@ -274,7 +270,7 @@ erDiagram
 TypeScript strict → Zod → ActiveRecord validations → PostgreSQL CHECK 制約
 ```
 
-**トレードオフ:** バリデーションの重複はコードの冗長性を生むが、**各層が独立して動作する**ことで「フロントのバグが DB を壊す」シナリオを構造的に防止。特に `rating` の CHECK 制約（1-5）は、API を直接叩かれても不正値が入らない最終防御ライン。
+**トレードオフ:** バリデーションの重複はコードの冗長性を生むが、**各層が独立して動作する**ことで「フロントのバグが DB を壊す」シナリオを構造的に防止。特に `contracts` テーブルの XOR 制約（`proposal_id` と `production_request_id` が排他）は、API を直接叩かれても不正な状態が入らない最終防御ライン。
 
 ---
 
@@ -302,11 +298,11 @@ TypeScript strict → Zod → ActiveRecord validations → PostgreSQL CHECK 制�
 - **TypeScript strict mode**: `any` 禁止、CI で `tsc --noEmit` を実行
 - **Zod スキーマ**: フォーム入力の実行時バリデーション
 - **Rails ActiveRecord validations**: サーバーサイドの制約
-- **PostgreSQL CHECK 制約**: DB 層の最終防御（`rating >= 1 AND rating <= 5` 等）
+- **PostgreSQL CHECK 制約**: DB 層の最終防御（`contracts` の proposal/production_request 排他制約 等）
 
 ### 4. テスト戦略
 
-- **RSpec 68 ファイル**：モデル（21）・リクエスト・サービス・統合テストの多層構成
+- **RSpec 35 ファイル**：モデル（19）・リクエスト（10）・サービス（3）・統合／コントローラの多層構成
 - **ESLint + TypeScript 型検査** でフロントエンドの品質を担保
 - **GitHub Actions** で全 PR に対して自動テスト実行（RSpec / Lint / tsc 並列）
 
@@ -389,7 +385,7 @@ python music_analyzer.py --file path/to/audio.mp3
 ## テスト
 
 ```bash
-# Backend（RSpec: 68 specファイル）
+# Backend（RSpec: 35 specファイル）
 cd backend && bundle exec rspec
 
 # Frontend（ESLint + TypeScript型検査）
@@ -429,7 +425,6 @@ music-portfolio-ai/
 - ✅ JWT 認証 + ロールベースアクセス制御
 - ✅ 案件投稿・提案・契約管理
 - ✅ メッセージング機能
-- ✅ レビューシステム（CHECK 制約付き）
 - ✅ Docker Compose 本番構成 + EC2 デプロイ
 - ✅ CI/CD パイプライン（GitHub Actions）
 - ✅ OpenAI 連携による楽曲説明文の自動生成（GPT-4o-mini）
