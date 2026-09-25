@@ -47,7 +47,7 @@ SG_ID=$(aws ec2 describe-security-groups \
 if [ -z "$SG_ID" ] || [ "$SG_ID" = "None" ]; then
   SG_ID=$(aws ec2 create-security-group \
     --group-name "$SG_NAME" \
-    --description "Music Portfolio AI - SSH and HTTP" \
+    --description "Music Portfolio AI - SSH, HTTP and HTTPS" \
     --region "$REGION" \
     --query "GroupId" \
     --output text)
@@ -64,10 +64,17 @@ if [ -z "$SG_ID" ] || [ "$SG_ID" = "None" ]; then
     --cidr "0.0.0.0/0" \
     --region "$REGION"
 
-  echo "SG: $SG_ID (SSH: ${MY_IP}, HTTP: 0.0.0.0/0)"
+  echo "SG: $SG_ID (SSH: ${MY_IP}, HTTP/HTTPS: 0.0.0.0/0)"
 else
   echo "セキュリティグループ $SG_NAME は既に存在します ($SG_ID)"
 fi
+
+# HTTPS 化以前に作成された SG にも 443 を開ける (追加済みなら重複エラーを無視)
+aws ec2 authorize-security-group-ingress \
+  --group-id "$SG_ID" \
+  --protocol tcp --port 443 \
+  --cidr "0.0.0.0/0" \
+  --region "$REGION" 2>/dev/null || true
 
 # 4. EC2 インスタンス起動
 echo "[4/6] EC2 t2.micro 起動中..."
@@ -121,7 +128,8 @@ echo "1. SSH 接続 (30秒待ってから):"
 echo "   ssh -i $KEY_FILE ec2-user@$ELASTIC_IP"
 echo ""
 echo "2. セットアップ実行:"
-echo "   bash <(curl -fsSL https://raw.githubusercontent.com/syo030078/music-portfolio-ai/feature/ec2-cicd-v2/infrastructure/ec2/setup.sh) feature/ec2-cicd-v2"
+echo "   (事前に musicportfolioai.com と www の A レコードを $ELASTIC_IP に向けること)"
+echo "   bash <(curl -fsSL https://raw.githubusercontent.com/syo030078/music-portfolio-ai/main/infrastructure/ec2/setup.sh) main <letsencrypt-email>"
 echo ""
 echo "3. GitHub Secrets 設定 (Settings > Secrets > Actions):"
 echo "   EC2_HOST=$ELASTIC_IP"
