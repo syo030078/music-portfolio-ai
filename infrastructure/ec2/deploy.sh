@@ -12,6 +12,8 @@ git pull origin "$(git branch --show-current)"
 
 $COMPOSE build
 
+bash infrastructure/ec2/init-letsencrypt.sh
+
 $COMPOSE up -d db
 sleep 5
 
@@ -25,7 +27,8 @@ $COMPOSE up -d
 
 sleep 15
 
-HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/api/v1/health)
+HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+  --resolve musicportfolioai.com:443:127.0.0.1 https://musicportfolioai.com/api/v1/health)
 
 if [ "$HTTP_STATUS" = "200" ]; then
   echo "=== Deploy OK ==="

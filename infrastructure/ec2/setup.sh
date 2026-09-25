@@ -3,10 +3,19 @@ set -euo pipefail
 
 REPO_URL="https://github.com/miyatasyo/music-portfolio-ai.git"
 BRANCH="${1:-main}"
+LETSENCRYPT_EMAIL="${2:-}"
+# nginx.conf の server_name / 証明書パスと一致させること
+DOMAIN="musicportfolioai.com"
 APP_DIR="/home/ec2-user/music-portfolio-ai"
 
 echo "=== Music Portfolio AI - EC2 Setup ==="
 echo "Branch: $BRANCH"
+
+if [ -z "$LETSENCRYPT_EMAIL" ]; then
+  echo "Usage: setup.sh <branch> <letsencrypt-email>"
+  echo "  事前に ${DOMAIN} と www.${DOMAIN} の A レコードをこの EC2 の Elastic IP に向けてください"
+  exit 1
+fi
 
 # 1. System update & Docker install
 echo "[1/7] Installing Docker..."
@@ -66,7 +75,7 @@ if [ -z "$PUBLIC_IP" ]; then
   exit 1
 fi
 
-echo "Detected public IP: $PUBLIC_IP"
+echo "Detected public IP: $PUBLIC_IP (${DOMAIN} の A レコードがこの IP を向いている必要があります)"
 
 # 6. Create .env file
 echo "[6/7] Creating .env..."
@@ -75,8 +84,8 @@ DB_USERNAME=postgres
 DB_PASSWORD=${DB_PASSWORD}
 SECRET_KEY_BASE=${SECRET_KEY_BASE}
 RAILS_MASTER_KEY=REPLACE_WITH_YOUR_MASTER_KEY
-FRONTEND_URL=http://${PUBLIC_IP}
-NEXT_PUBLIC_API_URL=http://${PUBLIC_IP}
+FRONTEND_URL=https://${DOMAIN}
+LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
 EOF
 
 echo ""
@@ -97,6 +106,7 @@ fi
 echo "[7/7] Building and starting services..."
 cd "$APP_DIR"
 sudo docker compose -f docker-compose.production.yml build
+sudo bash infrastructure/ec2/init-letsencrypt.sh
 sudo docker compose -f docker-compose.production.yml up -d
 
 echo "Waiting for services to be healthy..."
@@ -107,5 +117,5 @@ sudo docker compose -f docker-compose.production.yml exec backend \
 
 echo ""
 echo "=== Setup Complete ==="
-echo "Access the app at: http://${PUBLIC_IP}/"
+echo "Access the app at: https://${DOMAIN}/"
 echo "Log out and back in to use 'docker' without sudo."

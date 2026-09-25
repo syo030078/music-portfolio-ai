@@ -47,6 +47,9 @@ jobs:
             # set -e によりビルド失敗時はここで中断される
             docker compose -f docker-compose.production.yml build --no-cache
 
+            # 証明書が未発行の場合のみ発行する (2回目以降は即終了)
+            bash infrastructure/ec2/init-letsencrypt.sh
+
             docker compose -f docker-compose.production.yml up -d db
             sleep 5
             docker compose -f docker-compose.production.yml run --rm backend \
@@ -54,15 +57,17 @@ jobs:
             docker compose -f docker-compose.production.yml up -d --force-recreate nginx
             docker compose -f docker-compose.production.yml up -d
             sleep 15
-            curl -f http://localhost/api/v1/health
+            # 証明書の検証も兼ねて HTTPS で確認する
+            curl -fsS --resolve musicportfolioai.com:443:127.0.0.1 \
+              https://musicportfolioai.com/api/v1/health
 
       - name: Health check
         run: |
-          echo "::add-mask::${{ secrets.EC2_HOST }}"
           sleep 10
-          STATUS=$(curl -sf "http://${{ secrets.EC2_HOST }}/api/v1/health" 2>/dev/null | jq -r '.status' 2>/dev/null || echo "failed")
+          STATUS=$(curl -sf "https://musicportfolioai.com/api/v1/health" 2>/dev/null | jq -r '.status' 2>/dev/null || echo "failed")
           if [ "$STATUS" = "ok" ]; then
             echo "Health check passed!"
           else
-            echo "WARNING: Health check did not return ok (status: $STATUS)"
+            echo "::error::Health check did not return ok (status: $STATUS)"
+            exit 1
           fi
