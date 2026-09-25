@@ -1,4 +1,4 @@
-FROM ruby:3.1.3-slim
+FROM ruby:3.1.7-slim-bookworm
 
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y \
