@@ -5,12 +5,12 @@ class Api::V1::TracksController < ApplicationController
     track = current_user.tracks.find_by(uuid: params[:id])
 
     if track.nil?
-      render json: { error: "楽曲が見つかりません" }, status: :not_found
+      render_error("楽曲が見つかりません", :not_found)
       return
     end
 
     unless track.bpm || track.key || track.genre
-      render json: { error: "解析データがないため AI 説明文を生成できません" }, status: :unprocessable_entity
+      render_error("解析データがないため AI 説明文を生成できません", :unprocessable_entity)
       return
     end
 
@@ -21,7 +21,7 @@ class Api::V1::TracksController < ApplicationController
     )
 
     if ai_text.nil?
-      render json: { error: "AI 説明文の生成に失敗しました。しばらく経ってから再度お試しください" }, status: :service_unavailable
+      render_error("AI 説明文の生成に失敗しました。しばらく経ってから再度お試しください", :service_unavailable)
       return
     end
 
@@ -104,7 +104,7 @@ class Api::V1::TracksController < ApplicationController
     track = Track.includes(:user).find_by(uuid: params[:id])
 
     if track.nil?
-      render json: { error: "楽曲が見つかりません" }, status: :not_found
+      render_error("楽曲が見つかりません", :not_found)
       return
     end
 
@@ -154,9 +154,7 @@ class Api::V1::TracksController < ApplicationController
           }
         }, status: :created
       else
-        render json: {
-          error: track.errors.full_messages.join(", ")
-        }, status: :unprocessable_entity
+        render_error(track.errors.full_messages.join(", "), :unprocessable_entity)
       end
       return
     end
@@ -168,10 +166,10 @@ class Api::V1::TracksController < ApplicationController
       if result.success?
         render json: { message: result.message, data: result.data }, status: :created
       else
-        render json: { error: result.error }, status: result.status
+        render_error(result.error, result.status)
       end
     else
-      render json: { error: "音声ファイルまたはYouTube URLを指定してください" }, status: :bad_request
+      render_error("音声ファイルまたはYouTube URLを指定してください", :bad_request)
     end
   end
 end

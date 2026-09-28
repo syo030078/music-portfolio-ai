@@ -35,7 +35,7 @@ class Api::V1::ConversationsController < ApplicationController
   def show
     # 権限チェック
     unless @conversation.participant?(current_user)
-      render json: { error: 'アクセス権限がありません' }, status: :forbidden
+      render_forbidden
       return
     end
 
@@ -98,7 +98,7 @@ class Api::V1::ConversationsController < ApplicationController
         }
       }, status: :created
     else
-      render json: { errors: conversation.errors.full_messages }, status: :unprocessable_entity
+      render_validation_errors(conversation)
     end
   end
 
@@ -107,7 +107,7 @@ class Api::V1::ConversationsController < ApplicationController
   def set_conversation
     @conversation = Conversation.find(params[:id])
   rescue ActiveRecord::RecordNotFound
-    render json: { error: '会話が見つかりません' }, status: :not_found
+    render_error('会話が見つかりません', :not_found)
   end
 
   def build_conversation_params

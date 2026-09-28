@@ -17,7 +17,7 @@ module Api
         user = User.active.find_by(uuid: params[:uuid])
 
         if user.nil?
-          render json: { error: "ユーザーが見つかりません" }, status: :not_found
+          render_error("ユーザーが見つかりません", :not_found)
           return
         end
 

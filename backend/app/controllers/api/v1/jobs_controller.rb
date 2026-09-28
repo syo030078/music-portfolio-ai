@@ -29,7 +29,7 @@ class Api::V1::JobsController < ApplicationController
     job = Job.published.includes(:client).find_by(uuid: params[:uuid])
 
     if job.nil?
-      render json: { error: "案件が見つかりません" }, status: :not_found
+      render_error("案件が見つかりません", :not_found)
       return
     end
 
