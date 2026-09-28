@@ -5,12 +5,12 @@ class Api::V1::TracksController < ApplicationController
     track = current_user.tracks.find_by(uuid: params[:id])
 
     if track.nil?
-      render json: { error: "楽曲が見つかりません" }, status: :not_found
+      render_error("楽曲が見つかりません", :not_found)
       return
     end
 
     unless track.bpm || track.key || track.genre
-      render json: { error: "解析データがないため AI 説明文を生成できません" }, status: :unprocessable_entity
+      render_error("解析データがないため AI 説明文を生成できません", :unprocessable_entity)
       return
     end
 
@@ -21,7 +21,7 @@ class Api::V1::TracksController < ApplicationController
     )
 
     if ai_text.nil?
-      render json: { error: "AI 説明文の生成に失敗しました。しばらく経ってから再度お試しください" }, status: :service_unavailable
+      render_error("AI 説明文の生成に失敗しました。しばらく経ってから再度お試しください", :service_unavailable)
       return
     end
 
@@ -41,59 +41,22 @@ class Api::V1::TracksController < ApplicationController
     per_page = params[:per_page]&.to_i || 10
     per_page = [per_page, 50].min # 最大50件
 
-    # 基本クエリ（ユーザー情報を含む）
     tracks = Track.includes(:user)
+                  .by_user_uuid(params[:user_uuid])
+                  .by_genre(params[:genre])
+                  .by_key(params[:key])
+                  .bpm_min(params[:bpm_min])
+                  .bpm_max(params[:bpm_max])
+                  .order(created_at: :desc)
 
-    # フィルタリング: ユーザー（UUID）
-    if params[:user_uuid].present?
-      tracks = tracks.joins(:user).where(users: { uuid: params[:user_uuid] })
-    end
-
-    # フィルタリング: ジャンル
-    tracks = tracks.where(genre: params[:genre]) if params[:genre].present?
-
-    # フィルタリング: BPM範囲
-    if params[:bpm_min].present?
-      tracks = tracks.where('bpm >= ?', params[:bpm_min].to_f)
-    end
-    if params[:bpm_max].present?
-      tracks = tracks.where('bpm <= ?', params[:bpm_max].to_f)
-    end
-
-    # フィルタリング: キー
-    tracks = tracks.where(key: params[:key]) if params[:key].present?
-
-    # ソート（新しい順）
-    tracks = tracks.order(created_at: :desc)
-
-    # ページネーション適用
     total_count = tracks.count
-    total_pages = (total_count.to_f / per_page).ceil
     tracks = tracks.offset((page - 1) * per_page).limit(per_page)
 
-    # レスポンス生成
     render json: {
-      tracks: tracks.map do |track|
-        {
-          uuid: track.uuid,
-          title: track.title,
-          description: track.description,
-          yt_url: track.yt_url,
-          bpm: track.bpm,
-          key: track.key,
-          genre: track.genre,
-          ai_text: track.ai_text,
-          created_at: track.created_at,
-          user: {
-            uuid: track.user.uuid,
-            name: track.user.name,
-            bio: track.user.bio
-          }
-        }
-      end,
+      tracks: tracks.map { |track| track_payload(track) },
       pagination: {
         current_page: page,
-        total_pages: total_pages,
+        total_pages: (total_count.to_f / per_page).ceil,
         total_count: total_count,
         per_page: per_page
       }
@@ -104,30 +67,11 @@ class Api::V1::TracksController < ApplicationController
     track = Track.includes(:user).find_by(uuid: params[:id])
 
     if track.nil?
-      render json: { error: "楽曲が見つかりません" }, status: :not_found
+      render_error("楽曲が見つかりません", :not_found)
       return
     end
 
-    render json: {
-      track: {
-        uuid: track.uuid,
-        title: track.title,
-        description: track.description,
-        yt_url: track.yt_url,
-        bpm: track.bpm,
-        key: track.key,
-        genre: track.genre,
-        ai_text: track.ai_text,
-        created_at: track.created_at,
-        updated_at: track.updated_at,
-        user: {
-          uuid: track.user.uuid,
-          name: track.user.name,
-          bio: track.user.bio,
-          email: track.user.email
-        }
-      }
-    }
+    render json: { track: track_payload(track, detail: true) }
   end
 
   def create
@@ -154,9 +98,7 @@ class Api::V1::TracksController < ApplicationController
           }
         }, status: :created
       else
-        render json: {
-          data: { error: track.errors.full_messages.join(", ") }
-        }, status: :unprocessable_entity
+        render_error(track.errors.full_messages.join(", "), :unprocessable_entity)
       end
       return
     end
@@ -168,10 +110,32 @@ class Api::V1::TracksController < ApplicationController
       if result.success?
         render json: { message: result.message, data: result.data }, status: :created
       else
-        render json: { data: { error: result.error } }, status: result.status
+        render_error(result.error, result.status)
       end
     else
-      render json: { data: { error: "音声ファイルまたはYouTube URLを指定してください" } }, status: :bad_request
+      render_error("音声ファイルまたはYouTube URLを指定してください", :bad_request)
     end
+  end
+
+  private
+
+  # detail: true は詳細画面用（updated_at と投稿者の email を含む）
+  def track_payload(track, detail: false)
+    user = { uuid: track.user.uuid, name: track.user.name, bio: track.user.bio }
+    user = user.merge(email: track.user.email) if detail
+
+    payload = {
+      uuid: track.uuid,
+      title: track.title,
+      description: track.description,
+      yt_url: track.yt_url,
+      bpm: track.bpm,
+      key: track.key,
+      genre: track.genre,
+      ai_text: track.ai_text,
+      created_at: track.created_at,
+      user: user
+    }
+    detail ? payload.merge(updated_at: track.updated_at) : payload
   end
 end

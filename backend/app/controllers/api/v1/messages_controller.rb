@@ -7,7 +7,7 @@ class Api::V1::MessagesController < ApplicationController
   #         before (UUID)   - 指定UUIDより前のメッセージを返す（過去遡り用）
   def index
     unless @conversation.participant?(current_user)
-      render json: { error: 'アクセス権限がありません' }, status: :forbidden
+      render_forbidden
       return
     end
 
@@ -20,7 +20,7 @@ class Api::V1::MessagesController < ApplicationController
         nil
       end
       if since_time.nil?
-        render json: { error: 'since パラメータの形式が不正です (ISO8601)' }, status: :bad_request
+        render_error('since パラメータの形式が不正です (ISO8601)', :bad_request)
         return
       end
       messages = messages.where('messages.created_at > ?', since_time)
@@ -57,7 +57,7 @@ class Api::V1::MessagesController < ApplicationController
   def create
     # 権限チェック
     unless @conversation.participant?(current_user)
-      render json: { error: 'アクセス権限がありません' }, status: :forbidden
+      render_forbidden
       return
     end
 
@@ -71,7 +71,7 @@ class Api::V1::MessagesController < ApplicationController
 
       render json: { message: message_json(message) }, status: :created
     else
-      render json: { errors: message.errors.full_messages }, status: :unprocessable_entity
+      render_validation_errors(message)
     end
   end
 
@@ -80,7 +80,7 @@ class Api::V1::MessagesController < ApplicationController
   def set_conversation
     @conversation = Conversation.find(params[:conversation_id])
   rescue ActiveRecord::RecordNotFound
-    render json: { error: '会話が見つかりません' }, status: :not_found
+    render_error('会話が見つかりません', :not_found)
   end
 
   def message_params

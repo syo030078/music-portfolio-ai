@@ -5,7 +5,7 @@ class Api::V1::ProposalsController < ApplicationController
   # POST /api/v1/jobs/:uuid/proposals
   def create
     unless current_user.is_musician?
-      render json: { error: 'ミュージシャンのみ応募できます' }, status: :forbidden
+      render_forbidden('ミュージシャンのみ応募できます')
       return
     end
 
@@ -15,14 +15,14 @@ class Api::V1::ProposalsController < ApplicationController
       proposal.reload
       render json: { proposal: proposal_payload(proposal) }, status: :created
     else
-      render json: { errors: proposal.errors.full_messages }, status: :unprocessable_entity
+      render_validation_errors(proposal)
     end
   end
 
   # GET /api/v1/jobs/:uuid/proposals
   def index
     unless @job.client_id == current_user.id
-      render json: { error: 'アクセス権限がありません' }, status: :forbidden
+      render_forbidden
       return
     end
 
@@ -43,31 +43,31 @@ class Api::V1::ProposalsController < ApplicationController
         conversation_uuid: result.conversation.id
       }, status: :ok
     else
-      render json: { error: result.error }, status: result.status
+      render_error(result.error, result.status)
     end
   end
 
   # POST /api/v1/proposals/:uuid/reject
   def reject
     unless @proposal.job.client_id == current_user.id
-      render json: { error: 'アクセス権限がありません' }, status: :forbidden
+      render_forbidden
       return
     end
 
     if @proposal.accepted?
-      render json: { error: '承諾済みの提案は拒否できません' }, status: :unprocessable_entity
+      render_error('承諾済みの提案は拒否できません', :unprocessable_entity)
       return
     end
 
     if @proposal.rejected?
-      render json: { error: '既に拒否されています' }, status: :unprocessable_entity
+      render_error('既に拒否されています', :unprocessable_entity)
       return
     end
 
     if @proposal.update(status: 'rejected')
       render json: { proposal: proposal_payload(@proposal) }, status: :ok
     else
-      render json: { errors: @proposal.errors.full_messages }, status: :unprocessable_entity
+      render_validation_errors(@proposal)
     end
   end
 
@@ -77,13 +77,13 @@ class Api::V1::ProposalsController < ApplicationController
     job_uuid = params[:job_uuid] || params[:job_id]
     @job = Job.find_by!(uuid: job_uuid)
   rescue ActiveRecord::RecordNotFound
-    render json: { error: '案件が見つかりません' }, status: :not_found
+    render_error('案件が見つかりません', :not_found)
   end
 
   def set_proposal
     @proposal = Proposal.find_by!(uuid: params[:uuid] || params[:id])
   rescue ActiveRecord::RecordNotFound
-    render json: { error: '提案が見つかりません' }, status: :not_found
+    render_error('提案が見つかりません', :not_found)
   end
 
   def proposal_params
