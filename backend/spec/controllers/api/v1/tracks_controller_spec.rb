@@ -186,7 +186,7 @@ RSpec.describe Api::V1::TracksController, type: :controller do
         expect(response).to have_http_status(:bad_request)
 
         json = JSON.parse(response.body)
-        expect(json["data"]["error"]).to eq("音声ファイルまたはYouTube URLを指定してください")
+        expect(json["error"]).to eq("音声ファイルまたはYouTube URLを指定してください")
       end
     end
 
@@ -227,7 +227,7 @@ RSpec.describe Api::V1::TracksController, type: :controller do
         expect(response).to have_http_status(:unprocessable_entity)
 
         json = JSON.parse(response.body)
-        expect(json["data"]["error"]).to be_present
+        expect(json["error"]).to be_present
       end
     end
 
@@ -272,7 +272,7 @@ RSpec.describe Api::V1::TracksController, type: :controller do
         expect(response).to have_http_status(:unprocessable_entity)
 
         json = JSON.parse(response.body)
-        expect(json["data"]["error"]).to be_present
+        expect(json["error"]).to be_present
       end
     end
   end

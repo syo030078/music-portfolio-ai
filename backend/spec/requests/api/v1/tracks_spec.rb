@@ -128,4 +128,57 @@ RSpec.describe 'Api::V1::Tracks', type: :request do
       end
     end
   end
+
+  describe 'POST /api/v1/tracks' do
+    let(:headers) { { 'CONTENT_TYPE' => 'application/json', 'ACCEPT' => 'application/json' } }
+
+    def auth_headers_for(user)
+      post '/auth/sign_in', params: {
+        user: { email: user.email, password: 'password123' }
+      }.to_json, headers: headers
+
+      headers.merge('Authorization' => response.headers['Authorization'])
+    end
+
+    it 'registers a YouTube track' do
+      auth_headers = auth_headers_for(user)
+
+      expect {
+        post '/api/v1/tracks',
+             params: { yt_url: 'https://www.youtube.com/watch?v=abc', title: 'My Video' }.to_json,
+             headers: auth_headers
+      }.to change(Track, :count).by(1)
+
+      expect(response).to have_http_status(:created)
+      json = JSON.parse(response.body)
+      expect(json['data']).to include('yt_url' => 'https://www.youtube.com/watch?v=abc', 'title' => 'My Video')
+      expect(json['data']['uuid']).to be_present
+    end
+
+    it 'returns top-level error for invalid YouTube URL' do
+      auth_headers = auth_headers_for(user)
+
+      post '/api/v1/tracks',
+           params: { yt_url: 'https://example.com/not-youtube' }.to_json,
+           headers: auth_headers
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(JSON.parse(response.body)['error']).to be_present
+    end
+
+    it 'returns top-level error when neither audio_file nor yt_url is given' do
+      auth_headers = auth_headers_for(user)
+
+      post '/api/v1/tracks', params: {}.to_json, headers: auth_headers
+
+      expect(response).to have_http_status(:bad_request)
+      expect(JSON.parse(response.body)['error']).to eq('音声ファイルまたはYouTube URLを指定してください')
+    end
+
+    it 'returns 401 without authentication' do
+      post '/api/v1/tracks', params: { yt_url: 'https://www.youtube.com/watch?v=abc' }.to_json, headers: headers
+
+      expect(response).to have_http_status(:unauthorized)
+    end
+  end
 end

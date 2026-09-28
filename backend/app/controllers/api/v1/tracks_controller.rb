@@ -155,7 +155,7 @@ class Api::V1::TracksController < ApplicationController
         }, status: :created
       else
         render json: {
-          data: { error: track.errors.full_messages.join(", ") }
+          error: track.errors.full_messages.join(", ")
         }, status: :unprocessable_entity
       end
       return
@@ -168,10 +168,10 @@ class Api::V1::TracksController < ApplicationController
       if result.success?
         render json: { message: result.message, data: result.data }, status: :created
       else
-        render json: { data: { error: result.error } }, status: result.status
+        render json: { error: result.error }, status: result.status
       end
     else
-      render json: { data: { error: "音声ファイルまたはYouTube URLを指定してください" } }, status: :bad_request
+      render json: { error: "音声ファイルまたはYouTube URLを指定してください" }, status: :bad_request
     end
   end
 end
