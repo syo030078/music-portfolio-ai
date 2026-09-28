@@ -72,6 +72,41 @@ RSpec.describe 'Api::V1::Tracks', type: :request do
     end
   end
 
+  describe 'GET /api/v1/tracks filtering' do
+    let(:other_user) { User.create!(email: 'other@example.com', password: 'password123', name: 'Other').reload }
+
+    let!(:jazz_track) do
+      Track.create!(user: other_user, title: 'Jazz Track', bpm: 90, key: 'A minor', genre: 'Jazz').reload
+    end
+
+    def uuids_for(query)
+      get "/api/v1/tracks?#{query.to_query}"
+      JSON.parse(response.body)['tracks'].map { |t| t['uuid'] }
+    end
+
+    it 'filters by user_uuid' do
+      expect(uuids_for(user_uuid: other_user.uuid)).to eq([jazz_track.uuid])
+    end
+
+    it 'filters by genre' do
+      expect(uuids_for(genre: 'Rock')).to eq([track.uuid])
+    end
+
+    it 'filters by key' do
+      expect(uuids_for(key: 'A minor')).to eq([jazz_track.uuid])
+    end
+
+    it 'filters by bpm range' do
+      expect(uuids_for(bpm_min: 100)).to eq([track.uuid])
+      expect(uuids_for(bpm_max: 100)).to eq([jazz_track.uuid])
+      expect(uuids_for(bpm_min: 80, bpm_max: 130)).to contain_exactly(track.uuid, jazz_track.uuid)
+    end
+
+    it 'ignores blank filter params' do
+      expect(uuids_for(genre: '', key: '')).to contain_exactly(track.uuid, jazz_track.uuid)
+    end
+  end
+
   describe 'GET /api/v1/tracks/:uuid' do
     context 'with valid uuid' do
       it 'returns track with uuid instead of id' do

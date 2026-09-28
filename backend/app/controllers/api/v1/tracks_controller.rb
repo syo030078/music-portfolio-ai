@@ -41,59 +41,22 @@ class Api::V1::TracksController < ApplicationController
     per_page = params[:per_page]&.to_i || 10
     per_page = [per_page, 50].min # 最大50件
 
-    # 基本クエリ（ユーザー情報を含む）
     tracks = Track.includes(:user)
+                  .by_user_uuid(params[:user_uuid])
+                  .by_genre(params[:genre])
+                  .by_key(params[:key])
+                  .bpm_min(params[:bpm_min])
+                  .bpm_max(params[:bpm_max])
+                  .order(created_at: :desc)
 
-    # フィルタリング: ユーザー（UUID）
-    if params[:user_uuid].present?
-      tracks = tracks.joins(:user).where(users: { uuid: params[:user_uuid] })
-    end
-
-    # フィルタリング: ジャンル
-    tracks = tracks.where(genre: params[:genre]) if params[:genre].present?
-
-    # フィルタリング: BPM範囲
-    if params[:bpm_min].present?
-      tracks = tracks.where('bpm >= ?', params[:bpm_min].to_f)
-    end
-    if params[:bpm_max].present?
-      tracks = tracks.where('bpm <= ?', params[:bpm_max].to_f)
-    end
-
-    # フィルタリング: キー
-    tracks = tracks.where(key: params[:key]) if params[:key].present?
-
-    # ソート（新しい順）
-    tracks = tracks.order(created_at: :desc)
-
-    # ページネーション適用
     total_count = tracks.count
-    total_pages = (total_count.to_f / per_page).ceil
     tracks = tracks.offset((page - 1) * per_page).limit(per_page)
 
-    # レスポンス生成
     render json: {
-      tracks: tracks.map do |track|
-        {
-          uuid: track.uuid,
-          title: track.title,
-          description: track.description,
-          yt_url: track.yt_url,
-          bpm: track.bpm,
-          key: track.key,
-          genre: track.genre,
-          ai_text: track.ai_text,
-          created_at: track.created_at,
-          user: {
-            uuid: track.user.uuid,
-            name: track.user.name,
-            bio: track.user.bio
-          }
-        }
-      end,
+      tracks: tracks.map { |track| track_payload(track) },
       pagination: {
         current_page: page,
-        total_pages: total_pages,
+        total_pages: (total_count.to_f / per_page).ceil,
         total_count: total_count,
         per_page: per_page
       }
@@ -108,26 +71,7 @@ class Api::V1::TracksController < ApplicationController
       return
     end
 
-    render json: {
-      track: {
-        uuid: track.uuid,
-        title: track.title,
-        description: track.description,
-        yt_url: track.yt_url,
-        bpm: track.bpm,
-        key: track.key,
-        genre: track.genre,
-        ai_text: track.ai_text,
-        created_at: track.created_at,
-        updated_at: track.updated_at,
-        user: {
-          uuid: track.user.uuid,
-          name: track.user.name,
-          bio: track.user.bio,
-          email: track.user.email
-        }
-      }
-    }
+    render json: { track: track_payload(track, detail: true) }
   end
 
   def create
@@ -171,5 +115,27 @@ class Api::V1::TracksController < ApplicationController
     else
       render_error("音声ファイルまたはYouTube URLを指定してください", :bad_request)
     end
+  end
+
+  private
+
+  # detail: true は詳細画面用（updated_at と投稿者の email を含む）
+  def track_payload(track, detail: false)
+    user = { uuid: track.user.uuid, name: track.user.name, bio: track.user.bio }
+    user = user.merge(email: track.user.email) if detail
+
+    payload = {
+      uuid: track.uuid,
+      title: track.title,
+      description: track.description,
+      yt_url: track.yt_url,
+      bpm: track.bpm,
+      key: track.key,
+      genre: track.genre,
+      ai_text: track.ai_text,
+      created_at: track.created_at,
+      user: user
+    }
+    detail ? payload.merge(updated_at: track.updated_at) : payload
   end
 end
