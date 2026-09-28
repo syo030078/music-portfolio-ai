@@ -7,13 +7,14 @@ const API_URL =
     ? (process.env.API_INTERNAL_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000')
     : (process.env.NEXT_PUBLIC_API_URL || '');
 
+// JSON 以外（nginx の 413/502/504 HTML ページなど）は本文を画面に出さず、ステータスから文言を決める
 async function parseResponse<T>(res: Response): Promise<T> {
   const text = await res.text();
   try {
     return JSON.parse(text) as T;
   } catch {
-    if (text) {
-      throw new Error(text);
+    if (res.status === 413) {
+      throw new Error('ファイルサイズが大きすぎます');
     }
     throw new Error(`リクエストに失敗しました (${res.status})`);
   }
