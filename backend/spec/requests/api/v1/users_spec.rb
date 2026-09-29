@@ -57,6 +57,18 @@ RSpec.describe 'Api::V1::Users', type: :request do
         expect(json).not_to have_key('id')
         expect(json['name']).to eq('Updated Name')
       end
+
+      it 'returns validation errors as an array of messages on failure' do
+        allow_any_instance_of(User).to receive(:update) do |record|
+          record.errors.add(:name, 'is invalid')
+          false
+        end
+
+        patch '/api/v1/user', params: { user: { name: 'x' } }.to_json, headers: auth_headers_for(user)
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(JSON.parse(response.body)['errors']).to eq(['Name is invalid'])
+      end
     end
   end
 end
