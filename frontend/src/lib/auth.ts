@@ -6,6 +6,12 @@ export function getToken(): string | null {
   return localStorage.getItem(JWT_KEY);
 }
 
+export function saveSession(token: string, user: unknown): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(JWT_KEY, token);
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+}
+
 export function removeToken(): void {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(JWT_KEY);
