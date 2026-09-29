@@ -20,13 +20,28 @@ async function parseResponse<T>(res: Response): Promise<T> {
   }
 }
 
-// 全リクエスト共通: 401 → セッション切れ処理、エラー時はサーバーの error / errors を例外メッセージにする
-async function request<T>(path: string, init: RequestInit): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, init);
+type RequestOptions = {
+  // ログイン前のリクエスト（sign_in 等）では 401 = 認証失敗なので、セッション切れ扱いにしない
+  handleUnauthorized?: boolean;
+};
 
-  if (res.status === 401) {
+// 全リクエスト共通: 401 → セッション切れ処理、エラー時はサーバーの error / errors を例外メッセージにする
+async function request<T>(
+  path: string,
+  init: RequestInit,
+  { handleUnauthorized = true }: RequestOptions = {},
+): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, init).catch(() => {
+    throw new Error('ネットワークエラーが発生しました');
+  });
+
+  if (res.status === 401 && handleUnauthorized) {
     handleSessionExpired();
     throw new Error('ログインセッションが切れました。再度ログインしてください');
+  }
+
+  if (res.status === 204) {
+    return undefined as T;
   }
 
   const data = await parseResponse<T & { error?: string; errors?: string[] }>(res);
@@ -58,6 +73,26 @@ export async function apiPost<T>(path: string, token: string, body?: unknown): P
       Authorization: token,
     },
     body: body ? JSON.stringify(body) : undefined,
+  });
+}
+
+// 未ログイン状態で送るリクエスト用（sign_in / sign_up）
+export async function apiPostPublic<T>(path: string, body: unknown): Promise<T> {
+  return request<T>(
+    path,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(body),
+    },
+    { handleUnauthorized: false },
+  );
+}
+
+export async function apiDelete<T = void>(path: string, token: string): Promise<T> {
+  return request<T>(path, {
+    method: 'DELETE',
+    headers: { Authorization: token, Accept: 'application/json' },
   });
 }
 

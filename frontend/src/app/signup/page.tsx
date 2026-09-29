@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
+import { signUp } from "@/lib/api/auth";
+import { saveSession } from "@/lib/auth";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
@@ -27,51 +27,17 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          user: {
-            email,
-            password,
-            name,
-            is_musician: isMusician,
-            is_client: isClient,
-          },
-        }),
+      const { token, user } = await signUp({
+        email,
+        password,
+        name,
+        is_musician: isMusician,
+        is_client: isClient,
       });
-
-      const contentType = res.headers.get("content-type") || "";
-      if (!contentType.includes("application/json")) {
-        setError("サーバーエラーが発生しました。しばらく経ってからお試しください");
-        return;
-      }
-
-      const data = await res.json();
-
-      if (res.ok) {
-        const token = res.headers.get("Authorization") || data.token;
-
-        if (token) {
-          localStorage.setItem("jwt", token);
-
-          if (data.user) {
-            localStorage.setItem("user", JSON.stringify(data.user));
-          }
-
-          router.push(isMusician ? "/upload" : "/jobs");
-        } else {
-          setError("認証トークンの取得に失敗しました");
-        }
-      } else {
-        const messages = data.errors?.join(", ") || data.error || "登録に失敗しました";
-        setError(messages);
-      }
-    } catch {
-      setError("ネットワークエラーが発生しました");
+      saveSession(token, user);
+      router.push(isMusician ? "/upload" : "/jobs");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "登録に失敗しました");
     } finally {
       setLoading(false);
     }

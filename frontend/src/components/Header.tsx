@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { signOut } from "@/lib/api/auth";
 import { getToken, getStoredUser, removeToken } from "@/lib/auth";
 
 interface UserInfo {
@@ -29,18 +30,13 @@ export default function Header() {
 
   const handleLogout = async () => {
     const token = getToken();
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
-    try {
-      await fetch(`${API_BASE_URL}/auth/sign_in`, {
-        method: "DELETE",
-        headers: {
-          Authorization: token || "",
-          Accept: "application/json",
-        },
-      });
-    } catch {
-      // ログアウトAPIが失敗してもローカルはクリアする
+    if (token) {
+      try {
+        await signOut(token);
+      } catch {
+        // ログアウトAPIが失敗してもローカルはクリアする
+      }
     }
 
     removeToken();

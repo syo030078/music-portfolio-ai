@@ -4,8 +4,8 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useUser } from "@/hooks/useUser";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
+import { signIn } from "@/lib/api/auth";
+import { saveSession } from "@/lib/auth";
 
 function LoginForm() {
   const { isLoggedIn, isMusician } = useUser();
@@ -29,46 +29,11 @@ function LoginForm() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/sign_in`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          user: {
-            email,
-            password,
-          },
-        }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        const token = res.headers.get("Authorization") || data.token;
-
-        if (token) {
-          localStorage.setItem("jwt", token);
-
-          if (data.user) {
-            localStorage.setItem("user", JSON.stringify(data.user));
-          }
-
-          if (redirectTo) {
-            router.push(redirectTo);
-          } else {
-            const user = data.user;
-            router.push(user?.is_musician ? "/upload" : "/jobs");
-          }
-        } else {
-          setError("認証トークンの取得に失敗しました");
-        }
-      } else {
-        const errorData = await res.json();
-        setError(errorData.error || "ログインに失敗しました");
-      }
-    } catch {
-      setError("ネットワークエラーが発生しました");
+      const { token, user } = await signIn(email, password);
+      saveSession(token, user);
+      router.push(redirectTo || (user.is_musician ? "/upload" : "/jobs"));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "ログインに失敗しました");
     } finally {
       setLoading(false);
     }

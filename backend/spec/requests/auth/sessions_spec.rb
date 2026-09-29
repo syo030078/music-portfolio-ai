@@ -76,6 +76,18 @@ RSpec.describe 'User Sessions', type: :request do
         delete '/auth/sign_out', headers: headers.merge('Authorization' => token)
         expect(response).to have_http_status(:no_content)
       end
+
+      it 'ログアウト後は同じトークンで認証できない' do
+        post '/auth/sign_in', params: {
+          user: { email: 'test@example.com', password: 'password123' }
+        }.to_json, headers: headers
+        token = response.headers['Authorization']
+
+        delete '/auth/sign_out', headers: headers.merge('Authorization' => token)
+        get '/api/v1/user', headers: headers.merge('Authorization' => token)
+
+        expect(response).to have_http_status(:unauthorized)
+      end
     end
   end
 end
