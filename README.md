@@ -9,7 +9,20 @@
 
 ---
 
+## 背景
+
+音楽制作の依頼では、依頼者と音楽家の双方に次の課題がある。
+
+- **依頼者**: 音楽家の作風（テンポ・調・ジャンル）が自分の要望に合うかどうかは、曲を 1 つずつ聴かないと判断できない
+- **音楽家**: 作品を並べるだけでは得意分野が伝わらず、依頼につながりにくい
+
+このサービスでは、楽曲を AI で解析して作風を数値と文章で示す。依頼者は要望を文章で入力するだけで、合う楽曲と音楽家を見つけられる。
+
+---
+
 ## 主要機能
+
+上の 2 つの課題に対応する機能と、依頼から契約・連絡までを行う機能に分かれる。
 
 | 利用者 | 機能 | 内容 |
 |--------|------|------|
@@ -24,6 +37,8 @@
 ---
 
 ## 技術スタック
+
+Web アプリ本体は Rails と Next.js で作り、音響解析だけを Python で行う。
 
 | レイヤー | 技術 | 選定理由 |
 |----------|------|----------|
@@ -62,6 +77,8 @@ graph LR
         Backend -- "Open3.popen3" --> Analyzer
     end
 ```
+
+以下の 2 つの処理は、上の図のどこを通るかを追うと全体の動きがわかる。
 
 **楽曲アップロードの処理**
 
@@ -161,17 +178,28 @@ URL では内部の連番 `id` を使わず、`uuid` でリソースを指定す
 
 ## 開発環境セットアップ
 
+前提: Docker と Docker Compose が入っていること。
+
 ```bash
 git clone https://github.com/syo030078/music-portfolio-ai.git
 cd music-portfolio-ai
-cp .env.example .env
-docker compose up
+docker compose up -d
+docker compose exec backend bin/rails db:setup   # DB の作成・スキーマ読み込み・シードデータ投入
 ```
+
+コンテナは Rails サーバーを起動するだけで DB は作らないため、初回は `db:setup` が必要。
 
 | サービス | URL |
 |----------|-----|
 | Frontend | http://localhost:3001 |
 | Backend API | http://localhost:3000 |
+
+シードデータで、次のテスト用アカウントが作られる（パスワードはすべて `password123`）。
+
+- 音楽家: `musician1@example.com` 〜 `musician4@example.com`
+- 依頼者: `client1@example.com` 〜 `client3@example.com`
+
+開発用の `docker-compose.yml` は `OPENAI_API_KEY` を backend に渡さないため、Docker で動かした場合は説明文生成と AI マッチングは使えない（それ以外の機能は動く）。
 
 <details>
 <summary>個別セットアップ（Docker を使わない場合）</summary>
@@ -217,6 +245,8 @@ python music_analyzer.py --file path/to/audio.mp3
 
 ## テスト
 
+Backend と Frontend の検査は CI（`test.yml`）でも実行される。Analyzer のテストは CI に入っていないため、ローカルで実行する。
+
 ```bash
 # Backend（RSpec: 35 specファイル）
 cd backend && bundle exec rspec
@@ -244,6 +274,8 @@ docs/             設計資料（ER 図など）
 ---
 
 ## 今後の開発予定
+
+未着手の機能。
 
 - RAG（pgvector + Embedding によるベクトル検索）
 - 楽曲の波形表示・プレビュー再生
