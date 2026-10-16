@@ -66,7 +66,7 @@ export default function Header() {
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center space-x-2">
             <div className="text-2xl font-bold text-gray-900">
-              Music<span className="text-green-600">Work</span>
+              Music Portfolio <span className="text-green-600">AI</span>
             </div>
           </Link>
 

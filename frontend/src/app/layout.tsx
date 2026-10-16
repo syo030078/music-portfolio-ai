@@ -3,8 +3,8 @@ import Header from "@/components/Header";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "MusicWork - 音楽仕事マッチングプラットフォーム",
-  description: "音楽家と依頼者をつなぐマッチングサービス",
+  title: "Music Portfolio AI - AI 楽曲解析つきの受発注マッチング",
+  description: "音楽家と依頼者をつなぐ、AI 楽曲解析つきの受発注マッチングプラットフォーム",
 };
 
 export default function RootLayout({
