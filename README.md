@@ -1,80 +1,75 @@
 # Music Portfolio AI
 
-**音楽家と制作依頼者を AI でつなぐマッチングプラットフォーム**
+音楽家と依頼者をつなぐ、AI 楽曲解析つきの受発注マッチングプラットフォーム。音楽家がアップロードした楽曲を AI が解析し、依頼者はその解析結果をもとに音楽家を探して制作を依頼する。
 
 [![CI](https://github.com/syo030078/music-portfolio-ai/actions/workflows/test.yml/badge.svg)](https://github.com/syo030078/music-portfolio-ai/actions/workflows/test.yml)
 [![Deploy](https://github.com/syo030078/music-portfolio-ai/actions/workflows/deploy.yml/badge.svg)](https://github.com/syo030078/music-portfolio-ai/actions/workflows/deploy.yml)
 
-![Ruby](https://img.shields.io/badge/Ruby-3.1.3-CC342D?logo=ruby&logoColor=white)
-![Rails](https://img.shields.io/badge/Rails-7.0-D30001?logo=rubyonrails&logoColor=white)
-![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=next.js&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
-![Python](https://img.shields.io/badge/Python-librosa-3776AB?logo=python&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14-4169E1?logo=postgresql&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
-![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-412991?logo=openai&logoColor=white)
+**デモ**: https://musicportfolioai.com/
 
 ---
 
-## デモ
+## 背景
 
-**公開 URL**: http://54.250.46.74/
+音楽制作の依頼では、依頼者と音楽家の双方に次の課題がある。
 
-> 📸 スクリーンショットは後日追加予定
+- **依頼者**: 音楽家の作風（テンポ・調・ジャンル）が自分の要望に合うかどうかは、曲を 1 つずつ聴かないと判断できない
+- **音楽家**: 作品を並べるだけでは得意分野が伝わらず、依頼につながりにくい
 
-<!-- 追加時のフォーマット例:
-![ダッシュボード](docs/screenshots/dashboard.png)
-![楽曲解析](docs/screenshots/track-analysis.png)
--->
+このサービスでは、楽曲を AI で解析して作風を数値と文章で示す。依頼者は要望を文章で入力するだけで、合う楽曲と音楽家を見つけられる。
 
 ---
 
 ## 主要機能
 
-| 機能 | 概要 | 技術要素 |
-|------|------|----------|
-| 🎵 楽曲の AI 解析 | アップロードした楽曲の BPM・キー・ジャンルを自動推定 | Python + librosa, Open3 プロセス分離 |
-| 🤖 AI 楽曲説明文生成 | 解析データから楽曲の特徴・雰囲気・用途を自動生成 | OpenAI GPT-4o-mini, AiTextGenerator サービス |
-| 🔍 AI マッチング | 自然言語で要望を入力 → 最適な楽曲をスコア付きで推薦 | OpenAI GPT-4o-mini, AiMatchingService |
-| 📋 ポートフォリオ自動生成 | 解析データから音楽家プロフィールを構築 | Rails API + PostgreSQL |
-| 📝 案件管理 | 制作依頼の投稿・提案・契約をステータスマシンで管理 | `draft → published → contracted → completed` |
-| 👥 ロールベース UI | ミュージシャン / クライアントで異なる画面・操作を提供 | Next.js App Router + JWT ロール判定 |
-| 💬 メッセージング | 依頼者と音楽家のリアルタイムコミュニケーション | RESTful API |
-| 🔐 認証・認可 | JWT + トークン無効化（denylist）によるセキュアな認証 | Devise JWT + ロールベースアクセス制御 |
+上の 2 つの課題に対応する機能と、依頼から契約・連絡までを行う機能に分かれる。
+
+| 利用者 | 機能 | 内容 |
+|--------|------|------|
+| 音楽家 | 楽曲解析 | アップロードした楽曲の BPM・キー・ジャンルを librosa で推定する |
+| 音楽家 | 説明文生成 | 解析結果をもとに、楽曲の特徴・雰囲気・用途を GPT-4o-mini で文章にする |
+| 音楽家 | ポートフォリオ | プロフィールと楽曲（解析結果・説明文）を音楽家ごとのページで公開する |
+| 依頼者 | AI マッチング | 自然言語の要望に合う楽曲を、スコア付きで最大 5 件推薦する |
+| 依頼者 | 案件・直接依頼 | 案件を公開して提案を募るか、音楽家に直接依頼する。承認すると契約になる |
+| 共通 | メッセージ | 依頼者と音楽家が案件・契約ごとにやり取りする |
+| 共通 | 認証 | JWT で認証し、音楽家と依頼者で使える画面と操作を分ける |
 
 ---
 
 ## 技術スタック
 
+Web アプリ本体は Rails と Next.js で作り、音響解析だけを Python で行う。
+
 | レイヤー | 技術 | 選定理由 |
 |----------|------|----------|
-| **Frontend** | Next.js 15 (App Router), React 19, TypeScript strict, Tailwind CSS 4 | RSC + Server Actions によるデータフェッチ最適化。Turbopack で高速開発 |
-| **Backend** | Rails 7 API mode, Ruby 3.1.3 | ActiveRecord のマイグレーション管理と充実したモデル層。API mode で軽量化 |
-| **Database** | PostgreSQL 14 | UUID ネイティブ対応、CHECK 制約、JSONB。ビジネスロジックの一部を DB 層で保証 |
-| **AI / 解析** | Python, librosa, soundfile, NumPy | 音響解析の事実上の標準。Ruby には同等ライブラリがないためサブプロセスとして分離 |
-| **LLM** | OpenAI GPT-4o-mini | 楽曲説明文の自動生成 + 自然言語マッチング。コスト効率重視で mini モデルを選定 |
-| **認証** | Devise + JWT, bcrypt | SPA + API のステートレス通信に対応。`JwtDenylist` でトークン失効管理 |
-| **バリデーション** | Zod | TypeScript の型はコンパイル時のみ → API レスポンスやフォーム入力を実行時にも検証 |
-| **Testing** | RSpec (35 spec files), ESLint, TypeScript 型検査 (`tsc --noEmit`) | モデル・リクエスト・サービス・統合テストの多層カバレッジ |
-| **Infra** | Docker Compose, nginx, EC2, GitHub Actions | 開発〜本番で同一構成。CI/CD で自動テスト → 自動デプロイ |
+| Frontend | Next.js 15 (App Router), React 19, TypeScript strict, Tailwind CSS 4 | Server Components でデータ取得をサーバー側で行える |
+| Backend | Rails 7 API mode, Ruby 3.1 | ActiveRecord でモデルの関連・検証・マイグレーションをまとめて管理できる |
+| Database | PostgreSQL 14 | UUID と CHECK 制約で、整合性を DB 層でも保証できる |
+| 音響解析 | Python, librosa | Ruby には同等の音響解析ライブラリがない |
+| LLM | OpenAI GPT-4o-mini | 用途に足りる品質で、コストが低い |
+| 認証 | Devise + devise-jwt | SPA と API の間をステートレスに認証できる |
+| バリデーション | Zod | TypeScript の型では検査できない実行時の値を検証できる |
+| Infra | Docker Compose, nginx, Let's Encrypt, EC2, GitHub Actions | 開発と本番を同じ構成で動かせる |
 
 ---
 
-## アーキテクチャ概要
+## アーキテクチャ
 
-### システム全体構成
+nginx がリクエストをパスで振り分け、`/api/` と `/auth/` を Rails、それ以外を Next.js に渡す。
 
 ```mermaid
 graph LR
     Browser[ブラウザ] --> Nginx
 
     subgraph EC2["EC2 (Docker Compose)"]
-        Nginx["Nginx :80"]
+        Nginx["nginx :80 / :443"]
+        Certbot["certbot"]
         Frontend["Next.js :3000"]
         Backend["Rails API :3001"]
         DB["PostgreSQL 14"]
         Analyzer["Python Analyzer"]
 
+        Certbot -- "証明書を自動更新" --> Nginx
         Nginx -- "/ → frontend" --> Frontend
         Nginx -- "/api/, /auth/ → backend" --> Backend
         Frontend -- "API_INTERNAL_URL" --> Backend
@@ -83,262 +78,128 @@ graph LR
     end
 ```
 
-### CI/CD パイプライン
+以下の 2 つの処理は、上の図のどこを通るかを追うと全体の動きがわかる。
 
-```mermaid
-graph LR
-    PR["PR / Push"] --> Test["test.yml"]
+**楽曲アップロードの処理**
 
-    subgraph Test["test.yml (並列実行)"]
-        RSpec["Backend: RSpec"]
-        Lint["Frontend: Lint + tsc"]
-    end
+1. Next.js が `POST /api/v1/tracks` に音声ファイルを送る
+2. Rails が Python Analyzer を別プロセスで起動する（60 秒でタイムアウト）
+3. 推定した BPM・キー・ジャンルを保存する
 
-    Test -- "main branch<br/>workflow_run" --> Deploy["deploy.yml"]
-    Deploy -- "SSH" --> EC2["EC2"]
-    EC2 --> Build["docker compose build --no-cache"]
-    Build --> Migrate["rails db:migrate"]
-    Migrate --> Up["docker compose up -d"]
-    Up --> Health["curl /api/v1/health"]
-```
+説明文の生成はアップロードとは別の処理で、`POST /api/v1/tracks/:id/generate_ai_text` を呼んだときに行う。
 
-### データフロー（楽曲アップロード）
+**CI/CD**
 
-```mermaid
-sequenceDiagram
-    participant U as ユーザー
-    participant F as Next.js
-    participant B as Rails API
-    participant A as Python Analyzer
-    participant DB as PostgreSQL
-    participant OpenAI as OpenAI API
-
-    U->>F: 楽曲ファイルをアップロード
-    F->>B: POST /api/v1/tracks
-    B->>A: AnalyzerRunner.call(file_path)
-    Note over B,A: Open3.popen3 / 60秒タイムアウト
-    A-->>B: {bpm, key, genre} (JSON)
-    B->>OpenAI: AiTextGenerator.call(bpm, key, genre)
-    Note over B,OpenAI: GPT-4o-mini / 10秒タイムアウト
-    OpenAI-->>B: ai_text（楽曲説明文）
-    B->>DB: Track.create(解析結果 + ai_text)
-    B-->>F: 201 Created + track data
-    F-->>U: ポートフォリオに楽曲表示
-```
+1. PR と push のたびに、RSpec・ESLint・`tsc --noEmit` を並列で実行する
+2. main で成功すると、EC2 に SSH してビルド → マイグレーション → 起動を行う
+3. 最後に `https://musicportfolioai.com/api/v1/health` を確認し、失敗したらデプロイを失敗として扱う
 
 ---
 
-## API エンドポイント設計
+## API
 
-RESTful 設計 + UUID 公開キー。内部 `id` を URL に露出させず、`uuid` パラメータでリソースを識別。
+URL では内部の連番 `id` を使わず、`uuid` でリソースを指定する。全ルートは [`backend/config/routes.rb`](backend/config/routes.rb) にある。
 
-| Method | Endpoint | 概要 | 認証 |
-|--------|----------|------|------|
-| `POST` | `/auth/sign_up` | ユーザー登録 | - |
-| `POST` | `/auth/sign_in` | ログイン（JWT 発行） | - |
-| `DELETE` | `/auth/sign_out` | ログアウト（トークン denylist 追加） | 🔑 |
-| `GET` | `/api/v1/user` | 自分のプロフィール取得 | 🔑 |
-| `PUT` | `/api/v1/user` | プロフィール更新 | 🔑 |
-| `GET` | `/api/v1/users/:uuid` | 他ユーザーのプロフィール | - |
-| `GET/POST` | `/api/v1/tracks` | 楽曲一覧 / 新規アップロード（AI 解析自動実行） | 🔑 |
-| `POST` | `/api/v1/tracks/:id/generate_ai_text` | 楽曲の AI 説明文を再生成 | 🔑 |
-| `POST` | `/api/v1/matching` | 自然言語 → AI マッチング（スコア付き推薦） | 🔑 |
-| `GET/POST` | `/api/v1/jobs` | 案件一覧 / 新規作成 | 🔑 |
-| `GET` | `/api/v1/jobs/:uuid` | 案件詳細 | - |
-| `GET/POST` | `/api/v1/jobs/:uuid/proposals` | 提案一覧 / 新規提案 | 🔑 |
-| `POST` | `/api/v1/proposals/:uuid/accept` | 提案を承認 → 契約自動生成 | 🔑 |
-| `POST` | `/api/v1/proposals/:uuid/reject` | 提案を却下 | 🔑 |
-| `GET/POST` | `/api/v1/production_requests` | 制作依頼の一覧 / 新規作成 | 🔑 |
-| `POST` | `/api/v1/production_requests/:uuid/accept\|reject\|withdraw` | 制作依頼のステータス操作 | 🔑 |
-| `GET/POST` | `/api/v1/conversations` | 会話一覧 / 新規作成 | 🔑 |
-| `GET/POST` | `/api/v1/conversations/:id/messages` | メッセージ一覧 / 送信 | 🔑 |
-| `GET` | `/api/v1/health` | ヘルスチェック | - |
+| リソース | エンドポイント | 主な操作 |
+|----------|---------------|----------|
+| 認証 | `/auth/sign_up`, `/auth/sign_in`, `/auth/sign_out` | 登録 / ログイン / ログアウト |
+| ユーザー | `/api/v1/user`, `/api/v1/users/:uuid` | 自分のプロフィールの取得・更新 / 公開プロフィール |
+| 楽曲 | `/api/v1/tracks`, `/api/v1/tracks/:id/generate_ai_text` | 一覧・アップロード / 説明文の生成 |
+| マッチング | `/api/v1/matching` | 自然言語から楽曲を推薦 |
+| 案件・提案 | `/api/v1/jobs`, `/api/v1/jobs/:uuid/proposals`, `/api/v1/proposals/:uuid/accept\|reject` | 案件の投稿 / 提案 / 承認（契約を作成） |
+| 直接依頼 | `/api/v1/production_requests/:uuid/accept\|reject\|withdraw` | 依頼の作成 / 承認（契約を作成）/ 却下 / 取り下げ |
+| メッセージ | `/api/v1/conversations`, `/api/v1/conversations/:id/messages` | 会話の作成 / メッセージの送信 |
+| ヘルスチェック | `/api/v1/health` | 稼働確認 |
+
+エラーレスポンスの形式は 2 種類に統一している。
+
+- 単一のエラー: `{ error: "..." }`
+- バリデーションエラー: `{ errors: ["...", ...] }`
 
 ---
 
-## ER 図（20 テーブル）
+## データベース
 
-```mermaid
-erDiagram
-    users ||--|| musician_profiles : "has one"
-    users ||--|| client_profiles : "has one"
-    users ||--o{ tracks : "musician"
-    users ||--o{ jobs : "client"
-    users ||--o{ proposals : "musician"
-    users ||--o{ contracts : "client/musician"
+全 20 テーブル。カラムと制約の一覧は [`docs/architecture/er-diagram.puml`](docs/architecture/er-diagram.puml) にある。
 
-    jobs ||--o{ job_requirements : "has many"
-    jobs ||--o{ proposals : "has many"
-    proposals ||--|| contracts : "creates"
-    contracts ||--o{ contract_milestones : "has many"
+契約と会話は、それぞれ 2 つの外部キーのうち必ず片方だけが入るように CHECK 制約で強制している。
 
-    jobs ||--o{ conversations : "pre-contract"
-    contracts ||--o{ conversations : "post-contract"
-    conversations ||--o{ messages : "has many"
-    conversations ||--o{ conversation_participants : "has many"
-    users ||--o{ conversation_participants : "joins"
-
-    users ||--o{ musician_genres : "has many"
-    genres ||--o{ musician_genres : "has many"
-    users ||--o{ musician_instruments : "has many"
-    instruments ||--o{ musician_instruments : "has many"
-    users ||--o{ musician_skills : "has many"
-    skills ||--o{ musician_skills : "has many"
-
-    users {
-        uuid id PK
-        citext email "unique"
-        boolean is_musician
-        boolean is_client
-        timestamptz deleted_at "soft delete"
-    }
-    tracks {
-        bigserial id PK
-        bigint user_id FK
-        varchar title
-        float bpm "AI解析"
-        varchar key "AI解析"
-        varchar genre "AI解析"
-        text ai_text "LLM生成"
-    }
-    jobs {
-        bigserial id PK
-        uuid uuid "公開用ID"
-        bigint client_id FK
-        varchar title
-        text description
-        integer budget_jpy
-        enum status "draft→published→contracted→completed"
-    }
-    proposals {
-        uuid id PK
-        uuid job_id FK
-        uuid musician_id FK
-        integer quote_total_jpy
-        enum status "submitted→shortlisted→accepted→rejected"
-    }
-    contracts {
-        uuid id PK
-        uuid proposal_id FK "unique"
-        integer escrow_total_jpy
-        enum status "active→in_progress→delivered→completed"
-    }
-    conversations {
-        bigserial id PK
-        bigint job_id FK "nullable, XOR制約"
-        bigint contract_id FK "nullable, XOR制約"
-    }
-```
-
-> 設計ポイント: `conversations` は `job_id` と `contract_id` の XOR 制約で「契約前 / 契約後」の会話を分離。Job や Contract の削除時に CASCADE で会話も削除される。
->
-> 詳細な ER 図（全カラム・制約付き）は [`docs/architecture/er-diagram.puml`](docs/architecture/er-diagram.puml) を参照。
+| テーブル | 外部キー | 意味 |
+|----------|----------|------|
+| `contracts` | `proposal_id` / `production_request_id` | 契約の元は、案件への提案か直接依頼のどちらか一方 |
+| `conversations` | `job_id` / `contract_id` | 会話は、契約前（案件）か契約後（契約）のどちらか一方 |
 
 ---
 
-## 設計判断とトレードオフ
+## 設計判断
 
-### なぜ Rails API + Next.js の分離構成か（モノリス vs マイクロサービス）
+各判断を「課題 → 選択 → 代償」の順に書く。
 
-| 選択肢 | メリット | デメリット |
-|---------|---------|-----------|
-| **Rails モノリス（ERB / Hotwire）** | 開発速度が速い、デプロイが単純 | SPA レベルの UX が困難、フロント技術のアピールが弱い |
-| **Next.js フルスタック** | 1 言語で完結 | ActiveRecord の ORM 力・マイグレーション管理を失う |
-| ✅ **Rails API + Next.js（採用）** | フロント/バックの責務分離、両方の技術力を証明できる | CORS 設定・認証トークン管理の複雑さが増す |
+### Rails API と Next.js を分ける
 
-**判断理由:** 音楽マッチングプラットフォームは「検索 → 試聴 → 提案 → 契約」の対話的な UX が重要。Server Components + App Router でデータフェッチを最適化しつつ、Rails の強力な ORM とマイグレーション管理を活用する構成が最適と判断した。
+- **課題**: 検索・試聴・提案・契約と画面操作が多く、SPA で作りたい。一方、モデルとマイグレーションの管理は Rails に任せたい
+- **選択**: バックエンドを Rails API、フロントエンドを Next.js に分ける
+- **代償**: CORS の設定と認証トークンの管理が必要になる
 
-### なぜ UUID を公開キーに使うか（連番 ID vs UUID）
+### 公開 ID に UUID を使う
 
-- 連番 ID を URL に露出すると、`/jobs/1`, `/jobs/2` で他ユーザーのリソースを推測可能（IDOR 脆弱性）
-- UUID を公開用、連番 ID を内部用に分離することで、**セキュリティとパフォーマンス（JOIN 効率）を両立**
-- PostgreSQL の `pgcrypto` 拡張で DB 層で UUID を生成
+- **課題**: 連番 ID を URL に出すと、他人のリソースの ID を推測できる（IDOR）
+- **選択**: 外部には UUID を出し、テーブル間の結合には内部の連番 ID を使う
+- **代償**: すべてのテーブルに `uuid` 列とユニークインデックスが必要になる
 
-### なぜ Python サブプロセスか（FFI vs マイクロサービス vs サブプロセス）
+### Python をサブプロセスで実行する
 
-| 選択肢 | メリット | デメリット |
-|---------|---------|-----------|
-| Ruby FFI で librosa 呼び出し | プロセス間通信なし | librosa は Python 専用。FFI バインディングが存在しない |
-| Python マイクロサービス（API） | スケーラブル | インフラコスト増、認証・ヘルスチェックの管理が必要 |
-| ✅ **Open3 サブプロセス（採用）** | 最小構成で Python の音響解析ライブラリを活用 | プロセス生成コスト、タイムアウト管理が必要 |
+- **課題**: 音響解析は Python でしかできないが、Rails から呼び出す必要がある
+- **選択**: 解析は 1 リクエストにつき 1 回なので、別サーバーにはせず `Open3.popen3` で起動する。60 秒を超えたら `Process.kill` で止める
+- **代償**: 呼び出すたびにプロセス起動のコストがかかる
 
-**判断理由:** 音響解析は 1 リクエストあたり 1 回のみ実行。マイクロサービスの運用コストに見合うほどの呼び出し頻度がないため、`Open3.popen3` + 60 秒タイムアウト + `Process.kill` のシンプルな構成を選択。
+### 4 層でバリデーションする
 
-### なぜ 4 層バリデーションか
-
-```
-TypeScript strict → Zod → ActiveRecord validations → PostgreSQL CHECK 制約
-```
-
-**トレードオフ:** バリデーションの重複はコードの冗長性を生むが、**各層が独立して動作する**ことで「フロントのバグが DB を壊す」シナリオを構造的に防止。特に `contracts` テーブルの XOR 制約（`proposal_id` と `production_request_id` が排他）は、API を直接叩かれても不正な状態が入らない最終防御ライン。
+- **課題**: フロントエンドを通さず API を直接呼ばれても、不正なデータを DB に入れたくない
+- **選択**: TypeScript → Zod → ActiveRecord → PostgreSQL CHECK 制約の 4 層で検証する
+- **代償**: 同じ検証を複数の層に書くことになる
 
 ---
 
-## 技術的こだわり
+## セキュリティと障害時の動作
 
-### 1. API 設計
+**セキュリティ**
 
-- RESTful エンドポイント + UUID 公開キーでリソースを識別
-- ステータスマシンによる案件ライフサイクル管理（`draft → published → contracted → completed`）
-- ページネーション：オフセットベース、最大 50 件/リクエスト
+- 本番は HTTPS のみで配信する（Let's Encrypt）。HTTP は HTTPS にリダイレクトし、HSTS を付ける
+- ログアウト時は JWT を `JwtDenylist` に登録し、サーバー側でも無効にする
+- 本番の Docker イメージはマルチステージビルドで作り、root 以外のユーザーで実行する
 
-### 2. 認証・認可
+**障害時の動作**
 
-- **Devise JWT** によるステートレス認証。セッション管理不要で SPA と相性が良い
-- **JwtDenylist テーブル** でログアウト時のトークン即時無効化を実現
-- **ロールベースアクセス制御**：ミュージシャン / クライアントで API 権限を分離
-
-### 3. 型安全性の多層防御
-
-```
-[TypeScript strict]  →  [Zod schema]  →  [AR validations]  →  [PG CHECK制約]
-  コンパイル時            ランタイム          サーバーサイド          DB層
-```
-
-- **TypeScript strict mode**: `any` 禁止、CI で `tsc --noEmit` を実行
-- **Zod スキーマ**: フォーム入力の実行時バリデーション
-- **Rails ActiveRecord validations**: サーバーサイドの制約
-- **PostgreSQL CHECK 制約**: DB 層の最終防御（`contracts` の proposal/production_request 排他制約 等）
-
-### 4. テスト戦略
-
-- **RSpec 35 ファイル**：モデル（19）・リクエスト（10）・サービス（3）・統合／コントローラの多層構成
-- **ESLint + TypeScript 型検査** でフロントエンドの品質を担保
-- **GitHub Actions** で全 PR に対して自動テスト実行（RSpec / Lint / tsc 並列）
-
-### 5. 本番構成
-
-- **マルチステージ Docker ビルド**：非 root ユーザー実行、ビルド時依存の除去で軽量イメージ
-- **nginx リバースプロキシ**：パスベースルーティング、gzip 圧縮、セキュリティヘッダー付与
-- **ヘルスチェック監視**：`curl /api/v1/health` による自動検知
-- **PostgreSQL チューニング**：`shared_buffers=64MB`, `effective_cache_size=256MB`, `max_connections=50`
-
-### 6. AI 統合：音響解析 + LLM パイプライン
-
-- librosa による BPM・キー・ジャンル推定を `AnalyzerRunner` サービスに集約
-- `Open3.popen3` で Python プロセスを分離し、60 秒タイムアウト + `Process.kill` で暴走を防止
-- フォールバック設計：解析失敗時もデフォルト値（BPM=120, Key=C, Genre=Pop）で正常レスポンス
-- **`AiTextGenerator`**：OpenAI GPT-4o-mini で解析データから楽曲説明文を自動生成（日本語プロンプト、max_tokens=300）
-- **`AiMatchingService`**：クライアントの自然言語要望と全楽曲メタデータを LLM に渡し、マッチ度スコア付きで最大 5 件推薦
-- Graceful degradation：API キー未設定や LLM エラー時もアプリ全体は正常動作
+- 音響解析に失敗したら、デフォルト値（BPM=120, Key=C, Genre=Pop）で登録を続ける
+- OpenAI の API キーがない場合や API がエラーを返した場合は、AI 機能だけが使えなくなり、他の機能は動き続ける
 
 ---
 
 ## 開発環境セットアップ
 
-### Docker Compose（推奨）
+前提: Docker と Docker Compose が入っていること。
 
 ```bash
 git clone https://github.com/syo030078/music-portfolio-ai.git
 cd music-portfolio-ai
-cp .env.example .env
-docker compose up
+docker compose up -d
+docker compose exec backend bin/rails db:setup   # DB の作成・スキーマ読み込み・シードデータ投入
 ```
+
+コンテナは Rails サーバーを起動するだけで DB は作らないため、初回は `db:setup` が必要。
 
 | サービス | URL |
 |----------|-----|
 | Frontend | http://localhost:3001 |
 | Backend API | http://localhost:3000 |
+
+シードデータで、次のテスト用アカウントが作られる（パスワードはすべて `password123`）。
+
+- 音楽家: `musician1@example.com` 〜 `musician4@example.com`
+- 依頼者: `client1@example.com` 〜 `client3@example.com`
+
+開発用の `docker-compose.yml` は `OPENAI_API_KEY` を backend に渡さないため、Docker で動かした場合は説明文生成と AI マッチングは使えない（それ以外の機能は動く）。
 
 <details>
 <summary>個別セットアップ（Docker を使わない場合）</summary>
@@ -384,6 +245,8 @@ python music_analyzer.py --file path/to/audio.mp3
 
 ## テスト
 
+Backend と Frontend の検査は CI（`test.yml`）でも実行される。Analyzer のテストは CI に入っていないため、ローカルで実行する。
+
 ```bash
 # Backend（RSpec: 35 specファイル）
 cd backend && bundle exec rspec
@@ -400,44 +263,27 @@ cd analyzer && python test_music_analyzer.py
 ## リポジトリ構成
 
 ```
-music-portfolio-ai/
-├── frontend/                # Next.js 15 (App Router, TypeScript, Tailwind CSS 4)
-├── backend/                 # Rails 7 API (PostgreSQL, Devise + JWT, RSpec)
-├── analyzer/                # Python 音源解析 (librosa, soundfile)
-├── infrastructure/          # EC2 デプロイ設定 (nginx.conf, setup.sh)
-│   └── ec2/
-│       ├── nginx.conf       # リバースプロキシ設定
-│       ├── setup.sh         # EC2 初期構築スクリプト
-│       └── deploy.sh        # デプロイ実行スクリプト
-├── .github/workflows/       # CI/CD
-│   ├── test.yml             # RSpec + ESLint + tsc（PR / Push時）
-│   └── deploy.yml           # EC2 自動デプロイ（main merge時）
-├── docs/                    # 設計資料 (PLAN.md, er-diagram.puml)
-├── docker-compose.yml       # 開発環境
-└── docker-compose.production.yml  # 本番環境
+frontend/         Next.js 15 (App Router)
+backend/          Rails 7 API
+analyzer/         Python 音響解析 (librosa)
+infrastructure/   EC2 構築・デプロイ用スクリプト、nginx 設定
+docs/             設計資料（ER 図など）
+.github/workflows CI (test.yml) / CD (deploy.yml)
 ```
 
 ---
 
 ## 今後の開発予定
 
-- ✅ 楽曲アップロード + AI 解析（BPM / キー / ジャンル）
-- ✅ JWT 認証 + ロールベースアクセス制御
-- ✅ 案件投稿・提案・契約管理
-- ✅ メッセージング機能
-- ✅ Docker Compose 本番構成 + EC2 デプロイ
-- ✅ CI/CD パイプライン（GitHub Actions）
-- ✅ OpenAI 連携による楽曲説明文の自動生成（GPT-4o-mini）
-- ✅ AI マッチング（自然言語 → 楽曲推薦）
-- ⬜ RAG 実装（pgvector + Embedding によるベクトル検索）
-- ⬜ 楽曲の波形表示・プレビュー再生
-- ⬜ リアルタイム通知（WebSocket / Action Cable）
-- ⬜ 楽曲検索のフィルタリング強化（BPM 範囲・ジャンル）
+未着手の機能。
+
+- RAG（pgvector + Embedding によるベクトル検索）
+- 楽曲の波形表示・プレビュー再生
+- リアルタイム通知（WebSocket / Action Cable）
+- 楽曲検索のフィルタ強化（BPM の範囲・ジャンル）
 
 ---
 
 ## ライセンス
 
 MIT
-
-*Built with Ruby, JavaScript, Python, and PostgreSQL*
