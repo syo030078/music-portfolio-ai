@@ -1,6 +1,6 @@
 # Music Portfolio AI
 
-音楽家と制作依頼者をつなぐマッチングプラットフォーム。音楽家がアップロードした楽曲を AI が解析し、依頼者はその解析結果をもとに音楽家を探して制作を依頼する。
+音楽家と依頼者をつなぐ、AI 楽曲解析つきの受発注マッチングプラットフォーム。音楽家がアップロードした楽曲を AI が解析し、依頼者はその解析結果をもとに音楽家を探して制作を依頼する。
 
 [![CI](https://github.com/syo030078/music-portfolio-ai/actions/workflows/test.yml/badge.svg)](https://github.com/syo030078/music-portfolio-ai/actions/workflows/test.yml)
 [![Deploy](https://github.com/syo030078/music-portfolio-ai/actions/workflows/deploy.yml/badge.svg)](https://github.com/syo030078/music-portfolio-ai/actions/workflows/deploy.yml)
