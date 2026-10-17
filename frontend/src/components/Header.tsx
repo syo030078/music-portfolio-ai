@@ -51,6 +51,7 @@ export default function Header() {
   const publicNavLinks = [
     { href: "/jobs", label: "案件を探す" },
     { href: "/", label: "音楽家を探す" },
+    { href: "/bgm", label: "作業BGM生成" },
   ];
 
   const authNavLinks = [
