@@ -150,29 +150,78 @@ RSpec.describe 'Api::V1::Conversations', type: :request do
   end
 
   describe 'POST /api/v1/conversations' do
-    it 'creates conversation and returns uuid' do
-      new_job = Job.create!(
+    let(:outsider) { User.create!(email: 'outsider@example.com', password: 'password123', name: 'Outsider', is_musician: true).reload }
+    let!(:new_job) do
+      Job.create!(
         client: client,
         title: 'New Job',
         description: 'New description',
         status: 'published',
         published_at: Time.current
       ).reload
+    end
 
-      auth = auth_headers_for(client)
+    it 'job_uuid で会話を作り、uuid を返す' do
+      auth = auth_headers_for(musician)
       post '/api/v1/conversations', params: {
-        conversation: { job_id: new_job.id },
-        participant_ids: [musician.id]
+        conversation: { job_uuid: new_job.uuid }
       }.to_json, headers: auth
 
       expect(response).to have_http_status(:created)
-      json = JSON.parse(response.body)
-      conv_data = json['conversation']
+      conv_data = JSON.parse(response.body)['conversation']
 
       expect(conv_data).to have_key('uuid')
       expect(conv_data).not_to have_key('id')
-      expect(conv_data).to have_key('job_uuid')
+      expect(conv_data['job_uuid']).to eq(new_job.uuid)
       expect(conv_data).not_to have_key('job_id')
+
+      created = Conversation.find(conv_data['uuid'])
+      expect(created.participants).to contain_exactly(client, musician)
+    end
+
+    it 'participant_uuids で第三者を参加者に追加できない' do
+      auth = auth_headers_for(musician)
+      post '/api/v1/conversations', params: {
+        conversation: { job_uuid: new_job.uuid },
+        participant_uuids: [outsider.uuid]
+      }.to_json, headers: auth
+
+      expect(response).to have_http_status(:created)
+      created = Conversation.find(JSON.parse(response.body)['conversation']['uuid'])
+      expect(created.participants).not_to include(outsider)
+    end
+
+    it '内部IDの job_id / participant_ids は受け付けない' do
+      auth = auth_headers_for(musician)
+      expect do
+        post '/api/v1/conversations', params: {
+          conversation: { job_id: new_job.id },
+          participant_ids: [outsider.id]
+        }.to_json, headers: auth
+      end.not_to change(Conversation, :count)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
+
+    it '当事者でない契約の会話は作れない' do
+      proposal = Proposal.create!(job: new_job, musician: musician, quote_total_jpy: 50_000, delivery_days: 7, cover_message: 'よろしく')
+      contract = Contract.create!(proposal: proposal, client: client, musician: musician, escrow_total_jpy: 50_000, status: 'active').reload
+
+      auth = auth_headers_for(outsider)
+      post '/api/v1/conversations', params: {
+        conversation: { contract_uuid: contract.uuid }
+      }.to_json, headers: auth
+
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it '存在しない案件は 404' do
+      auth = auth_headers_for(musician)
+      post '/api/v1/conversations', params: {
+        conversation: { job_uuid: SecureRandom.uuid }
+      }.to_json, headers: auth
+
+      expect(response).to have_http_status(:not_found)
     end
   end
 end
