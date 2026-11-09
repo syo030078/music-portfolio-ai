@@ -67,39 +67,28 @@ class Api::V1::ConversationsController < ApplicationController
   end
 
   # POST /api/v1/conversations
+  # 参加者は親リソース（案件/契約）の当事者からサーバー側で決める
   def create
-    conversation = Conversation.new(build_conversation_params)
+    result = ConversationCreationService.call(
+      actor: current_user,
+      job_uuid: conversation_params[:job_uuid],
+      contract_uuid: conversation_params[:contract_uuid]
+    )
 
-    if conversation.save
-      # 参加者を追加（UUIDまたはIDで受け付け）
-      participant_uuids = params[:participant_uuids] || []
-      participant_ids = params[:participant_ids] || []
-
-      participant_uuids.each do |uuid|
-        user = User.find_by(uuid: uuid)
-        conversation.conversation_participants.create!(user: user) if user
-      end
-
-      participant_ids.each do |user_id|
-        conversation.conversation_participants.create!(user_id: user_id)
-      end
-
-      # 作成者も参加者に追加
-      unless conversation.participants.include?(current_user)
-        conversation.conversation_participants.create!(user_id: current_user.id)
-      end
-
-      render json: {
-        conversation: {
-          uuid: conversation.id,
-          job_uuid: conversation.job&.uuid,
-          contract_uuid: conversation.contract&.uuid,
-          created_at: conversation.created_at
-        }
-      }, status: :created
-    else
-      render_validation_errors(conversation)
+    unless result.success?
+      render_error(result.error, result.status)
+      return
     end
+
+    conversation = result.conversation
+    render json: {
+      conversation: {
+        uuid: conversation.id,
+        job_uuid: conversation.job&.uuid,
+        contract_uuid: conversation.contract&.uuid,
+        created_at: conversation.created_at
+      }
+    }, status: :created
   end
 
   private
@@ -110,21 +99,7 @@ class Api::V1::ConversationsController < ApplicationController
     render_error('会話が見つかりません', :not_found)
   end
 
-  def build_conversation_params
-    conv_params = params.require(:conversation).permit(:job_id, :contract_id, :job_uuid, :contract_uuid)
-
-    # UUIDからIDへ変換
-    if conv_params[:job_uuid].present?
-      job = Job.find_by(uuid: conv_params[:job_uuid])
-      conv_params[:job_id] = job&.id
-    end
-
-    if conv_params[:contract_uuid].present?
-      contract = Contract.find_by(uuid: conv_params[:contract_uuid])
-      conv_params[:contract_id] = contract&.id
-    end
-
-    conv_params.except(:job_uuid, :contract_uuid)
+  def conversation_params
+    params.require(:conversation).permit(:job_uuid, :contract_uuid)
   end
-
 end

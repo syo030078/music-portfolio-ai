@@ -98,9 +98,7 @@ export default async function JobDetailPage({
               )}
             </div>
 
-            <div className="rounded-lg border border-gray-200 bg-white p-6">
-              <ContactButton jobUuid={job.uuid} clientUuid={job.client.uuid} />
-            </div>
+            <ContactButton jobUuid={job.uuid} ownerUuid={job.client.uuid} />
           </div>
         </div>
       </div>

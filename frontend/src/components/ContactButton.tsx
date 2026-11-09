@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { apiGet, apiPost } from '@/lib/api/client';
 import { getToken } from '@/lib/auth';
+import { useUser } from '@/hooks/useUser';
 
 interface ContactButtonProps {
   jobUuid: string;
-  clientUuid: string;
+  // 案件の持ち主には問い合わせボタンを出さない（自分宛ての問い合わせはサーバーが拒否する）
+  ownerUuid: string;
 }
 
 interface ConversationListResponse {
@@ -19,8 +21,9 @@ interface ConversationCreateResponse {
   conversation: { uuid: string };
 }
 
-export default function ContactButton({ jobUuid, clientUuid }: ContactButtonProps) {
+export default function ContactButton({ jobUuid, ownerUuid }: ContactButtonProps) {
   const router = useRouter();
+  const { user } = useUser();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsLogin, setNeedsLogin] = useState(false);
@@ -47,7 +50,7 @@ export default function ContactButton({ jobUuid, clientUuid }: ContactButtonProp
         const createData = await apiPost<ConversationCreateResponse>(
           '/api/v1/conversations',
           token,
-          { conversation: { job_uuid: jobUuid }, participant_uuids: [clientUuid] }
+          { conversation: { job_uuid: jobUuid } }
         );
         router.push(`/messages/${createData.conversation.uuid}`);
       }
@@ -62,8 +65,12 @@ export default function ContactButton({ jobUuid, clientUuid }: ContactButtonProp
     }
   };
 
+  if (user?.uuid === ownerUuid) {
+    return null;
+  }
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-6">
       <button
         onClick={handleClick}
         disabled={loading}
